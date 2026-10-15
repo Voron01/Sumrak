@@ -1,0 +1,8 @@
+﻿node_modules/
+Lib/
+cloudflared.exe
+ngrok.exe
+records.json
+*.log
+.DS_Store
+Thumbs.db
