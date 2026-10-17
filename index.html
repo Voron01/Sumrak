@@ -6330,12 +6330,13 @@ function setupMobileControls(){
         const max=45;const len=Math.hypot(dx,dy);
         const k=len>max?max/len:1;
         joyKnob.style.transform='translate('+dx*k+'px,'+dy*k+'px)';
-        touchMove={x:dx/max,y:dy/max};
+              const ndx = dx/max, ndy = dy/max;
+      touchMove = (Math.hypot(ndx,ndy) < 0.15) ? null : {x:ndx,y:ndy};
       } else if(t.identifier===lookId){
-        camYaw-=(t.clientX-lastX)*0.005;camPitch-=(t.clientY-lastY)*0.004;
-        camPitch=clamp(camPitch,-1.15,0.85);lastX=t.clientX;lastY=t.clientY;
-        lastLookTime=performance.now();
-      }
+  camYaw-=(t.clientX-lastX)*0.003;camPitch-=(t.clientY-lastY)*0.0025;
+  camPitch=clamp(camPitch,-1.15,0.85);lastX=t.clientX;lastY=t.clientY;
+  lastLookTime=performance.now();
+}
     }
   },{passive:true});
   const resetAll=()=>{
@@ -11258,14 +11259,13 @@ if(clanIslandGroup && clanIslandGroup.visible && clanIslandGroup.userData.clanFi
     while(diff>Math.PI)diff-=Math.PI*2;while(diff<-Math.PI)diff+=Math.PI*2;
     p.yaw+=diff*Math.min(1,dt*12);
 
-    if(isMobile && autoCameraFollow && touchMove && p.moving && performance.now() - lastLookTime > 700){
-      let targetCamYaw = p.targetYaw + Math.PI;
-      let cdiff = targetCamYaw - camYaw;
-      while(cdiff > Math.PI) cdiff -= Math.PI * 2;
-      while(cdiff < -Math.PI) cdiff += Math.PI * 2;
-      camYaw += cdiff * Math.min(1, dt * 3.5);
-    }
-
+    if(isMobile && autoCameraFollow && touchMove && p.moving && performance.now() - lastLookTime > 1500){
+  let targetCamYaw = p.targetYaw + Math.PI;
+  let cdiff = targetCamYaw - camYaw;
+  while(cdiff > Math.PI) cdiff -= Math.PI * 2;
+  while(cdiff < -Math.PI) cdiff += Math.PI * 2;
+  camYaw += cdiff * Math.min(1, dt * 1.4);
+}
     p.updateVisual(dt);
     const inWater=p.pos.x>116&&p.pos.x<144&&p.pos.z>-200&&p.pos.z<40;
     const waterDepth=inWater?0.9:0;
