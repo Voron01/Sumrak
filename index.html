@@ -1362,7 +1362,7 @@ class Ambience{
     if(!this.ready)return;
     const dur=rand(3.5,6.5);
     this._burst({dur,filter:'highpass',freq:2200,q:0.6,vol:0.022,fi:dur*0.3,fo:dur*0.5});
-    this._schedLeaves();},rand(18,40)*1000);}
+       this._schedLeaves();},rand(60,120)*1000);}
   _schedBirds(){
     if(!this.ready)return;
     const delay=this.springBirdMode?rand(10,25)*1000:rand(30,70)*1000;
@@ -3614,8 +3614,15 @@ try{
   const s=localStorage.getItem('sumrak_custom');
   if(s)currentCustom={...DEFAULT_CUSTOM,...JSON.parse(s)};
 }catch(e){}
-function cloneC(c){return {...c,shirtPixels:c.shirtPixels?c.shirtPixels.slice():null,
-  paintPixels:c.paintPixels?c.paintPixels.slice():null};}
+function cloneC(c){
+  if(!c) return {...DEFAULT_CUSTOM};
+  return {
+    ...DEFAULT_CUSTOM,
+    ...c,
+    shirtPixels: c.shirtPixels && Array.isArray(c.shirtPixels) ? c.shirtPixels.slice() : null,
+    paintPixels: c.paintPixels && Array.isArray(c.paintPixels) ? c.paintPixels.slice() : null
+  };
+}
 function saveC(){try{localStorage.setItem('sumrak_custom',JSON.stringify(currentCustom));}catch(e){}}
 
 function pixelsToTex(px,size=16){
@@ -4073,7 +4080,7 @@ function showInvite(type,fromName,fromId,extra={}){
 class Player{
   constructor({id,name,color,isLocal=false,custom=null}){
     this.id=id;this.name=name;this.color=color;this.isLocal=isLocal;
-    this.custom=cloneC(custom||DEFAULT_CUSTOM);
+    this.custom=cloneC(custom);
     const parts=createChar(color,this.custom);
     this.parts=parts;this.group=parts.group;scene.add(this.group);
     this.pos=new THREE.Vector3();
