@@ -1283,9 +1283,10 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
     <div class="mBtn" id="mZoomIn">+</div>
     <div class="mBtn" id="mZoomOut">−</div>
   </div>
-  <div id="mCamCtrl">
+ <div id="mCamCtrl">
     <div class="mBtn" id="mAutoCamBtn" title="Камера смотрит за движением">🎥</div>
-  </div>
+    <div class="mBtn" id="mSensBtn" title="Чувствительность камеры" style="font-size:11px;font-weight:bold">1.0</div>
+</div>
 </div>
 
 <!-- ============ LEAFLET (Инструкция) ============ -->
@@ -1813,6 +1814,11 @@ let mobileRunning=false;
 /* ============ КАМЕРА ============ */
 let autoCameraFollow=true;
 let photoMode=false;
+let lookSensitivity = 1.0;
+try{
+  const ls = parseFloat(localStorage.getItem('sumrak_look_sens'));
+  if(!isNaN(ls) && ls >= 0.3 && ls <= 5) lookSensitivity = ls;
+}catch(e){}
 try{
   const saved=localStorage.getItem('sumrak_autocam');
   if(saved!==null)autoCameraFollow=saved==='1';
@@ -7230,14 +7236,29 @@ function setupMobileControls(){
   document.addEventListener('touchstart',e=>{
     if(document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA')return;
     if(isUiTarget(e.target))return;
+    const isLandscape = window.innerWidth > window.innerHeight;
+    const halfW = window.innerWidth / 2;
     for(const t of e.changedTouches){
-      if(joyId===null){
-        joyId=t.identifier;joyCx=t.clientX;joyCy=t.clientY;
-        joyBase.style.left=(joyCx-55)+'px';joyBase.style.top=(joyCy-55)+'px';
-        joyBase.classList.add('on');joyKnob.style.transform='translate(0,0)';
-        touchMove=null;
-      } else if(lookId===null){
-        lookId=t.identifier;lastX=t.clientX;lastY=t.clientY;
+      if(isLandscape){
+        // Горизонталь: джойстик ТОЛЬКО на левой половине, камера — на правой
+        if(t.clientX < halfW && joyId === null){
+          joyId=t.identifier;joyCx=t.clientX;joyCy=t.clientY;
+          joyBase.style.left=(joyCx-55)+'px';joyBase.style.top=(joyCy-55)+'px';
+          joyBase.classList.add('on');joyKnob.style.transform='translate(0,0)';
+          touchMove=null;
+        } else if(t.clientX >= halfW && lookId === null){
+          lookId=t.identifier;lastX=t.clientX;lastY=t.clientY;
+        }
+      } else {
+        // Вертикаль — как было
+        if(joyId===null){
+          joyId=t.identifier;joyCx=t.clientX;joyCy=t.clientY;
+          joyBase.style.left=(joyCx-55)+'px';joyBase.style.top=(joyCy-55)+'px';
+          joyBase.classList.add('on');joyKnob.style.transform='translate(0,0)';
+          touchMove=null;
+        } else if(lookId===null){
+          lookId=t.identifier;lastX=t.clientX;lastY=t.clientY;
+        }
       }
     }
   },{passive:true});
@@ -7250,9 +7271,11 @@ function setupMobileControls(){
         joyKnob.style.transform='translate('+dx*k+'px,'+dy*k+'px)';
               const ndx = dx/max, ndy = dy/max;
       touchMove = (Math.hypot(ndx,ndy) < 0.15) ? null : {x:ndx,y:ndy};
-      } else if(t.identifier===lookId){
-  camYaw-=(t.clientX-lastX)*0.003;camPitch-=(t.clientY-lastY)*0.0025;
-  camPitch=clamp(camPitch,-1.15,0.85);lastX=t.clientX;lastY=t.clientY;
+     } else if(t.identifier===lookId){
+  camYaw   -= (t.clientX-lastX) * 0.003  * lookSensitivity;
+  camPitch -= (t.clientY-lastY) * 0.0025 * lookSensitivity;
+  camPitch = clamp(camPitch,-1.15,0.85);
+  lastX=t.clientX; lastY=t.clientY;
   lastLookTime=performance.now();
 }
     }
@@ -7308,6 +7331,22 @@ function setupMobileControls(){
     if(autoCamEl)autoCamEl.classList.toggle('on',autoCameraFollow);
     try{localStorage.setItem('sumrak_autocam',autoCameraFollow?'1':'0');}catch(e){}
     showToast(autoCameraFollow?'🎥 Камера за движением':'🎥 Камера свободна');
+  });
+  // ─── Чувствительность камеры ───
+  const SENS_LEVELS = [0.5, 0.8, 1.0, 1.4, 2.0, 3.0];
+  function updateSensLabel(){
+    const el = document.getElementById('mSensBtn');
+    if(el) el.textContent = lookSensitivity.toFixed(1);
+  }
+  updateSensLabel();
+  bindBtn('mSensBtn',()=>{
+    let idx = SENS_LEVELS.findIndex(x => Math.abs(x - lookSensitivity) < 0.01);
+    if(idx < 0) idx = 2; // fallback: 1.0
+    idx = (idx + 1) % SENS_LEVELS.length;
+    lookSensitivity = SENS_LEVELS[idx];
+    try{ localStorage.setItem('sumrak_look_sens', String(lookSensitivity)); }catch(e){}
+    updateSensLabel();
+    showToast('🎚 Чувствительность: ' + lookSensitivity.toFixed(1) + 'x');
   });
   const mm=$('#minimap');
   mm.addEventListener('touchend',e=>{
