@@ -6,6 +6,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Сумрак</title>
+<title>Сумрак</title>
+<style>
 #inventoryPanel .inv-item{display:flex;flex-direction:column;align-items:center;
   justify-content:center;padding:8px 4px;border-radius:10px;
   background:rgba(10,13,18,.7);border:1px solid rgba(255,180,90,.3);
@@ -22,7 +24,6 @@
   background:linear-gradient(135deg,rgba(255,180,90,.35),rgba(255,120,40,.2));
   border:1px solid rgba(255,180,90,.5);color:#ffd9a4;font-size:11px}
 .ach-badge.locked{opacity:.35;background:rgba(30,30,30,.5);border-color:rgba(100,100,100,.4)}
-<style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;overflow:hidden;background:#06080b;color:#e9e2d6;
   font-family:Georgia,'Times New Roman',serif;-webkit-font-smoothing:antialiased;touch-action:none;
@@ -279,6 +280,8 @@ input,textarea{-webkit-user-select:text !important;user-select:text !important;t
   border-color:rgba(255,217,122,.55);color:#ffd97a}
 #clanBtn{bottom:84px;right:256px;background:radial-gradient(circle at 35% 30%,#4a3a6a,#1a1030);
   border-color:rgba(180,130,240,.55);color:#e0c8ff;font-size:20px}
+#islandExitBtn{bottom:84px;right:316px;background:radial-gradient(circle at 35% 30%,#5a4a2a,#2a1e0e);
+  border-color:rgba(255,180,90,.55);color:#ffd9a4;font-size:19px;display:none}
 
 #mobileCtl{position:fixed;inset:0;z-index:15;pointer-events:none;display:none}
 #mobileCtl.on{display:block}
@@ -445,6 +448,37 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
   radial-gradient(ellipse at 50% 0%,rgba(55,45,35,.8),rgba(14,16,20,.98));
   border:1px solid rgba(255,180,90,.28);border-radius:18px;padding:16px}
 .ed-panel h2{margin:0 0 14px;font-weight:normal;letter-spacing:.12em;color:#ffce8f;font-size:19px;text-align:center}
+#editorPreviewWrap{
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:linear-gradient(180deg,#1a1612 0%,#1a1612 88%,rgba(26,22,18,0) 100%);
+  padding:8px 8px 14px;
+  margin-bottom:14px;
+  border-radius:14px;
+}
+#editorPreviewCanvas{
+  display:block;
+  width:100%;
+  height:260px;
+  border-radius:12px;
+  border:1px solid rgba(255,180,90,.25);
+  background:radial-gradient(ellipse at 50% 80%,#2a2018 0%,#0a0a10 80%);
+  cursor:grab;
+  touch-action:none;
+}
+#editorPreviewCanvas:active{cursor:grabbing}
+#editorPreviewHint{
+  text-align:center;
+  font-size:10px;
+  color:#8e8677;
+  margin-top:6px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+@media (max-width:640px){
+  #editorPreviewCanvas{height:200px}
+}
 .ed-tabs{display:flex;gap:5px;margin-bottom:12px;flex-wrap:wrap;justify-content:center}
 .ed-tabs button{padding:8px 14px;border-radius:9px;border:1px solid rgba(255,180,90,.25);
   background:rgba(10,13,18,.6);color:#c9bda6;font-family:inherit;font-size:12px;cursor:pointer;
@@ -462,6 +496,18 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
   background:rgba(10,13,18,.55);color:#e0d5bf;font-family:inherit;font-size:12px;cursor:pointer;
   touch-action:manipulation}
 .ed-row button.on{border-color:#ffb457;background:rgba(255,150,50,.28);color:#ffd9a4}
+.ed-row.acc-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(88px,1fr));
+  gap:5px;
+  max-height:210px;
+  overflow-y:auto;
+  padding:6px;
+  background:rgba(0,0,0,.18);
+  border:1px solid rgba(255,180,90,.12);
+  border-radius:9px;
+}
+.ed-row.acc-grid button{padding:7px 5px;font-size:11px;text-align:center;line-height:1.2}
 .ed-color{display:flex;align-items:center;gap:10px}
 .ed-color input[type=color]{width:52px;height:36px;border:none;background:transparent;
   border-radius:9px;cursor:pointer;padding:0}
@@ -619,7 +665,7 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
   box-shadow:0 0 6px #6f6}
 #friendsPanel .friend-card .fc-off{width:8px;height:8px;border-radius:50%;background:#555}
 
-@media(max-width:700px){
+@media (max-width:700px), (orientation:landscape) and (max-height:560px){
   #help{display:none}
   #minimap{top:6px;left:6px;right:auto;width:110px;height:110px}
   #players{top:6px;right:6px;font-size:11px;min-width:120px;max-width:150px;padding:6px 8px}
@@ -657,14 +703,15 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
 
   #toast{font-size:11px;padding:6px 12px;top:auto;bottom:250px;max-width:70vw;white-space:normal;text-align:center}
   #inviteContainer{top:auto;bottom:290px;right:6px;max-width:200px}
-  #hint{bottom:250px;font-size:11px;padding:5px 10px}
+  #hint{bottom:250px;font-size:11px;padding:5px 10px;pointer-events:auto;cursor:pointer}
 
   .fab{width:34px;height:34px;font-size:15px}
-  #phoneBtn{top:118px;bottom:auto;right:6px}
+   #phoneBtn{top:118px;bottom:auto;right:6px}
   #editBtn{top:118px;bottom:auto;right:46px}
   #leafBtn{top:158px;bottom:auto;right:6px}
   #friendBtn{top:158px;bottom:auto;right:46px}
   #clanBtn{top:198px;bottom:auto;right:6px}
+  #islandExitBtn{top:198px;bottom:auto;right:46px;left:auto}
 
   #mobileBtns{right:4px;gap:5px;top:250px;bottom:170px;max-height:none;transform:none}
   .mBtn{width:40px;height:40px;font-size:16px}
@@ -679,6 +726,60 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
   #logHud{top:auto;bottom:340px;left:6px;right:auto;font-size:12px;padding:4px 9px}
   #fortuneBadges{top:auto;bottom:415px;left:6px;right:auto;font-size:10px}
   .fb-chip{padding:2px 8px;font-size:10px}
+}
+/* === Горизонтальная ориентация (телефон) === */
+@media (orientation: landscape) and (max-height: 560px) {
+  #help{display:none !important}
+  #minimap{top:4px;left:4px;right:auto;width:92px;height:92px}
+  #compass{top:4px;width:34px;height:34px;font-size:11px}
+  #players{top:4px;right:4px;max-height:26vh;min-width:105px;max-width:140px;font-size:10px;padding:4px 6px}
+  #seasonInfo{top:4px;left:100px;right:auto;bottom:auto;font-size:9px;padding:2px 6px}
+  #rainInfo{top:26px;left:100px;right:auto;bottom:auto;font-size:9px;padding:2px 6px}
+  #hungerHud{display:none !important}
+  #fortuneBadges{display:none !important}
+  #logHud{top:auto;bottom:40px;left:4px;right:auto;font-size:11px;padding:3px 8px}
+
+  #inv{bottom:38px;top:auto;left:50%;transform:translateX(-50%);gap:3px;z-index:24}
+  .slot{width:32px;height:32px;font-size:13px;border-radius:8px}
+  .slot .lbl{display:none}
+  .slot .num{font-size:7px}
+
+  #emobar{left:0;right:0;bottom:0;top:auto;transform:none;flex-direction:row;flex-wrap:nowrap;
+    max-width:none;max-height:none;height:34px;overflow-x:auto;overflow-y:hidden;border-radius:0;
+    padding:2px 4px;gap:2px;z-index:23}
+  #emobar span{width:26px;height:26px;font-size:15px;flex-shrink:0}
+  #emobar span .hk{display:none}
+
+  #chatbox{left:4px;bottom:38px;width:min(220px,30vw);z-index:26}
+  #chatlog{max-height:46px;font-size:10px}
+  #chatlog div{padding:2px 6px}
+  #chatinput{font-size:11px;padding:5px 8px}
+  #chatTarget{font-size:10px;padding:5px 6px;max-width:54px}
+  #chatTabs button{font-size:9px;padding:2px 5px}
+  #chatTabs{margin-bottom:2px}
+  #chatWrap{gap:3px}
+  #chatSend{display:flex;width:28px;height:28px;font-size:12px}
+
+  #toast{top:44px;bottom:auto;left:50%;transform:translateX(-50%);font-size:11px;
+    padding:5px 10px;max-width:56vw;white-space:normal;text-align:center;z-index:30}
+  #hint{bottom:auto;top:76px;left:50%;transform:translateX(-50%);font-size:10px;
+    padding:4px 9px;max-width:56vw;z-index:24;pointer-events:auto}
+  #inviteContainer{top:auto;bottom:80px;right:4px;max-width:160px}
+
+  .fab{width:28px;height:28px;font-size:12px;bottom:auto}
+  #phoneBtn{top:102px;left:4px;right:auto;bottom:auto}
+  #editBtn{top:102px;left:36px;right:auto;bottom:auto}
+  #leafBtn{top:102px;left:68px;right:auto;bottom:auto}
+  #friendBtn{top:102px;left:100px;right:auto;bottom:auto}
+  #clanBtn{top:102px;left:132px;right:auto;bottom:auto}
+  #islandExitBtn{top:102px;left:164px;right:auto;bottom:auto}
+
+  #mobileBtns{top:62%;bottom:auto;right:4px;transform:translateY(-50%);max-height:54vh;gap:4px;z-index:25}
+  .mBtn{width:33px;height:33px;font-size:14px}
+  #mZoomCtrl{left:4px;right:auto;top:136px;bottom:auto;transform:none;flex-direction:row;z-index:25;gap:4px}
+  #mZoomCtrl .mBtn{width:30px;height:30px;font-size:15px}
+  #mCamCtrl{left:70px;right:auto;top:136px;bottom:auto;transform:none;flex-direction:row;z-index:25;gap:4px}
+  #mCamCtrl .mBtn{width:30px;height:30px;font-size:14px}
 }
 /* === Сумрак-сеть === */
 #socialPanel .mg-panel{width:min(560px,98vw)}
@@ -823,6 +924,10 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
 <div id="editor">
   <div class="ed-panel">
     <h2>Редактор персонажа</h2>
+    <div id="editorPreviewWrap">
+      <canvas id="editorPreviewCanvas"></canvas>
+      <div id="editorPreviewHint">↔ Крутите мышью или пальцем</div>
+    </div>
     <div class="ed-tabs">
       <button data-tab="presets" class="on">Готовые</button>
       <button data-tab="body">Фигура</button>
@@ -837,9 +942,19 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
         <div class="preset-grid" id="presetGrid"></div>
       </div>
     </div>
-    <div class="ed-page" data-page="body">
+        <div class="ed-page" data-page="body">
       <div class="ed-grid">
         <div>
+          <div class="ed-sec"><label>Раса</label>
+            <div class="ed-row acc-grid" data-grp="species">
+              <button data-val="human" class="on">Человек</button>
+              <button data-val="vampire">Вампир</button>
+              <button data-val="demon">Демон</button>
+              <button data-val="neko">Неко</button>
+              <button data-val="bunny">Кролик</button>
+              <button data-val="skeleton">Скелет</button>
+              <button data-val="wolf">Оборотень</button>
+            </div></div>
           <div class="ed-sec"><label>Пол</label>
             <div class="ed-row" data-grp="gender">
               <button data-val="m" class="on">М</button>
@@ -885,6 +1000,12 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
               <button data-val="mid" class="on">Сред.</button>
               <button data-val="big">Бол.</button>
             </div></div>
+      <div class="ed-sec"><label>Свечение глаз</label>
+        <div class="ed-row" data-grp="eyeGlow">
+          <button data-val="0" class="on">Нет</button>
+          <button data-val="1">Слабое</button>
+          <button data-val="2">Сильное</button>
+        </div></div>
           <div class="ed-sec"><label>Брови</label>
             <div class="ed-row" data-grp="browStyle">
               <button data-val="thin" class="on">Тонкие</button>
@@ -927,6 +1048,8 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
               <button data-val="5">Ирокез</button>
               <button data-val="6">Кудри</button>
               <button data-val="7">Коса</button>
+          <button data-val="8">Дреды</button>
+          <button data-val="9">Два хвоста</button>
             </div></div>
         </div>
         <div>
@@ -941,6 +1064,7 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
               <button data-val="3">Капюшон</button>
               <button data-val="4">Венок</button>
               <button data-val="5">Корона</button>
+          <button data-val="6">Маска</button>
             </div></div>
         </div>
       </div>
@@ -972,18 +1096,34 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
               <span id="cPantsVal">#2b2f36</span></div></div>
         </div>
         <div>
-          <div class="ed-sec"><label>Аксессуары</label>
-            <div class="ed-row" data-grp="acc">
-              <button data-val="0" class="on">Нет</button>
-              <button data-val="1">Ожерелье</button>
-              <button data-val="2">Шарф</button>
-              <button data-val="3">Плащ</button>
-              <button data-val="4">Сумка</button>
-              <button data-val="5">Ремень</button>
-            </div></div>
-          <div class="ed-sec"><label>Цвет аксессуара</label>
-            <div class="ed-color"><input type="color" id="cAcc" value="#8a2a2a">
-              <span id="cAccVal">#8a2a2a</span></div></div>
+         <div class="ed-sec"><label>Украшения</label>
+  <div class="ed-row acc-grid" data-grp="acc">
+    <button data-val="0" class="on">Нет</button>
+    <button data-val="1">Ожерелье</button>
+    <button data-val="2">Шарф</button>
+    <button data-val="3">Плащ</button>
+    <button data-val="4">Сумка</button>
+    <button data-val="5">Ремень</button>
+    <button data-val="6">Серьги</button>
+    <button data-val="7">Браслеты</button>
+    <button data-val="8">Очки</button>
+    <button data-val="9">Крылья</button>
+    <button data-val="10">Нимб</button>
+    <button data-val="11">Бандана</button>
+    <button data-val="12">Рога</button>
+    <button data-val="13">Оленьи рога</button>
+    <button data-val="14">Медальон</button>
+    <button data-val="15">Рюкзак</button>
+    <button data-val="16">Цепочка</button>
+    <button data-val="17">Маг-кольцо</button>
+          <button data-val="18">Наушники</button>
+  </div></div>
+<div class="ed-sec"><label>Основной цвет</label>
+  <div class="ed-color"><input type="color" id="cAcc" value="#8a2a2a">
+    <span id="cAccVal">#8a2a2a</span></div></div>
+<div class="ed-sec"><label>Цвет-акцент</label>
+  <div class="ed-color"><input type="color" id="cAcc2" value="#ffd040">
+    <span id="cAcc2Val">#ffd040</span></div></div>
           <div class="ed-sec"><label>Аура/подсветка</label>
             <div class="ed-row" data-grp="aura">
               <button data-val="0" class="on">Нет</button>
@@ -1112,6 +1252,7 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
 <div class="fab" id="leafBtn" title="Инструкция">📜</div>
 <div class="fab" id="friendBtn" title="Друзья">⭐</div>
 <div class="fab" id="clanBtn" title="Клан (K)">🛡</div>
+<div class="fab" id="islandExitBtn" title="К костру" style="display:none">🚪</div>
 
 <!-- ============ MOBILE CONTROLS ============ -->
 <div id="mobileCtl">
@@ -1741,12 +1882,18 @@ renderer.setPixelRatio(isMobile ? 1.0 : Math.min(devicePixelRatio, 1.5));
 renderer.shadowMap.enabled=!isMobile;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure=1.15;
+renderer.toneMappingExposure=1.3;
 $('#game').appendChild(renderer.domElement);
 
 addEventListener('resize',()=>{
   camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
   renderer.setSize(innerWidth,innerHeight);
+});
+addEventListener('orientationchange',()=>{
+  setTimeout(()=>{
+    camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth,innerHeight);
+  },250);
 });
 
 const WORLD_RADIUS=200;
@@ -1779,6 +1926,7 @@ const skyU={top:{value:new THREE.Color(0x060a12)},bot:{value:new THREE.Color(0x1
 }
 
 const hemi=new THREE.HemisphereLight(0x2c3f5c,0x121a12,0.55);scene.add(hemi);
+const baseAmbient=new THREE.AmbientLight(0x8a9ab8,0.22);scene.add(baseAmbient);
 const interiorAmbient = new THREE.AmbientLight(0xfff2d8, 0);
 scene.add(interiorAmbient);
 const sunL=new THREE.DirectionalLight(0xffd090,0);sunL.position.set(30,40,20);scene.add(sunL);
@@ -3666,6 +3814,7 @@ function teleportToIsland(){
   if(!localPlayer) return;
   rebuildClanIslandIfNeeded();
   onClanIsland=true;
+  updateIslandExitBtn();
   if(clanIslandGroup) clanIslandGroup.visible=true;
   localPlayer.sitting=false; localPlayer.sitGround=false; localPlayer.seat=-1;
   localPlayer.pos.set(CLAN_ISLAND_POS.x, 0, CLAN_ISLAND_POS.z+15);
@@ -3681,6 +3830,7 @@ function teleportToIsland(){
 function teleportFromIsland(){
   if(!localPlayer) return;
   onClanIsland=false;
+  updateIslandExitBtn();
   if(clanIslandGroup) clanIslandGroup.visible=false;
   localPlayer.sitting=false; localPlayer.sitGround=false;
   localPlayer.pos.set(0,0,4.6);
@@ -3693,7 +3843,13 @@ function teleportFromIsland(){
     r:+localPlayer.yaw.toFixed(2), s:0, i:localPlayer.item});
 }
 
+function updateIslandExitBtn(){
+  const b=document.getElementById('islandExitBtn');
+  if(!b)return;
+  b.style.display=(isMobile&&onClanIsland)?'flex':'none';
+}
 function showIslandReturnCard(){
+  if(isMobile){ updateIslandExitBtn(); return; }
   removeIslandReturnCard();
   const container=$('#inviteContainer');
   if(!container)return;
@@ -4711,11 +4867,11 @@ let worldCat=null;
 const DEFAULT_CUSTOM={
   species:'human',
   gender:'m',build:'normal',height:'mid',faceShape:'round',
-  skinColor:'#d9a679',eyeColor:'#3a2818',eyeSize:'mid',browStyle:'thin',
+  skinColor:'#d9a679',eyeColor:'#3a2818',eyeSize:'mid',eyeGlow:0,browStyle:'thin',
   noseStyle:'mid',mouthStyle:'thin',beard:0,
   hairStyle:0,hairColor:'#2a1c12',hat:0,
   shirtStyle:0,shirtColor:'#5c4a2e',pantsStyle:0,pantsColor:'#2b2f36',
-  acc:0,accColor:'#8a2a2a',aura:0,shirtPixels:null,paintPixels:null,presetName:null
+  acc:0,accColor:'#8a2a2a',accColor2:'#ffd040',aura:0,shirtPixels:null,paintPixels:null,presetName:null
 };
 const PRESETS=[
   {name:'Странник',emoji:'🧙',c:{gender:'m',build:'normal',height:'mid',faceShape:'oval',
@@ -4778,11 +4934,107 @@ const PRESETS=[
     mouthStyle:'thin',beard:2,hairStyle:0,hairColor:'#3a2a1a',hat:0,
     shirtStyle:4,shirtColor:'#4a3a2a',pantsStyle:0,pantsColor:'#3a2a1a',
     acc:5,accColor:'#8a6a3a',aura:1}},
-  {name:'Неоновый Волк',emoji:'🐺',c:{gender:'n',build:'slim',height:'tall',faceShape:'heart',
+    {name:'Неоновый Волк',emoji:'🐺',c:{gender:'n',build:'slim',height:'tall',faceShape:'heart',
     skinColor:'#1a1a22',eyeColor:'#ffdd00',eyeSize:'big',browStyle:'thick',noseStyle:'small',
     mouthStyle:'smile',beard:0,hairStyle:5,hairColor:'#00e5ff',hat:0,
     shirtStyle:4,shirtColor:'#111115',pantsStyle:0,pantsColor:'#111115',
-    acc:0,accColor:'#00e5ff',aura:2,species:'wolf'}}
+    acc:0,accColor:'#00e5ff',aura:2,species:'wolf'}},
+  {name:'Готик-Клоун',emoji:'🃏',c:{gender:'f',build:'slim',height:'mid',faceShape:'oval',
+    skinColor:'#f0f0f0',eyeColor:'#111111',eyeSize:'big',browStyle:'thin',noseStyle:'small',
+    mouthStyle:'smile',beard:0,hairStyle:1,hairColor:'#f0f0f0',hat:3,
+    shirtStyle:3,shirtColor:'#111111',pantsStyle:0,pantsColor:'#111111',
+    acc:14,accColor:'#c0c0c0',accColor2:'#ffffff',aura:3,
+    // Грим: черные слезы и улыбка
+    paintPixels: (()=>{ let p=new Array(256).fill(null); 
+      // Глаза
+      [3,4,5, 10,11,12].forEach(i=>p[3*16+i]='#111111'); 
+      // Улыбка
+      [8,9,10,11,12,13].forEach(i=>p[10*16+i]='#111111');
+      p[9*16+8]='#111111'; p[9*16+13]='#111111';
+      return p; })()
+  }},
+  
+  {name:'Неоновый Демон',emoji:'😈',c:{gender:'f',build:'slim',height:'tall',faceShape:'heart',
+    skinColor:'#2a1a2a',eyeColor:'#ff00ff',eyeSize:'big',browStyle:'thick',noseStyle:'small',
+    mouthStyle:'full',beard:0,hairStyle:6,hairColor:'#8a2be2',hat:4,
+    shirtStyle:3,shirtColor:'#111115',pantsStyle:0,pantsColor:'#111115',
+    acc:17,accColor:'#ff00ff',accColor2:'#00ffff',aura:3,
+    paintPixels: (()=>{ let p=new Array(256).fill(null);
+      // Неоновые полосы на теле
+      for(let i=0;i<16;i+=2){ p[i*16+2]='#ff00ff'; p[i*16+13]='#ff00ff'; }
+      return p; })()
+  }},
+  
+  {name:'Тёмный Джокер',emoji:'🎭',c:{gender:'m',build:'normal',height:'mid',faceShape:'square',
+    skinColor:'#e0e0e0',eyeColor:'#ff0000',eyeSize:'mid',browStyle:'thick',noseStyle:'big',
+    mouthStyle:'smile',beard:0,hairStyle:5,hairColor:'#4a0e4e',hat:0,
+    shirtStyle:3,shirtColor:'#0a0a0a',pantsStyle:0,pantsColor:'#111111',
+    acc:16,accColor:'#ffd040',accColor2:'#ff0000',aura:3,
+    // Грим: рваная улыбка
+    paintPixels: (()=>{ let p=new Array(256).fill(null);
+      for(let i=4;i<=11;i++) p[10*16+i]='#111111';
+      for(let y=8;y<=12;y++){ p[y*16+4]='#111111'; p[y*16+11]='#111111'; }
+      return p; })()
+  }},
+
+  {name:'Кибер-Ниндзя',emoji:'🥷',c:{gender:'m',build:'slim',height:'tall',faceShape:'heart',
+    skinColor:'#b08a6a',eyeColor:'#a060ff',eyeSize:'small',browStyle:'thick',noseStyle:'small',
+    mouthStyle:'thin',beard:0,hairStyle:3,hairColor:'#e0e0e0',hat:3,
+    shirtStyle:4,shirtColor:'#1a1a22',pantsStyle:1,pantsColor:'#0a0a0c',
+    acc:8,accColor:'#aa00ff',accColor2:'#111111',aura:3
+  }},
+
+  {name:'Нео-Рейвер',emoji:'🎧',c:{gender:'f',build:'normal',height:'mid',faceShape:'round',
+    skinColor:'#f0d0b0',eyeColor:'#00ffff',eyeSize:'big',browStyle:'thin',noseStyle:'small',
+    mouthStyle:'smile',beard:0,hairStyle:2,hairColor:'#ff00ff',hat:0,
+    shirtStyle:0,shirtColor:'#2a0a3a',pantsStyle:2,pantsColor:'#1a1a1a',
+    acc:9,accColor:'#00ffff',accColor2:'#ff00ff',aura:2
+  }},
+  {name:'Вампир',emoji:'🧛',c:{species:'vampire',gender:'m',build:'slim',height:'tall',
+    faceShape:'oval',skinColor:'#e0c0c0',eyeColor:'#ff2020',eyeSize:'mid',eyeGlow:2,
+    browStyle:'thick',noseStyle:'small',mouthStyle:'smile',beard:0,
+    hairStyle:1,hairColor:'#1a0a0a',hat:0,
+    shirtStyle:3,shirtColor:'#1a0a1a',pantsStyle:0,pantsColor:'#0a0a0a',
+    acc:3,accColor:'#8a0a20',accColor2:'#ffd040',aura:3,
+    paintPixels: (()=>{ let p=new Array(256).fill(null);
+      for(let y=0;y<16;y+=2){ p[y*16+2]='#f0e0e0'; p[y*16+13]='#f0e0e0'; }
+      return p; })()
+  }},
+  
+  {name:'Демон',emoji:'😈',c:{species:'demon',gender:'f',build:'slim',height:'tall',
+    faceShape:'heart',skinColor:'#a02020',eyeColor:'#ff8020',eyeSize:'big',eyeGlow:2,
+    browStyle:'thick',noseStyle:'small',mouthStyle:'full',beard:0,
+    hairStyle:5,hairColor:'#0a0a0a',hat:0,
+    shirtStyle:4,shirtColor:'#1a0a0a',pantsStyle:0,pantsColor:'#0a0a0a',
+    acc:12,accColor:'#1a0505',accColor2:'#8a1a1a',aura:3,
+    paintPixels: (()=>{ let p=new Array(256).fill(null);
+      for(let y=4;y<14;y+=2){ p[y*16+4]='#3a0a0a'; p[y*16+11]='#3a0a0a'; }
+      return p; })()
+  }},
+  
+  {name:'Неко',emoji:'🐱',c:{species:'neko',gender:'f',build:'normal',height:'short',
+    faceShape:'round',skinColor:'#f0d0b0',eyeColor:'#40c0a0',eyeSize:'big',eyeGlow:0,
+    browStyle:'thin',noseStyle:'small',mouthStyle:'smile',beard:0,
+    hairStyle:1,hairColor:'#e8a870',hat:0,
+    shirtStyle:0,shirtColor:'#ff80a0',pantsStyle:2,pantsColor:'#3a2a2a',
+    acc:0,accColor:'#ff80a0',accColor2:'#ffffff',aura:0
+  }},
+  
+  {name:'Кролик',emoji:'🐰',c:{species:'bunny',gender:'f',build:'slim',height:'mid',
+    faceShape:'heart',skinColor:'#f8e0d8',eyeColor:'#8a4ac0',eyeSize:'big',eyeGlow:0,
+    browStyle:'thin',noseStyle:'small',mouthStyle:'smile',beard:0,
+    hairStyle:9,hairColor:'#f0e0d0',hat:0,
+    shirtStyle:5,shirtColor:'#f0d0f0',pantsStyle:0,pantsColor:'#a0a0ff',
+    acc:1,accColor:'#ff9aa8',accColor2:'#ffffff',aura:0
+  }},
+  
+  {name:'Скелет-воин',emoji:'💀',c:{species:'skeleton',gender:'m',build:'broad',
+    height:'tall',faceShape:'square',skinColor:'#e8e4d8',eyeColor:'#ff3020',
+    eyeSize:'small',eyeGlow:2,browStyle:'none',noseStyle:'small',
+    mouthStyle:'thin',beard:0,hairStyle:4,hairColor:'#0a0a0a',hat:3,
+    shirtStyle:4,shirtColor:'#2a1a0a',pantsStyle:0,pantsColor:'#0a0a0a',
+    acc:17,accColor:'#ff3020',accColor2:'#ffd040',aura:3
+  }},
 ];
 let currentCustom={...DEFAULT_CUSTOM};
 try{
@@ -4819,13 +5071,29 @@ function pixelsToTex(px,size=16){
 
 function createChar(color,custom){
   custom=custom||DEFAULT_CUSTOM;
-  const isWolf = custom.species === 'wolf';
+    const species = custom.species || 'human';
+  const isWolf = species === 'wolf';
   const g=new THREE.Group();
   
-  const wolfSkin = isWolf ? 0x1a1a22 : custom.skinColor;
+  // Базовый цвет кожи от расы
+  let baseSkin = custom.skinColor;
+  if (isWolf) {
+    baseSkin = 0x1a1a22;
+  } else if (species === 'skeleton') {
+    baseSkin = '#e8e4d8'; // Костяной белый
+  }
+  
   const neonCyan = 0x00e5ff;
   
-  const skinM=new THREE.MeshStandardMaterial({color:wolfSkin,roughness:0.85});
+  // Создаём материал кожи
+  const skinM = new THREE.MeshStandardMaterial({color:baseSkin, roughness:0.85});
+  
+  // Тонировки для вампира (бледность) и демона (красноватость)
+  if (species === 'vampire') {
+    skinM.color.lerp(new THREE.Color(0xffe0f0), 0.35);
+  } else if (species === 'demon') {
+    skinM.color.lerp(new THREE.Color(0x8a1a1a), 0.55);
+  }
   const clothOpt={color:custom.shirtColor,roughness:0.92};
   let texApplied=null;
   if(custom.paintPixels){
@@ -4839,11 +5107,15 @@ function createChar(color,custom){
   const clothM=new THREE.MeshStandardMaterial(clothOpt);
   const pantsM=new THREE.MeshStandardMaterial({color:custom.pantsColor,roughness:1});
   const hairM=new THREE.MeshStandardMaterial({color:custom.hairColor,roughness:0.92});
+    let glowIntensity = 0;
+  if (custom.eyeGlow === 1) glowIntensity = 0.9;
+  else if (custom.eyeGlow === 2) glowIntensity = 2.5;
+  
   const eyeM=new THREE.MeshStandardMaterial({
     color:custom.eyeColor,
     roughness:0.35, 
-    emissive: isWolf ? custom.eyeColor : 0x000000, 
-    emissiveIntensity: isWolf ? 1.5 : 0
+    emissive: (isWolf || glowIntensity > 0) ? custom.eyeColor : 0x000000, 
+    emissiveIntensity: isWolf ? 1.5 : glowIntensity
   });
   const whiteM=new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.4});
   const pupilM=new THREE.MeshStandardMaterial({color:0x111111,roughness:0.15});
@@ -4984,6 +5256,9 @@ function createChar(color,custom){
       const m=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.012,0.01),mouthM);
       m.position.set(0,1.44,0.185);g.add(m);
     }
+g.userData.mouthMesh = g.children.find(c =>
+  c.position && c.position.y === 1.44 && Math.abs(c.position.z - 0.19) < 0.02
+);
 
     const eS={small:0.028,mid:0.038,big:0.048};
     const es=eS[custom.eyeSize]||0.038;
@@ -5001,6 +5276,7 @@ function createChar(color,custom){
     const shineG=new THREE.SphereGeometry(es*0.18,6,6);
     const sL=new THREE.Mesh(shineG,shineM);sL.position.set(-0.075+es*0.25,1.55+es*0.3,eyeZ+es*0.55);g.add(sL);
     const sR=new THREE.Mesh(shineG,shineM);sR.position.set(0.075+es*0.25,1.55+es*0.3,eyeZ+es*0.55);g.add(sR);
+g.userData.eyeL = eL; g.userData.eyeR = eR;
 
     if(custom.browStyle!=='none'){
       const thick=custom.browStyle==='thick';
@@ -5045,50 +5321,247 @@ function createChar(color,custom){
     sideFurL.position.set(-0.18, 1.6, 0); sideFurL.rotation.z = 1.2; hairG.add(sideFurL);
     const sideFurR = sideFurL.clone(); sideFurR.position.x = 0.18; sideFurR.rotation.z = -1.2; hairG.add(sideFurR);
   } else {
-    if(hs===0){
+       if(hs===0){
+      // Основа — полусфера
       const h=new THREE.Mesh(new THREE.SphereGeometry(0.215,14,12,0,Math.PI*2,0,Math.PI*0.6),hairM);
       h.position.y=1.545;hairG.add(h);
-      const fr=new THREE.Mesh(new THREE.CapsuleGeometry(0.02,0.2,3,6),hairM);
-      fr.position.set(-0.05,1.66,0.15);fr.rotation.z=-0.6;hairG.add(fr);
-    } else if(hs===1){
+      
+      // Чёлка — 5 прядей
+      for(let i=0;i<5;i++){
+        const bang=new THREE.Mesh(new THREE.ConeGeometry(0.024,0.11,4),hairM);
+        bang.position.set(-0.11+i*0.055, 1.66, 0.15);
+        bang.rotation.x=-0.5;
+        bang.rotation.z=(i-2)*0.08;
+        hairG.add(bang);
+      }
+      
+      // Боковые пряди
+      for(const side of [-1,1]){
+        for(let i=0;i<2;i++){
+          const sideS=new THREE.Mesh(new THREE.ConeGeometry(0.02,0.13,4),hairM);
+          sideS.position.set(side*(0.18+i*0.015), 1.58, 0.05+i*0.02);
+          sideS.rotation.z=side*0.3;
+          sideS.rotation.x=-0.2;
+          hairG.add(sideS);
+        }
+      }
+        } else if(hs===1){
+      // Купол сверху
       const h=new THREE.Mesh(new THREE.SphereGeometry(0.218,14,12,0,Math.PI*2,0,Math.PI*0.68),hairM);
       h.position.y=1.545;hairG.add(h);
-      const b=new THREE.Mesh(new THREE.CapsuleGeometry(0.09,0.3,4,8),hairM);
-      b.position.set(0,1.28,-0.11);hairG.add(b);
-    } else if(hs===2){
+      
+      // Задние пряди — 6 штук, свисают вниз
+      for(let i=0;i<6;i++){
+        const back=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.015,0.4+i*0.02,5),hairM);
+        back.position.set(-0.14+i*0.056, 1.25, -0.15-Math.abs(i-2.5)*0.02);
+        back.rotation.x=0.15+(i%2)*0.05;
+        back.rotation.z=(i-2.5)*0.08;
+        hairG.add(back);
+      }
+      
+      // Боковые пряди — 3+3
+      for(const side of [-1,1]){
+        for(let i=0;i<3;i++){
+          const sideS=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.012,0.35-i*0.03,5),hairM);
+          sideS.position.set(side*(0.16+i*0.02), 1.35, 0.02+i*0.02);
+          sideS.rotation.z=side*(0.15+i*0.08);
+          sideS.rotation.x=-0.1;
+          hairG.add(sideS);
+        }
+      }
+      
+      // Чёлка — 6 прядей
+      for(let i=0;i<6;i++){
+        const bang=new THREE.Mesh(new THREE.ConeGeometry(0.025,0.13,4),hairM);
+        bang.position.set(-0.13+i*0.052, 1.66, 0.15);
+        bang.rotation.x=-0.45;
+        bang.rotation.z=(i-2.5)*0.06;
+        hairG.add(bang);
+      }
+       } else if(hs===2){
       const h=new THREE.Mesh(new THREE.SphereGeometry(0.212,12,10,0,Math.PI*2,0,Math.PI*0.6),hairM);
       h.position.y=1.545;hairG.add(h);
-      const bun=new THREE.Mesh(new THREE.SphereGeometry(0.085,10,10),hairM);
+      
+      // Пучок
+      const bun=new THREE.Mesh(new THREE.SphereGeometry(0.09,10,10),hairM);
       bun.position.set(0,1.735,-0.09);hairG.add(bun);
-      const tie=new THREE.Mesh(new THREE.TorusGeometry(0.07,0.012,5,10), new THREE.MeshStandardMaterial({color:0xc04060}));
+      
+      // Пряди вокруг пучка (8 штук)
+      for(let i=0;i<8;i++){
+        const a=(i/8)*Math.PI*2;
+        const tuft=new THREE.Mesh(new THREE.SphereGeometry(0.025,6,5),hairM);
+        tuft.position.set(Math.cos(a)*0.075, 1.74+Math.sin(a)*0.03, -0.09+Math.sin(a)*0.06);
+        hairG.add(tuft);
+      }
+      
+      // Заколка
+      const tie=new THREE.Mesh(new THREE.TorusGeometry(0.075,0.012,5,10), new THREE.MeshStandardMaterial({color:0xc04060}));
       tie.position.set(0,1.7,-0.09);tie.rotation.x=Math.PI/2;hairG.add(tie);
-    } else if(hs===3){
+      
+      // Чёлка — 4 пряди
+      for(let i=0;i<4;i++){
+        const bang=new THREE.Mesh(new THREE.ConeGeometry(0.022,0.1,4),hairM);
+        bang.position.set(-0.09+i*0.06,1.65,0.15);
+        bang.rotation.x=-0.45;
+        bang.rotation.z=(i-1.5)*0.1;
+        hairG.add(bang);
+      }
+        } else if(hs===3){
       const h=new THREE.Mesh(new THREE.SphereGeometry(0.213,14,12,0,Math.PI*2,0,Math.PI*0.62),hairM);
       h.position.y=1.545;hairG.add(h);
-      const tail=new THREE.Mesh(new THREE.CapsuleGeometry(0.05,0.32,4,8),hairM);
-      tail.position.set(0,1.34,-0.19);tail.rotation.x=0.3;hairG.add(tail);
+      
+      // Хвост — 5 прядей
+      for(let i=0;i<5;i++){
+        const tail=new THREE.Mesh(
+          new THREE.CylinderGeometry(0.018+0.012*(1-i/5), 0.006, 0.3+Math.random()*0.12, 5),
+          hairM);
+        tail.position.set(-0.04+i*0.02, 1.32-i*0.02, -0.19-i*0.01);
+        tail.rotation.x=0.3+(i-2)*0.02;
+        tail.rotation.z=(i-2)*0.06;
+        hairG.add(tail);
+      }
+      
+      // Заколка
       const tie=new THREE.Mesh(new THREE.TorusGeometry(0.055,0.012,5,8), new THREE.MeshStandardMaterial({color:0xc04060}));
       tie.position.set(0,1.51,-0.19);tie.rotation.x=Math.PI/2;hairG.add(tie);
-    } else if(hs===5){
-      const cr=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.26,0.28),hairM);
-      cr.position.y=1.68;hairG.add(cr);
+      
+      // Чёлка
+      for(let i=0;i<4;i++){
+        const bang=new THREE.Mesh(new THREE.ConeGeometry(0.022,0.11,4),hairM);
+        bang.position.set(-0.09+i*0.06,1.66,0.15);
+        bang.rotation.x=-0.45;
+        hairG.add(bang);
+      }
+       } else if(hs===5){
+      // Базовый «шапочный» купол
       const h=new THREE.Mesh(new THREE.SphereGeometry(0.212,10,8,0,Math.PI*2,0,Math.PI*0.5),hairM);
       h.position.y=1.545;hairG.add(h);
-    } else if(hs===6){
-      for(let i=0;i<12;i++){
-        const a=rand(0,Math.PI*2);
-        const cu=new THREE.Mesh(new THREE.SphereGeometry(rand(0.05,0.09),6,6),hairM);
-        cu.position.set(Math.cos(a)*0.16,1.62+rand(-0.06,0.1),Math.sin(a)*0.16);
-        hairG.add(cu);
+      
+      // Ирокез — 7 шипов от затылка ко лбу
+      for(let i=0;i<7;i++){
+        const spike=new THREE.Mesh(
+          new THREE.ConeGeometry(0.04-i*0.002, 0.18+Math.sin(i/6*Math.PI)*0.08, 4),
+          hairM);
+        spike.position.set(0, 1.68+Math.sin(i/6*Math.PI)*0.05, -0.1+i*0.045);
+        spike.rotation.x=(i/6-0.5)*0.3;
+        hairG.add(spike);
       }
-    } else if(hs===7){
+        } else if(hs===6){
+      // Кудри в 3 слоя (объём)
+      const layers=3;
+      for(let L=0; L<layers; L++){
+        const r=0.16+L*0.02;
+        const y=1.58+L*0.05;
+        for(let i=0;i<10+L*2;i++){
+          const a=(i/(10+L*2))*Math.PI*2 + L*0.3;
+          const cu=new THREE.Mesh(new THREE.SphereGeometry(0.04+Math.random()*0.025,6,5),hairM);
+          cu.position.set(Math.cos(a)*r, y+Math.random()*0.06, Math.sin(a)*r);
+          hairG.add(cu);
+        }
+      }
+      // Чёлка-кудри спереди
+      for(let i=0;i<5;i++){
+        const curl=new THREE.Mesh(new THREE.SphereGeometry(0.04,6,5),hairM);
+        curl.position.set(-0.1+i*0.05, 1.66, 0.15);
+        hairG.add(curl);
+      }
+        } else if(hs===7){
       const h=new THREE.Mesh(new THREE.SphereGeometry(0.213,14,12,0,Math.PI*2,0,Math.PI*0.62),hairM);
       h.position.y=1.545;hairG.add(h);
-      const br=new THREE.Mesh(new THREE.CapsuleGeometry(0.055,0.5,4,8),hairM);
-      br.position.set(0,1.2,-0.17);br.rotation.x=0.15;hairG.add(br);
+      
+      // Коса — 7 переплетённых сегментов
+      for(let i=0;i<7;i++){
+        const seg=new THREE.Mesh(new THREE.SphereGeometry(0.05-i*0.004,6,5),hairM);
+        seg.position.set((i%2===0?0.02:-0.02), 1.32-i*0.08, -0.17);
+        seg.scale.set(1.4,0.9,1.2);
+        hairG.add(seg);
+      }
+      
+      // Ленточки
+      for(let i=0;i<3;i++){
+        const ribbon=new THREE.Mesh(new THREE.TorusGeometry(0.045,0.008,4,8),
+          new THREE.MeshStandardMaterial({color:0xc04060}));
+        ribbon.position.set(0,1.32-i*0.16,-0.17);
+        ribbon.rotation.x=Math.PI/2;
+        hairG.add(ribbon);
+      }
+      
+      // Чёлка
       for(let i=0;i<4;i++){
-        const seg=new THREE.Mesh(new THREE.TorusGeometry(0.06,0.01,4,8), new THREE.MeshStandardMaterial({color:0xc04060}));
-        seg.position.set(0,1.3-i*0.1,-0.17);seg.rotation.x=Math.PI/2;hairG.add(seg);
+        const bang=new THREE.Mesh(new THREE.ConeGeometry(0.022,0.1,4),hairM);
+        bang.position.set(-0.09+i*0.06,1.65,0.15);
+        bang.rotation.x=-0.45;
+        hairG.add(bang);
+      }
+        } else if(hs===8){
+      // Основа
+      const h=new THREE.Mesh(new THREE.SphereGeometry(0.213,14,12,0,Math.PI*2,0,Math.PI*0.62),hairM);
+      h.position.y=1.545;hairG.add(h);
+      
+      // Дреды — 16 штук по кругу, разной длины
+      for(let i=0;i<16;i++){
+        const a=(i/16)*Math.PI*2;
+        const len=0.3+Math.random()*0.2;
+        const r=0.19;
+        const dread=new THREE.Mesh(new THREE.CylinderGeometry(0.018,0.008,len,5),hairM);
+        dread.position.set(Math.cos(a)*r, 1.35-len/2+0.05, Math.sin(a)*r);
+        dread.rotation.z=Math.cos(a)*0.3;
+        dread.rotation.x=Math.sin(a)*0.3;
+        hairG.add(dread);
+        
+        // Узелки на каждом третьем дредов
+        if(i%3===0){
+          const knotColor = custom.accColor || '#c04060';
+          const knot=new THREE.Mesh(new THREE.TorusGeometry(0.02,0.006,4,8),
+            new THREE.MeshStandardMaterial({color: knotColor}));
+          knot.position.set(Math.cos(a)*r, 1.35-len*0.7, Math.sin(a)*r);
+          knot.rotation.x=Math.PI/2;
+          hairG.add(knot);
+        }
+      }
+      
+      // Дреды на макушке (короткие)
+      for(let i=0;i<5;i++){
+        const a=(i/5)*Math.PI*2;
+        const top=new THREE.Mesh(new THREE.CylinderGeometry(0.015,0.008,0.25,5),hairM);
+        top.position.set(Math.cos(a)*0.08, 1.68, Math.sin(a)*0.08);
+        top.rotation.z=Math.cos(a)*0.4;
+        top.rotation.x=Math.sin(a)*0.4;
+        hairG.add(top);
+      }
+        } else if(hs===9){
+      // Купол
+      const h=new THREE.Mesh(new THREE.SphereGeometry(0.213,14,12,0,Math.PI*2,0,Math.PI*0.62),hairM);
+      h.position.y=1.545;hairG.add(h);
+      
+      // Чёлка — 6 прядей
+      for(let i=0;i<6;i++){
+        const bang=new THREE.Mesh(new THREE.ConeGeometry(0.024,0.12,4),hairM);
+        bang.position.set(-0.12+i*0.048, 1.66, 0.15);
+        bang.rotation.x=-0.45;
+        bang.rotation.z=(i-2.5)*0.07;
+        hairG.add(bang);
+      }
+      
+      // Два хвоста — по 6 прядей
+      for(const side of [-1,1]){
+        const tie=new THREE.Mesh(new THREE.TorusGeometry(0.04,0.012,5,8),
+          new THREE.MeshStandardMaterial({color:0xc04060}));
+        tie.position.set(side*0.2,1.6,-0.05); tie.rotation.y=Math.PI/2; hairG.add(tie);
+        
+        for(let i=0;i<6;i++){
+          const strand=new THREE.Mesh(
+            new THREE.CylinderGeometry(0.014+Math.random()*0.01, 0.004, 0.28+Math.random()*0.18, 5),
+            hairM);
+          strand.position.set(
+            side*(0.19+i*0.016),
+            1.35-i*0.05+Math.random()*0.03,
+            -0.1-Math.random()*0.05
+          );
+          strand.rotation.z=side*(0.3+i*0.05);
+          strand.rotation.x=-0.2+Math.random()*0.15;
+          hairG.add(strand);
+        }
       }
     }
   }
@@ -5204,28 +5677,331 @@ function createChar(color,custom){
     tailGroup.add(tailTip);
     g.add(tailGroup);
   }
-
-  if(custom.acc>0 && !isWolf){
-    const aM=new THREE.MeshStandardMaterial({color:custom.accColor,roughness:0.7});
-    if(custom.acc===1){
-      const n=new THREE.Mesh(new THREE.TorusGeometry(0.13,0.015,5,10),aM);
-      n.position.y=1.25;n.rotation.x=Math.PI/2.3;g.add(n);
-      const pend=new THREE.Mesh(new THREE.OctahedronGeometry(0.025,0), new THREE.MeshStandardMaterial({color:0xffd040,metalness:0.8,roughness:0.2}));
-      pend.position.set(0,1.17,0.14);g.add(pend);
-    } else if(custom.acc===2){
-      const s=new THREE.Mesh(new THREE.TorusGeometry(0.1,0.05,5,10),aM);
-      s.position.y=1.3;s.rotation.x=Math.PI/2.1;g.add(s);
-    } else if(custom.acc===3){
-      const c=new THREE.Mesh(new THREE.CapsuleGeometry(0.24,0.6,4,10,true), new THREE.MeshStandardMaterial({color:custom.accColor,roughness:0.9,side:THREE.DoubleSide}));
-      c.position.y=1.05;c.scale.set(1,1,0.4);g.add(c);
-    } else if(custom.acc===4){
-      const bag=new THREE.Mesh(new THREE.BoxGeometry(0.15,0.2,0.08),aM);
-      bag.position.set(0.2,1.0,-0.1);g.add(bag);
-    } else if(custom.acc===5){
-      const blt=new THREE.Mesh(new THREE.TorusGeometry(0.22,0.02,5,12),aM);
-      blt.position.y=0.78;blt.rotation.x=Math.PI/2;g.add(blt);
+  /* ============ ОСОБЕННОСТИ РАСЫ (кроме волка) ============ */
+  if (!isWolf && species !== 'human') {
+    
+    /* --- ВАМПИР --- */
+    if (species === 'vampire') {
+      const fangM = new THREE.MeshStandardMaterial({color:0xffffff, roughness:0.25});
+      // Клыки под губой
+      for (const side of [-1,1]) {
+        const fang = new THREE.Mesh(new THREE.ConeGeometry(0.008,0.03,4), fangM);
+        fang.position.set(side*0.022, 1.428, 0.195);
+        fang.rotation.x = Math.PI;
+        g.add(fang);
+      }
+      // Заострённые уши
+      for (const side of [-1,1]) {
+        const ear = new THREE.Mesh(new THREE.ConeGeometry(0.035,0.09,4), skinM);
+        ear.position.set(side*0.185, 1.60, 0);
+        ear.rotation.z = side*-0.5;
+        ear.rotation.x = -0.2;
+        g.add(ear);
+      }
+    }
+    
+    /* --- ДЕМОН --- */
+    else if (species === 'demon') {
+      const hornM = new THREE.MeshStandardMaterial({color:0x1a0505, roughness:0.5, metalness:0.1});
+      // Рога
+      for (const side of [-1,1]) {
+        const horn = new THREE.Mesh(new THREE.ConeGeometry(0.05,0.30,6), hornM);
+        horn.position.set(side*0.11, 1.78, 0);
+        horn.rotation.z = side*0.35;
+        horn.rotation.x = -0.15;
+        g.add(horn);
+      }
+      // Острые уши
+      for (const side of [-1,1]) {
+        const ear = new THREE.Mesh(new THREE.ConeGeometry(0.04,0.13,5), skinM);
+        ear.position.set(side*0.19, 1.58, -0.02);
+        ear.rotation.z = side*-0.4;
+        ear.rotation.x = -0.15;
+        g.add(ear);
+      }
+      // Хвост с лопаткой
+      const tailM = new THREE.MeshStandardMaterial({color:0x3a0a0a, roughness:0.7});
+      const tailBase = new THREE.Mesh(new THREE.CapsuleGeometry(0.03,0.32,3,6), tailM);
+      tailBase.position.set(0, 0.68, -0.2);
+      tailBase.rotation.x = 0.8;
+      g.add(tailBase);
+      const tailTip = new THREE.Mesh(new THREE.ConeGeometry(0.05,0.13,5), tailM);
+      tailTip.position.set(0, 0.44, -0.42);
+      tailTip.rotation.x = Math.PI + 0.4;
+      g.add(tailTip);
+    }
+    
+    /* --- НЕКО --- */
+    else if (species === 'neko') {
+      const earM = new THREE.MeshStandardMaterial({color:custom.hairColor, roughness:0.9});
+      const innerM = new THREE.MeshStandardMaterial({color:0xff9aa8, roughness:0.8});
+      // Кошачьи уши
+      for (const side of [-1,1]) {
+        const ear = new THREE.Mesh(new THREE.ConeGeometry(0.055,0.14,4), earM);
+        ear.position.set(side*0.13, 1.74, 0);
+        ear.rotation.z = side*0.25;
+        g.add(ear);
+        const inner = new THREE.Mesh(new THREE.ConeGeometry(0.028,0.09,4), innerM);
+        inner.position.set(side*0.13, 1.74, 0.025);
+        inner.rotation.z = side*0.25;
+        g.add(inner);
+      }
+      // Кошачий хвост
+      const tailM = new THREE.MeshStandardMaterial({color:custom.hairColor, roughness:0.9});
+      const tail = new THREE.Mesh(new THREE.CapsuleGeometry(0.03,0.38,3,6), tailM);
+      tail.position.set(0.05, 0.7, -0.25);
+      tail.rotation.x = 0.5;
+      tail.rotation.z = 0.4;
+      g.add(tail);
+      const tip = new THREE.Mesh(new THREE.SphereGeometry(0.045,6,5), tailM);
+      tip.position.set(0.2, 0.55, -0.36);
+      g.add(tip);
+    }
+    
+    /* --- КРОЛИК --- */
+    else if (species === 'bunny') {
+      const earM = new THREE.MeshStandardMaterial({color:custom.hairColor, roughness:0.9});
+      const innerM = new THREE.MeshStandardMaterial({color:0xff9aa8, roughness:0.8});
+      // Длинные уши
+      for (const side of [-1,1]) {
+        const ear = new THREE.Mesh(new THREE.CapsuleGeometry(0.032,0.3,4,8), earM);
+        ear.position.set(side*0.075, 1.88, -0.02);
+        ear.rotation.z = side*0.12;
+        ear.rotation.x = -0.1;
+        g.add(ear);
+        const inner = new THREE.Mesh(new THREE.CapsuleGeometry(0.018,0.24,4,8), innerM);
+        inner.position.set(side*0.075, 1.88, 0);
+        inner.rotation.z = side*0.12;
+        inner.rotation.x = -0.1;
+        g.add(inner);
+      }
+      // Пушистый хвост
+      const tailM = new THREE.MeshStandardMaterial({color:0xffffff, roughness:1});
+      const tail = new THREE.Mesh(new THREE.SphereGeometry(0.09,8,6), tailM);
+      tail.position.set(0, 0.78, -0.22);
+      g.add(tail);
+    }
+    
+    /* --- СКЕЛЕТ --- */
+    else if (species === 'skeleton') {
+      const socketM = new THREE.MeshBasicMaterial({color:0x0a0a0a});
+      const glowEyeM = new THREE.MeshBasicMaterial({color:custom.eyeColor});
+      // Тёмные глазницы и светящиеся зрачки
+      for (const side of [-1,1]) {
+        const socket = new THREE.Mesh(new THREE.CircleGeometry(0.055, 12), socketM);
+        socket.position.set(side*0.075, 1.55, 0.185);
+        g.add(socket);
+        const glowEye = new THREE.Mesh(new THREE.SphereGeometry(0.014, 6, 6), glowEyeM);
+        glowEye.position.set(side*0.075, 1.55, 0.2);
+        g.add(glowEye);
+      }
+      // Носовая полость
+      const noseHole = new THREE.Mesh(new THREE.SphereGeometry(0.018,6,5), socketM);
+      noseHole.scale.set(1,1.4,0.5);
+      noseHole.position.set(0, 1.485, 0.195);
+      g.add(noseHole);
     }
   }
+ if(custom.acc>0 && !isWolf){
+  const aM=new THREE.MeshStandardMaterial({color:custom.accColor,roughness:0.7});
+  const aM2=new THREE.MeshStandardMaterial({color:custom.accColor2||'#ffd040',metalness:0.55,roughness:0.35});
+  const glowM=new THREE.MeshStandardMaterial({color:custom.accColor,emissive:custom.accColor,
+    emissiveIntensity:1.6,roughness:0.3,transparent:true,opacity:0.92});
+
+  if(custom.acc===1){
+    // Ожерелье
+    const n=new THREE.Mesh(new THREE.TorusGeometry(0.13,0.015,5,10),aM);
+    n.position.y=1.25;n.rotation.x=Math.PI/2.3;g.add(n);
+    const pend=new THREE.Mesh(new THREE.OctahedronGeometry(0.025,0),aM2);
+    pend.position.set(0,1.17,0.14);g.add(pend);
+  } else if(custom.acc===2){
+    // Шарф
+    const s=new THREE.Mesh(new THREE.TorusGeometry(0.1,0.05,5,10),aM);
+    s.position.y=1.3;s.rotation.x=Math.PI/2.1;g.add(s);
+    const tail=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.18,0.02),aM);
+    tail.position.set(0.08,1.16,0.1);tail.rotation.z=0.15;g.add(tail);
+  } else if(custom.acc===3){
+    // Плащ
+    const c=new THREE.Mesh(new THREE.CapsuleGeometry(0.24,0.6,4,10,true),
+      new THREE.MeshStandardMaterial({color:custom.accColor,roughness:0.9,side:THREE.DoubleSide}));
+    c.position.y=1.05;c.scale.set(1,1,0.4);g.add(c);
+    const clasp=new THREE.Mesh(new THREE.SphereGeometry(0.03,8,6),aM2);
+    clasp.position.set(0,1.33,0.18);g.add(clasp);
+  } else if(custom.acc===4){
+    // Сумка
+    const bag=new THREE.Mesh(new THREE.BoxGeometry(0.15,0.2,0.08),aM);
+    bag.position.set(0.2,1.0,-0.1);g.add(bag);
+    const strap=new THREE.Mesh(new THREE.TorusGeometry(0.2,0.012,4,10,Math.PI),aM);
+    strap.position.set(0.05,1.2,-0.04);strap.rotation.y=Math.PI/2;strap.rotation.z=-0.3;g.add(strap);
+    const buckle=new THREE.Mesh(new THREE.BoxGeometry(0.03,0.03,0.02),aM2);
+    buckle.position.set(0.2,1.05,0.03);g.add(buckle);
+  } else if(custom.acc===5){
+    // Ремень
+    const blt=new THREE.Mesh(new THREE.TorusGeometry(0.22,0.02,5,12),aM);
+    blt.position.y=0.78;blt.rotation.x=Math.PI/2;g.add(blt);
+    const buckle=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.05,0.02),aM2);
+    buckle.position.set(0,0.78,0.22);g.add(buckle);
+  } else if(custom.acc===6){
+    // Серьги — прикрепляем к голове
+    const studG=new THREE.SphereGeometry(0.02,6,5);
+    const dropG=new THREE.OctahedronGeometry(0.025,0);
+    const eL=new THREE.Mesh(studG,aM2);eL.position.set(-0.2,1.5,0);head.add(eL);
+    const eR=new THREE.Mesh(studG,aM2);eR.position.set(0.2,1.5,0);head.add(eR);
+    const dL=new THREE.Mesh(dropG,aM);dL.position.set(-0.2,1.44,0);head.add(dL);
+    const dR=new THREE.Mesh(dropG,aM);dR.position.set(0.2,1.44,0);head.add(dR);
+  } else if(custom.acc===7){
+    // Браслеты — на запястьях (внутри elbow-групп)
+    const brG=new THREE.TorusGeometry(0.045,0.012,5,10);
+    const bL=new THREE.Mesh(brG,aM2);
+    bL.position.y=-0.22;bL.rotation.x=Math.PI/2;elbowL.add(bL);
+    const bR=new THREE.Mesh(brG,aM2);
+    bR.position.y=-0.22;bR.rotation.x=Math.PI/2;elbowR.add(bR);
+    // маленький камень
+    const gemG=new THREE.OctahedronGeometry(0.012,0);
+    const gL=new THREE.Mesh(gemG,aM);gL.position.set(0,0.055,0);bL.add(gL);
+    const gR=new THREE.Mesh(gemG,aM);gR.position.set(0,0.055,0);bR.add(gR);
+  } else if(custom.acc===8){
+    // Очки
+    const frameG=new THREE.TorusGeometry(0.052,0.008,6,14);
+    const lensG=new THREE.CircleGeometry(0.048,14);
+    const lensM=new THREE.MeshStandardMaterial({color:custom.accColor,
+      transparent:true,opacity:0.42,roughness:0.08,metalness:0.4});
+    const fL=new THREE.Mesh(frameG,aM2);
+    fL.position.set(-0.075,1.55,0.205);fL.rotation.y=Math.PI;head.add(fL);
+    const fR=new THREE.Mesh(frameG,aM2);
+    fR.position.set(0.075,1.55,0.205);fR.rotation.y=Math.PI;head.add(fR);
+    const lL=new THREE.Mesh(lensG,lensM);
+    lL.position.set(-0.075,1.55,0.2);lL.rotation.y=Math.PI;head.add(lL);
+    const lR=new THREE.Mesh(lensG,lensM);
+    lR.position.set(0.075,1.55,0.2);lR.rotation.y=Math.PI;head.add(lR);
+    const bridge=new THREE.Mesh(new THREE.CylinderGeometry(0.006,0.006,0.05,4),aM2);
+    bridge.rotation.z=Math.PI/2;bridge.position.set(0,1.55,0.205);head.add(bridge);
+    // дужки
+    for(const side of [-1,1]){
+      const arm=new THREE.Mesh(new THREE.BoxGeometry(0.008,0.008,0.09),aM2);
+      arm.position.set(side*0.13,1.55,0.16);
+      head.add(arm);
+    }
+  } else if(custom.acc===9){
+    // Крылья
+    const wingM=new THREE.MeshStandardMaterial({color:custom.accColor,
+      roughness:0.8,transparent:true,opacity:0.88,side:THREE.DoubleSide,
+      emissive:custom.accColor,emissiveIntensity:0.15});
+    for(const side of [-1,1]){
+      for(let i=0;i<4;i++){
+        const feather=new THREE.Mesh(new THREE.ConeGeometry(0.06,0.36,5),wingM);
+        feather.position.set(side*(0.12+i*0.03),1.15+i*0.06,-0.15-i*0.01);
+        feather.rotation.z=side*(0.35+i*0.18);
+        feather.rotation.x=-0.5;
+        g.add(feather);
+      }
+      // верхнее перо
+      const tip=new THREE.Mesh(new THREE.ConeGeometry(0.05,0.28,5),
+        new THREE.MeshStandardMaterial({color:custom.accColor2||'#ffd040',
+          roughness:0.6,transparent:true,opacity:0.85,side:THREE.DoubleSide}));
+      tip.position.set(side*0.22,1.42,-0.16);
+      tip.rotation.z=side*1.1;
+      tip.rotation.x=-0.4;
+      g.add(tip);
+    }
+  } else if(custom.acc===10){
+    // Нимб
+    const halo=new THREE.Mesh(new THREE.TorusGeometry(0.18,0.018,8,24),glowM);
+    halo.position.y=1.87;halo.rotation.x=Math.PI/2;
+    g.add(halo);
+    const haloL=new THREE.PointLight(new THREE.Color(custom.accColor).getHex(),1.2,2.5,2);
+    haloL.position.y=1.87;g.add(haloL);
+  } else if(custom.acc===11){
+    // Бандана
+    const band=new THREE.Mesh(new THREE.CylinderGeometry(0.212,0.212,0.07,14),aM);
+    band.position.y=1.62;g.add(band);
+    const knot=new THREE.Mesh(new THREE.SphereGeometry(0.035,6,6),aM);
+    knot.position.set(0.16,1.6,-0.1);g.add(knot);
+    const tail1=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.14,0.015),aM);
+    tail1.position.set(0.19,1.52,-0.12);tail1.rotation.z=-0.4;g.add(tail1);
+    const tail2=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.12,0.015),aM);
+    tail2.position.set(0.14,1.5,-0.14);tail2.rotation.z=0.3;g.add(tail2);
+  } else if(custom.acc===12){
+    // Рога
+    for(const side of [-1,1]){
+      const horn=new THREE.Mesh(new THREE.ConeGeometry(0.045,0.22,7),aM);
+      horn.position.set(side*0.12,1.72,0);
+      horn.rotation.z=side*0.35;
+      g.add(horn);
+    }
+  } else if(custom.acc===13){
+    // Оленьи рога
+    for(const side of [-1,1]){
+      const main=new THREE.Mesh(new THREE.CylinderGeometry(0.014,0.022,0.28,6),aM);
+      main.position.set(side*0.1,1.78,0);
+      main.rotation.z=side*0.35;
+      g.add(main);
+      const b1=new THREE.Mesh(new THREE.CylinderGeometry(0.008,0.014,0.16,5),aM);
+      b1.position.set(side*0.18,1.88,0);
+      b1.rotation.z=side*0.9;
+      g.add(b1);
+      const b2=new THREE.Mesh(new THREE.CylinderGeometry(0.007,0.012,0.13,5),aM);
+      b2.position.set(side*0.13,1.94,0.05);
+      b2.rotation.x=0.5;b2.rotation.z=side*0.5;
+      g.add(b2);
+      const tip=new THREE.Mesh(new THREE.SphereGeometry(0.014,5,5),aM2);
+      tip.position.set(side*0.2,1.99,0);g.add(tip);
+    }
+  } else if(custom.acc===14){
+    // Медальон
+    for(let i=0;i<10;i++){
+      const a=i/10*Math.PI*2;
+      const link=new THREE.Mesh(new THREE.SphereGeometry(0.009,5,4),aM2);
+      link.position.set(Math.cos(a)*0.13,1.28+Math.sin(a)*0.035,Math.sin(a)*0.06+0.09);
+      g.add(link);
+    }
+    const med=new THREE.Mesh(new THREE.CylinderGeometry(0.045,0.045,0.012,14),aM2);
+    med.position.set(0,1.17,0.16);med.rotation.x=Math.PI/2;
+    g.add(med);
+    const gem=new THREE.Mesh(new THREE.OctahedronGeometry(0.022,0),aM);
+    gem.position.set(0,1.17,0.18);g.add(gem);
+  } else if(custom.acc===15){
+    // Рюкзак
+    const pack=new THREE.Mesh(new THREE.BoxGeometry(0.22,0.28,0.13),aM);
+    pack.position.set(0,1.05,-0.22);
+    pack.rotation.x=-0.05;
+    g.add(pack);
+    const pocket=new THREE.Mesh(new THREE.BoxGeometry(0.15,0.13,0.02),aM2);
+    pocket.position.set(0,1.0,-0.29);g.add(pocket);
+    const strapM=new THREE.MeshStandardMaterial({color:0x3a2818,roughness:1});
+    for(const side of [-1,1]){
+      const strap=new THREE.Mesh(new THREE.BoxGeometry(0.025,0.38,0.02),strapM);
+      strap.position.set(side*0.11,1.1,0.05);
+      strap.rotation.x=-0.15;
+      g.add(strap);
+    }
+  } else if(custom.acc===16){
+    // Цепочка
+    for(let i=0;i<14;i++){
+      const a=i/14*Math.PI*2;
+      const link=new THREE.Mesh(new THREE.SphereGeometry(0.011,5,4),aM2);
+      link.position.set(Math.cos(a)*0.14,1.28+Math.sin(a)*0.04,Math.sin(a)*0.08+0.07);
+      g.add(link);
+    }
+    const pend=new THREE.Mesh(new THREE.OctahedronGeometry(0.035,0),aM);
+    pend.position.set(0,1.14,0.16);
+    g.add(pend);
+  } else if(custom.acc===17){
+    // Магическое кольцо у ног
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(0.34,0.018,8,28),glowM);
+    ring.position.y=0.03;ring.rotation.x=Math.PI/2;
+    g.add(ring);
+    // малые руны по кольцу
+    for(let i=0;i<6;i++){
+      const a=i/6*Math.PI*2;
+      const rune=new THREE.Mesh(new THREE.OctahedronGeometry(0.022,0),aM2);
+      rune.position.set(Math.cos(a)*0.34,0.06,Math.sin(a)*0.34);
+      g.add(rune);
+    }
+    const ringLight=new THREE.PointLight(new THREE.Color(custom.accColor).getHex(),1.5,3.2,2);
+    ringLight.position.y=0.4;g.add(ringLight);
+  }
+}
 
   if(custom.aura>0){
     const auraColors={1:0xffaa50,2:0x00e5ff,3:0xaa50ff};
@@ -5361,6 +6137,12 @@ class Player{
     this.highlightOn=false;
     this.clanName=null;
     this.spits=[];
+this._blinkTimer = rand(2, 6);
+this._blinkPhase = 0;
+this._jumpAnticipation = 0;
+this._landSquash = 0;
+this._wasAirborne = false;
+this._breathPhase = 0;
     this._toastLight=null;
     this._toastLightT=0;
     this._toastHadItem=null;
@@ -5517,15 +6299,68 @@ class Player{
     const p=this.parts;
     this.group.position.copy(this.pos);this.group.rotation.y=this.yaw;
     const targetY=this.sitting?-0.28:0;
-    this.group.position.y=lerp(this.group.position.y,targetY,Math.min(1,dt*10));
-    if(this.pos.y>0)this.group.position.y=this.pos.y+targetY;
+this.group.position.y=lerp(this.group.position.y,targetY,Math.min(1,dt*10));
+if(this.pos.y>0)this.group.position.y=this.pos.y+targetY;
+
+    // Присед перед прыжком
+    if(this._jumpAnticipation > 0){
+      this._jumpAnticipation -= dt;
+      const squash = 1 + this._jumpAnticipation * 1.5;
+      if(p.torso) p.torso.scale.y = squash;
+      if(p.hipL) p.hipL.position.y = 0.72 - this._jumpAnticipation * 0.6;
+      if(p.hipR) p.hipR.position.y = 0.72 - this._jumpAnticipation * 0.6;
+    }
+
+    // Squash при приземлении
+    if(this.onGround && this._wasAirborne){
+      this._landSquash = 0.15;
+      this._wasAirborne = false;
+    }
+    if(!this.onGround && !this._wasAirborne){
+      this._wasAirborne = true;
+    }
+    if(this._landSquash > 0){
+      this._landSquash -= dt;
+      const sq = 1 - this._landSquash * 0.8;
+      if(p.torso) p.torso.scale.y = sq;
+      if(p.hipL) p.hipL.position.y = 0.72 - this._landSquash * 0.8;
+      if(p.hipR) p.hipR.position.y = 0.72 - this._landSquash * 0.8;
+    } else if(this._jumpAnticipation <= 0){
+      // Плавный возврат в норму
+      if(p.torso && !this._breathPhase) p.torso.scale.y = lerp(p.torso.scale.y, 1, Math.min(1, dt*12));
+      if(p.hipL) p.hipL.position.y = lerp(p.hipL.position.y, 0.72, Math.min(1, dt*12));
+      if(p.hipR) p.hipR.position.y = lerp(p.hipR.position.y, 0.72, Math.min(1, dt*12));
+    }
+
+    // Hip bob при ходьбе
+    if(this.moving && !this.sitting){
+      const bob = Math.abs(Math.sin(this.walkPhase)) * (this.running ? 0.025 : 0.015);
+      this.group.position.y += bob;
+    }
+
+// Покачивание торса
+if(p.torso){
+        const swayTarget = (this.moving && !this.sitting) ? Math.sin(this.walkPhase) * 0.025 : 0;
+  p.torso.rotation.z = lerp(p.torso.rotation.z, swayTarget, Math.min(1, dt*8));
+}
     const hipT=this.sitting?-1.25:0;
-    p.hipL.rotation.x=lerp(p.hipL.rotation.x,hipT,Math.min(1,dt*9));
-    p.hipR.rotation.x=lerp(p.hipR.rotation.x,hipT,Math.min(1,dt*9));
     if(this.moving&&!this.sitting)this.walkPhase+=dt*(this.running?19:12);
     else this.walkPhase=lerp(this.walkPhase%(Math.PI*2),0,Math.min(1,dt*8));
+    // ── Дыхание в покое (только вблизи) ──
+    if(!this.moving && !this.sitting && p.torso && !this.anim && !this._jumpAnticipation && !this._landSquash){
+      const _dist = localPlayer ? this.pos.distanceTo(localPlayer.pos) : 0;
+      const _doBreath = !isMobile || _dist < 40;
+      if(_doBreath){
+        this._breathPhase += dt * 1.6;
+        const breath = Math.sin(this._breathPhase) * 0.012;
+        p.torso.scale.y = 1 + breath;
+      } else {
+        p.torso.scale.y = lerp(p.torso.scale.y, 1, Math.min(1, dt*5));
+      }
+    }
         const sw=Math.sin(this.walkPhase)*(this.moving?(this.running?0.7:0.5):0);
-    p.hipL.rotation.x+=sw;p.hipR.rotation.x-=sw;
+        p.hipL.rotation.x=lerp(p.hipL.rotation.x,hipT+sw,Math.min(1,dt*12));
+    p.hipR.rotation.x=lerp(p.hipR.rotation.x,hipT-sw,Math.min(1,dt*12));
     if(p.kneeL){
   const kneeBase = this.running ? 0.40 : 0;
   const kneeMult = this.running ? 1.55 : 0.85;
@@ -5648,6 +6483,19 @@ if(p.elbowR){
         this.tearMeshes.forEach(t=>t.visible=false);
       }
     }
+    if(p.group.userData.eyeL && p.group.userData.eyeR){
+      this._blinkTimer -= dt;
+      if(this._blinkTimer <= 0){
+        this._blinkTimer = rand(3, 7);
+        this._blinkPhase = 0.12;
+      }
+      if(this._blinkPhase > 0){
+        this._blinkPhase -= dt;
+        const s = Math.max(0.05, this._blinkPhase / 0.12);
+        p.group.userData.eyeL.scale.y = 1.05 * s;
+        p.group.userData.eyeR.scale.y = 1.05 * s;
+      }
+    }
     if(this.highlightLight)this.highlightLight.intensity=2+Math.sin(performance.now()*0.008)*0.8;
     if(this._toastLight){
       this._toastLightT-=dt;
@@ -5670,6 +6518,18 @@ if(p.elbowR){
         this.emojiSprite=null;
       }
     }
+    // Движение рта при речи
+    if(p.group.userData.mouthMesh){
+      if(this.bubbleSprite){
+        const speakPhase = performance.now() * 0.012;
+        const open = 0.5 + Math.abs(Math.sin(speakPhase)) * 0.8;
+        p.group.userData.mouthMesh.scale.y = open;
+      } else {
+        p.group.userData.mouthMesh.scale.y = lerp(
+          p.group.userData.mouthMesh.scale.y, 1, Math.min(1, dt*10)
+        );
+      }
+    }
     if(this.bubbleSprite){
       this.bubbleTime-=dt;
       this.bubbleSprite.position.y=2.4+Math.sin(performance.now()*0.003)*0.03;
@@ -5683,11 +6543,13 @@ if(p.elbowR){
     }
     this.updateSpits(dt);
   }
-  rebuild(custom){
+    rebuild(custom, targetScene){
     this.custom=cloneC(custom||DEFAULT_CUSTOM);
     scene.remove(this.group);
+    if(previewScene) previewScene.remove(this.group);
     const parts=createChar(this.color,this.custom);
-    this.parts=parts;this.group=parts.group;scene.add(this.group);
+    this.parts=parts;this.group=parts.group;
+    (targetScene||scene).add(this.group);
     this._refreshTag();
     this.clanTagSprite=null;
     const it=this.item;
@@ -5885,7 +6747,9 @@ document.addEventListener('wheel',e=>{
 function doJump(){
   if(!localPlayer||!localPlayer.onGround)return;
   if(localPlayer.sitting){localPlayer.sitting=false;localPlayer.sitGround=false;localPlayer.seat=-1;}
-  localPlayer.velY=5.0;localPlayer.onGround=false;snd.jump();
+  localPlayer.velY=5.0;localPlayer.onGround=false;
+  localPlayer._jumpAnticipation = 0.08;
+  snd.jump();
 }
 
 function contextAction(){
@@ -6306,8 +7170,8 @@ function setupMobileControls(){
   $('#chatToggle').style.display='none';
   let joyId=null,joyCx=0,joyCy=0;
   let lookId=null,lastX=0,lastY=0;
-  function isUiTarget(target){
-    return target.closest('.hud,.fab,.mgame,#editor,#leaflet,#joyBase,#mobileBtns,#mZoomCtrl,#mCamCtrl,.modal,#chatbox,#chatToggle,#inviteContainer,#emobar,#inv,#chatSend,#fortuneReveal');
+   function isUiTarget(target){
+    return target.closest('.hud,.fab,.mgame,#editor,#leaflet,#joyBase,#mobileBtns,#mZoomCtrl,#mCamCtrl,.modal,#chatbox,#chatToggle,#inviteContainer,#emobar,#inv,#chatSend,#fortuneReveal,#hint,#islandExitBtn');
   }
   document.addEventListener('touchstart',e=>{
     if(document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA')return;
@@ -6397,6 +7261,66 @@ function setupMobileControls(){
   },{passive:false});
 }
 function setCamDist(d){camDist=clamp(d,1.5,10);}
+
+/* === Тап по сцене (мобильные): подбор предмета === */
+const tapRaycaster=new THREE.Raycaster();
+const tapNDC=new THREE.Vector2();
+let tapStartInfo=null;
+function handleSceneTap(cx,cy){
+  if(!localPlayer) return false;
+  const rect=renderer.domElement.getBoundingClientRect();
+  if(rect.width===0||rect.height===0) return false;
+  tapNDC.x=((cx-rect.left)/rect.width)*2-1;
+  tapNDC.y=-((cy-rect.top)/rect.height)*2+1;
+  tapRaycaster.setFromCamera(tapNDC,camera);
+  const groups=[];
+  for(const it of groundItems){
+    if(!it.active||!it.group||!it.group.visible||!it.group.parent) continue;
+    if(it.pos.distanceTo(localPlayer.pos)>40) continue;
+    groups.push(it.group);
+  }
+  if(groups.length){
+    const hits=tapRaycaster.intersectObjects(groups,true);
+    if(hits.length){
+      let o=hits[0].object,item=null;
+      while(o){ if(o.userData&&o.userData.groundItem){item=o.userData.groundItem;break;} o=o.parent; }
+      if(item){
+        if(localPlayer.pos.distanceTo(item.pos)<=3.2) pickUpItem(item);
+        else showToast('Подойди ближе к предмету');
+        return true;
+      }
+    }
+  }
+  return false;
+}
+if(isMobile){
+  const __cv=renderer.domElement;
+  __cv.addEventListener('touchstart',e=>{
+    if(e.touches.length!==1){tapStartInfo=null;return;}
+    const t=e.touches[0];
+    tapStartInfo={x:t.clientX,y:t.clientY,t:performance.now(),id:t.identifier,moved:false};
+  },{passive:true});
+  __cv.addEventListener('touchmove',e=>{
+    if(!tapStartInfo)return;
+    for(const t of e.changedTouches){
+      if(t.identifier===tapStartInfo.id&&
+         Math.hypot(t.clientX-tapStartInfo.x,t.clientY-tapStartInfo.y)>14){
+        tapStartInfo.moved=true;
+      }
+    }
+  },{passive:true});
+  __cv.addEventListener('touchend',e=>{
+    if(!tapStartInfo)return;
+    for(const t of e.changedTouches){
+      if(t.identifier===tapStartInfo.id){
+        const dt=performance.now()-tapStartInfo.t;
+        const moved=tapStartInfo.moved;
+        tapStartInfo=null;
+        if(!moved&&dt<450)handleSceneTap(t.clientX,t.clientY);
+      }
+    }
+  },{passive:true});
+}
 
 /* ============ ЧАТ / UI ============ */
 const chatLog=$('#chatlog'),chatInput=$('#chatinput'),invEl=$('#inv'),
@@ -6527,14 +7451,15 @@ $('#chatSend').addEventListener('click',e=>{
   doSendChat();
   chatInput.focus();
 });
-$('#chatTarget').onclick=()=>{
-  if(chatMode==='personal'){
-    const ids=[...players.keys()].filter(k=>k!=='me');
-    if(ids.length===0)return;
-    let i=ids.indexOf(personalTarget);i=(i+1)%ids.length;
-    personalTarget=ids[i];updateChatTargetUI();renderChat();
-  }
-};
+const __hintClickEl=$('#hint');
+if(__hintClickEl){
+  __hintClickEl.addEventListener('click',e=>{
+    if(!isMobile)return;
+    e.stopPropagation();
+    e.preventDefault();
+    if(__hintClickEl.dataset.actionable==='1'&&localPlayer)contextAction();
+  });
+}
 
 /* ============ ИНВЕНТАРЬ / ЭМОДЗИ ============ */
 /* ============ МОНЕТЫ ============ */
@@ -6774,6 +7699,10 @@ $('#editBtn').onclick=()=>{snd.click();openEditor();};
 $('#leafBtn').onclick=()=>{ $('#leaflet').classList.toggle('hidden'); };
 $('#friendBtn').onclick=()=>openFriendsPanel();
 $('#clanBtn').onclick=()=>openClanPanel();
+{
+  const __islBtn=document.getElementById('islandExitBtn');
+  if(__islBtn)__islBtn.onclick=()=>{ if(onClanIsland) teleportFromIsland(); };
+}
 
 /* ============ NPC ============ */
 const NPC_NAMES=['Кот','Ветер','Искра','Тень','Лиса'];
@@ -7210,7 +8139,123 @@ let editorBackup=null;
 let pixelData=null,paintData=null;
 let pixelEditor=null,paintEditor=null;
 let editorTempPlayer=null;
+let previewRenderer=null;
+let previewScene=null;
+let previewCamera=null;
+let previewRafId=null;
+let previewRenderLoop=null;
+let previewRotTarget=0;
+let previewRotCurrent=0;
 
+/* ============ ПРЕВЬЮ В РЕДАКТОРЕ ============ */
+function initPreviewRenderer(){
+  if(previewRenderer) return;
+  const canvas=document.getElementById('editorPreviewCanvas');
+  if(!canvas) return;
+
+  previewRenderer=new THREE.WebGLRenderer({
+    canvas:canvas,
+    antialias:true,
+    alpha:true
+  });
+  previewRenderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  previewRenderer.outputColorSpace=THREE.SRGBColorSpace;
+  previewRenderer.toneMapping=THREE.ACESFilmicToneMapping;
+  previewRenderer.toneMappingExposure=1.35;
+
+  previewScene=new THREE.Scene();
+  previewScene.background=null;
+
+  // Свет: три источника для объёма
+  previewScene.add(new THREE.HemisphereLight(0xffffff,0x334,1.0));
+  const keyL=new THREE.DirectionalLight(0xfff0d0,2.2);
+  keyL.position.set(3,5,4);
+  previewScene.add(keyL);
+  const rimL=new THREE.DirectionalLight(0x88aaff,1.1);
+  rimL.position.set(-3,3,-4);
+  previewScene.add(rimL);
+  previewScene.add(new THREE.AmbientLight(0x8a9ab8,0.4));
+
+  // Камера: чуть сверху, смотрит на уровень груди
+  previewCamera=new THREE.PerspectiveCamera(32,1,0.1,100);
+  previewCamera.position.set(0,1.25,4.5);
+previewCamera.lookAt(0,1.05,0);
+
+  // Пол-круг под ногами
+  const ground=new THREE.Mesh(
+    new THREE.CircleGeometry(1.2,32),
+    new THREE.MeshBasicMaterial({color:0x1a1410,transparent:true,opacity:0.55})
+  );
+  ground.rotation.x=-Math.PI/2;
+  ground.position.y=0.01;
+  previewScene.add(ground);
+
+  // Размеры
+  const w=canvas.clientWidth, h=canvas.clientHeight;
+  if(w&&h){
+    previewRenderer.setSize(w,h,false);
+    previewCamera.aspect=w/h;
+    previewCamera.updateProjectionMatrix();
+  }
+
+  // ── Вращение мышью / пальцем ──
+  let dragging=false, lastX=0;
+  const onDown=(x)=>{dragging=true;lastX=x;canvas.style.cursor='grabbing';};
+  const onMove=(x)=>{
+    if(!dragging)return;
+    previewRotTarget+=(x-lastX)*0.012;
+    lastX=x;
+  };
+  const onUp=()=>{dragging=false;canvas.style.cursor='grab';};
+
+  canvas.addEventListener('mousedown',e=>{e.preventDefault();onDown(e.clientX);});
+  window.addEventListener('mousemove',e=>onMove(e.clientX));
+  window.addEventListener('mouseup',onUp);
+  canvas.addEventListener('touchstart',e=>{
+    if(e.touches.length!==1)return;
+    onDown(e.touches[0].clientX);
+  },{passive:true});
+  window.addEventListener('touchmove',e=>{
+    if(e.touches.length!==1)return;
+    onMove(e.touches[0].clientX);
+  },{passive:true});
+  window.addEventListener('touchend',onUp);
+
+  // ── Цикл рендера ──
+  previewRenderLoop=()=>{
+    if(!previewRenderer||!document.getElementById('editor').classList.contains('show')){
+      previewRafId=null;
+      return;
+    }
+    previewRafId=requestAnimationFrame(previewRenderLoop);
+
+    // Пересчёт размеров при изменении окна
+    const cw=canvas.clientWidth, ch=canvas.clientHeight;
+    const pr=previewRenderer.getPixelRatio();
+    if(cw&&ch&&(canvas.width!==Math.floor(cw*pr)||canvas.height!==Math.floor(ch*pr))){
+      previewRenderer.setSize(cw,ch,false);
+      previewCamera.aspect=cw/ch;
+      previewCamera.updateProjectionMatrix();
+    }
+
+    // Анимация модели (моргание, дыхание) + вращение
+        if(editorTempPlayer){
+      // Страховка: если модель ушла из previewScene — вернуть
+      if(editorTempPlayer.group.parent !== previewScene){
+        if(editorTempPlayer.group.parent) editorTempPlayer.group.parent.remove(editorTempPlayer.group);
+        previewScene.add(editorTempPlayer.group);
+        if(editorTempPlayer.tag) editorTempPlayer.tag.visible = false;
+      }
+      editorTempPlayer.updateVisual(0.016);
+      previewRotCurrent+=(previewRotTarget-previewRotCurrent)*0.18;
+      editorTempPlayer.group.rotation.y=previewRotCurrent;
+      editorTempPlayer.group.position.set(0,0,0);
+      editorTempPlayer.group.visible=true;
+    }
+
+    previewRenderer.render(previewScene,previewCamera);
+  };
+}
 function buildPixelEditorGeneric(canvasId,colorInputId,getDataFn,setDataFn){
   const canvas=$(canvasId);
   if(!canvas)return null;
@@ -7293,7 +8338,12 @@ function buildPresetGrid(){
   });
 }
 function updateEditorPreview(){
-  if(editorTempPlayer){editorTempPlayer.rebuild(currentCustom);}
+  if(!editorTempPlayer) return;
+  editorTempPlayer.rebuild(currentCustom, previewScene);
+  editorTempPlayer.group.position.set(0,0,0);
+  editorTempPlayer.group.rotation.y = previewRotCurrent;
+  editorTempPlayer.group.visible = true;
+  if(editorTempPlayer.tag) editorTempPlayer.tag.visible = false;
 }
 function syncEditorUI(){
   $$('#editor [data-grp]').forEach(row=>{
@@ -7302,7 +8352,7 @@ function syncEditorUI(){
     [...row.children].forEach(b=>{
       const bv=b.dataset.val;
       let on=false;
-      if(['beard','hairStyle','hat','shirtStyle','pantsStyle','acc','aura'].includes(grp))
+            if(['beard','hairStyle','hat','shirtStyle','pantsStyle','acc','aura','eyeGlow'].includes(grp))
         on=parseInt(bv)===parseInt(val);
       else on=bv===val;
       b.classList.toggle('on',on);
@@ -7314,16 +8364,14 @@ function syncEditorUI(){
   if($('#cShirt')){$('#cShirt').value=currentCustom.shirtColor;$('#cShirtVal').textContent=currentCustom.shirtColor;}
   if($('#cPants')){$('#cPants').value=currentCustom.pantsColor;$('#cPantsVal').textContent=currentCustom.pantsColor;}
   if($('#cAcc')){$('#cAcc').value=currentCustom.accColor;$('#cAccVal').textContent=currentCustom.accColor;}
+if($('#cAcc2')){const _a2=currentCustom.accColor2||'#ffd040';$('#cAcc2').value=_a2;$('#cAcc2Val').textContent=_a2;}
 }
 function openEditor(){
-  if(!localPlayer){
-    const tmpColor=new THREE.Color().setHSL(rand(0,1),0.45,0.5).getHex();
-    editorTempPlayer=new Player({id:'editor_temp',name:'—',color:tmpColor,isLocal:true,custom:currentCustom});
-    editorTempPlayer.pos.set(0,0,100);
-    editorTempPlayer.group.visible=false;
-  }
+  // 1) Бэкап и синхронизация вкладок
   editorBackup=cloneC(currentCustom);
   buildPresetGrid();syncEditorUI();
+
+  // 2) Пиксельные редакторы (узор и раскраска)
   pixelData=(currentCustom.shirtPixels&&Array.isArray(currentCustom.shirtPixels))
     ?currentCustom.shirtPixels.slice():new Array(256).fill(null);
   paintData=(currentCustom.paintPixels&&Array.isArray(currentCustom.paintPixels))
@@ -7332,8 +8380,48 @@ function openEditor(){
     ()=>pixelData,(d)=>{pixelData=d;});
   paintEditor=buildPixelEditorGeneric('#paintCanvas','#paintColor',
     ()=>paintData,(d)=>{paintData=d;});
+
+  // 3) Сначала показываем панель — иначе canvas превью размером 0×0
   $('#editor').classList.add('show');
   if(document.pointerLockElement)document.exitPointerLock();
+
+  // 4) Инициализируем preview-рендерер (если ещё не)
+  if(typeof initPreviewRenderer==='function') initPreviewRenderer();
+
+  // 5) Пересоздаём preview-модель
+  if(editorTempPlayer){
+    if(editorTempPlayer.group.parent) editorTempPlayer.group.parent.remove(editorTempPlayer.group);
+    editorTempPlayer=null;
+  }
+  const tmpColor = localPlayer
+    ? localPlayer.color
+    : new THREE.Color().setHSL(rand(0,1),0.45,0.5).getHex();
+  editorTempPlayer=new Player({
+    id:'editor_temp',
+    name:'—',
+    color:tmpColor,
+    isLocal:true,
+    custom:currentCustom
+  });
+
+  // Перенести из основной сцены в preview
+  if(editorTempPlayer.group.parent) editorTempPlayer.group.parent.remove(editorTempPlayer.group);
+  if(previewScene) previewScene.add(editorTempPlayer.group);
+  editorTempPlayer.group.position.set(0,0,0);
+  editorTempPlayer.group.rotation.y=0;
+  editorTempPlayer.group.visible=true;
+
+  // Скрыть тег с именем
+  if(editorTempPlayer.tag) editorTempPlayer.tag.visible=false;
+
+  // 6) Сброс вращения на «фас»
+  previewRotTarget=0;
+  previewRotCurrent=0;
+
+  // 7) Запуск цикла рендера превью
+  if(!previewRafId && typeof previewRenderLoop==='function'){
+    previewRafId=requestAnimationFrame(previewRenderLoop);
+  }
 }
 function closeEditor(save){
   if(save){
@@ -7350,16 +8438,31 @@ function closeEditor(save){
       showToast('Сохранено');
     }
   } else currentCustom=cloneC(editorBackup);
+    // 1) Скрываем панель редактора
   $('#editor').classList.remove('show');
+
+  // 2) Убираем модель из правильной сцены (previewScene)
   if(editorTempPlayer){
-    scene.remove(editorTempPlayer.group);
-    editorTempPlayer=null;
+    if(editorTempPlayer.group.parent){
+      editorTempPlayer.group.parent.remove(editorTempPlayer.group);
+    }
+    editorTempPlayer = null;
   }
+
+  // 3) Останавливаем цикл рендера превью
+  if(previewRafId){
+    cancelAnimationFrame(previewRafId);
+    previewRafId = null;
+  }
+
+  // 4) Сбрасываем вращение — следующее открытие начнётся с «фас»
+  previewRotTarget = 0;
+  previewRotCurrent = 0;
 }
 $$('#editor [data-grp] button').forEach(b=>{
   b.onclick=()=>{
     const row=b.parentElement;const grp=row.dataset.grp;const v=b.dataset.val;
-    if(['beard','hairStyle','hat','shirtStyle','pantsStyle','acc','aura'].includes(grp))
+        if(['beard','hairStyle','hat','shirtStyle','pantsStyle','acc','aura','eyeGlow'].includes(grp))
       currentCustom[grp]=parseInt(v);
     else currentCustom[grp]=v;
     [...row.children].forEach(x=>x.classList.toggle('on',x===b));
@@ -7372,6 +8475,7 @@ if($('#cSkin'))$('#cSkin').oninput=e=>{currentCustom.skinColor=e.target.value;$(
 if($('#cShirt'))$('#cShirt').oninput=e=>{currentCustom.shirtColor=e.target.value;$('#cShirtVal').textContent=e.target.value;updateEditorPreview();};
 if($('#cPants'))$('#cPants').oninput=e=>{currentCustom.pantsColor=e.target.value;$('#cPantsVal').textContent=e.target.value;updateEditorPreview();};
 if($('#cAcc'))$('#cAcc').oninput=e=>{currentCustom.accColor=e.target.value;$('#cAccVal').textContent=e.target.value;updateEditorPreview();};
+if($('#cAcc2'))$('#cAcc2').oninput=e=>{currentCustom.accColor2=e.target.value;$('#cAcc2Val').textContent=e.target.value;updateEditorPreview();};;
 $('#clrPixels').onclick=()=>{if(pixelEditor)pixelEditor.clear();};
 $('#fillShirt').onclick=()=>{
   const c=$('#cShirt').value;
@@ -9991,8 +11095,8 @@ const _topWork=new THREE.Color(),_botWork=new THREE.Color();
 function updateDN(dt){
   tickAutoSeason();
   const hour = new Date().getUTCHours();
-  const fogBoost = (hour >= 4 && hour <= 8) || (hour >= 18 && hour <= 22) ? 1.5 : 1;
-  scene.fog.density = Math.min((isMobile?0.022:0.018) * fogBoost, 0.04);
+    const fogBoost = (hour >= 4 && hour <= 8) || (hour >= 18 && hour <= 22) ? 1.5 : 1;
+  scene.fog.density = Math.min((isMobile?0.015:0.017) * fogBoost, 0.035);
   worldTime=computeWorldTime();
   const phase=worldTime/FULL_CYCLE;
   const el=Math.sin((phase-0.25)*Math.PI*2);
@@ -10038,9 +11142,10 @@ function updateDN(dt){
   } else {
     scene.background.copy(bot).multiplyScalar(0.4);
   }
-  hemi.intensity=(0.15+dayF*0.6+nightF*0.4)*(isRaining?0.7:1);
-  sunL.intensity=dayF*1.6*(isRaining?0.3:1);
-  moonL.intensity=nightF*0.35;
+    hemi.intensity=(0.24+dayF*0.66+nightF*0.5)*(isRaining?0.72:1);
+  sunL.intensity=dayF*1.75*(isRaining?0.35:1);
+  moonL.intensity=nightF*0.55;
+  baseAmbient.intensity=0.16+nightF*0.18+(isMobile?0.12:0);
   const orbitR=200,orbitY=100;
   const sunAngle=phase*Math.PI*2-Math.PI/2;
   const moonAngle=sunAngle+Math.PI;
@@ -10070,7 +11175,7 @@ function updateDN(dt){
     fireBoostGlow.scale.setScalar(1+boostLevel*1.6+boostK*0.4);
     fireBoostGlow.material.opacity=0.10+boostLevel*0.35+boostK*0.12;
   }
-  renderer.toneMappingExposure=1.0+dayF*0.3;
+  renderer.toneMappingExposure=(1.05+dayF*0.35)*(isMobile?1.22:1);
   if(rainPoints){
     rainPoints.visible=isRaining;
     if(isRaining&&localPlayer){
@@ -10627,6 +11732,87 @@ g.add(makeChandelier(10, 0, H - 0.3));
   // сохраняем для пульсации в animate()
   g.userData.ordersBoard = obBoard;
   g.userData.ordersLight = obHalo;
+
+  // ─────── ГЕРБ НА СТЕНЕ (рисуется кодом, без внешних файлов) ───────
+  const crestW = 4;
+  const crestH = 2.2;
+  {
+    const cv = document.createElement('canvas');
+    cv.width = 512; cv.height = 288;
+    const ctx = cv.getContext('2d');
+    // фон
+    ctx.fillStyle = '#2a1a0e';
+    ctx.fillRect(0, 0, 512, 288);
+    // щит
+    ctx.fillStyle = '#8a2a2a';
+    ctx.beginPath();
+    ctx.moveTo(256, 30);
+    ctx.lineTo(460, 80);
+    ctx.lineTo(460, 180);
+    ctx.quadraticCurveTo(460, 240, 256, 260);
+    ctx.quadraticCurveTo(52, 240, 52, 180);
+    ctx.lineTo(52, 80);
+    ctx.closePath();
+    ctx.fill();
+    // золотая обводка щита
+    ctx.strokeStyle = '#ffd060';
+    ctx.lineWidth = 8;
+    ctx.stroke();
+    // звезда в центре
+    ctx.fillStyle = '#ffd060';
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + i * Math.PI / 5;
+      const r = i % 2 === 0 ? 80 : 34;
+      const px = 256 + Math.cos(a) * r;
+      const py = 150 + Math.sin(a) * r;
+      if (i === 0) ctx.moveTo(px, py);
+      else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+    // буква С
+    ctx.fillStyle = '#2a1a0e';
+    ctx.font = 'bold 60px Georgia';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('С', 256, 152);
+
+    const tex = new THREE.CanvasTexture(cv);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const crestMat = new THREE.MeshStandardMaterial({
+      map: tex,
+      roughness: 0.6,
+      metalness: 0.1,
+      emissive: 0xffffff,
+      emissiveMap: tex,
+      emissiveIntensity: 0.15
+    });
+    const crestMesh = new THREE.Mesh(new THREE.PlaneGeometry(crestW, crestH), crestMat);
+    crestMesh.position.set(0, 3.3, -D/2 + 0.22);
+    g.add(crestMesh);
+
+    // рамка
+    const frameM = new THREE.MeshStandardMaterial({color:0x3a2818, roughness:0.9});
+    const fTop = new THREE.Mesh(new THREE.BoxGeometry(crestW + 0.3, 0.15, 0.1), frameM);
+    fTop.position.set(0, 3.3 + crestH/2, -D/2 + 0.25);
+    g.add(fTop);
+    const fBot = fTop.clone();
+    fBot.position.set(0, 3.3 - crestH/2, -D/2 + 0.25);
+    g.add(fBot);
+    const fLeft = new THREE.Mesh(new THREE.BoxGeometry(0.15, crestH, 0.1), frameM);
+    fLeft.position.set(-crestW/2 - 0.075, 3.3, -D/2 + 0.25);
+    g.add(fLeft);
+    const fRight = fLeft.clone();
+    fRight.position.set(crestW/2 + 0.075, 3.3, -D/2 + 0.25);
+    g.add(fRight);
+
+    const crestLight = new THREE.PointLight(0xffe0a0, 1.5, 5, 1.8);
+    crestLight.position.set(0, 3.3, -D/2 + 1.0);
+    g.add(crestLight);
+  }
+  g.position.copy(TAVERN_INTERIOR_POS);
+  g.position.copy(TAVERN_INTERIOR_POS);
   g.position.copy(TAVERN_INTERIOR_POS);
   g.visible = false;
   scene.add(g);
@@ -10961,6 +12147,9 @@ function buildCaveInterior(){
   caveInteriorGroup = g;
 }
 buildCaveInterior();
+
+/* привязка предметов для тапа по сцене */
+groundItems.forEach(it=>{ if(it.group) it.group.userData.groundItem=it; });
 
 function enterInterior(type){
   if(!localPlayer || inInterior) return;
@@ -11378,8 +12567,15 @@ if(clanIslandGroup && clanIslandGroup.visible && clanIslandGroup.userData.clanFi
         hintText='🍻 Поднять тост (Y)';
       }
     }
-    if(hintText){hintTxt.textContent=hintText;hintEl.classList.add('on');}
-    else hintEl.classList.remove('on');
+       if(hintText){
+      hintTxt.textContent=hintText;
+      hintEl.classList.add('on');
+      const __na = hintText.startsWith('🏆')||hintText.startsWith('🍻')||hintText.startsWith('💍');
+      hintEl.dataset.actionable = __na ? '0' : '1';
+    } else {
+      hintEl.classList.remove('on');
+      hintEl.dataset.actionable='0';
+    }
     if(Net.online){
       netTimer+=dt;
       if(netTimer>0.12){netTimer=0;
