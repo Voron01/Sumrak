@@ -7,7 +7,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Сумрак</title>
 
-<title>Сумрак</title>
 <style>
 #inventoryPanel .inv-item{display:flex;flex-direction:column;align-items:center;
   justify-content:center;padding:8px 4px;border-radius:10px;
@@ -245,7 +244,7 @@ input,textarea{-webkit-user-select:text !important;user-select:text !important;t
   background:rgba(0,0,0,.6);border-radius:5px;padding:0 3px}
 #toast{top:60px;left:50%;transform:translateX(-50%);background:rgba(10,13,18,.85);
   border:1px solid rgba(255,180,90,.3);border-radius:20px;padding:8px 18px;font-size:13px;
-  color:#ffd9a4;opacity:0;transition:.4s;z-index:26;pointer-events:none;white-space:nowrap;max-width:80vw}
+  color:#ffd9a4;opacity:0;transition:.4s;z-index:200;pointer-events:none;white-space:nowrap;max-width:80vw}
 #toast.on{opacity:1}
 #minimap{top:14px;right:270px;width:150px;height:150px;border-radius:50%;
   background:rgba(8,11,16,.72);border:2px solid rgba(255,180,90,.32);
@@ -429,9 +428,6 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
 #shootergame .mg-panel{width:min(700px,98vw);background:
   radial-gradient(ellipse at 50% 40%,rgba(30,35,45,.9),rgba(8,10,14,.99));
   border-color:rgba(120,180,255,.4)}
-#shooterCanvas{background:#1a1a22;border-radius:10px;display:block;margin:6px auto;
-  width:100%;height:auto;max-height:55vh;cursor:crosshair;touch-action:none;
-  box-shadow:0 8px 24px rgba(0,0,0,.6)}
 .sh-info{display:flex;justify-content:space-between;font-size:12px;color:#ffd9a4;margin:4px 6px;flex-wrap:wrap;gap:6px}
 .sh-info .hp{color:#ff6060}
 .sh-info .score{color:#70ff70}
@@ -593,7 +589,7 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
   cursor:pointer;padding:0;touch-action:manipulation}
 #canvasColors .cbtn.on{border-color:#fff;box-shadow:0 0 8px rgba(255,255,255,.7);transform:scale(1.15)}
 
-#rainInfo{position:fixed;top:50px;right:270px;z-index:21;background:rgba(10,13,18,.7);
+#rainInfo{position:fixed;top:170px;right:270px;z-index:21;background:rgba(10,13,18,.7);
   border:1px solid rgba(140,180,220,.3);border-radius:10px;padding:6px 10px;font-size:11px;
   color:#a8c8e8;display:none;pointer-events:none}
 #rainInfo.on{display:block}
@@ -604,21 +600,21 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
 #seasonInfo.on{display:block}
 
 /* === Сытость === */
-#hungerHud{top:114px;right:270px;z-index:21;display:flex;align-items:center;gap:6px;
+#hungerHud{top:14px;right:430px;z-index:21;display:flex;align-items:center;gap:6px;
   background:rgba(10,13,18,.7);border:1px solid rgba(255,180,90,.2);border-radius:12px;padding:5px 10px}
 #hungerHud>span{font-size:13px}
 #hungerHud>div{width:90px;height:8px;background:rgba(0,0,0,.5);border-radius:4px;overflow:hidden}
 #hungerFill{height:100%;width:100%;background:linear-gradient(90deg,#c03030,#e0a040,#60c060);transition:width .3s}
 
 /* === Костёр-тотем: счётчик поленьев === */
-#logHud{position:fixed;top:148px;right:270px;z-index:21;
+#logHud{position:fixed;top:206px;right:270px;z-index:21;
   background:rgba(10,13,18,.82);border:1px solid rgba(255,140,60,.55);
   border-radius:12px;padding:6px 12px;font-size:14px;color:#ffb060;
   display:none;pointer-events:none;box-shadow:0 0 14px rgba(255,120,40,.45)}
 #logHud.on{display:block}
 
 /* === Значки гаданий === */
-#fortuneBadges{position:fixed;top:190px;right:270px;z-index:21;
+#fortuneBadges{position:fixed;top:240px;right:270px;z-index:21;
   display:flex;flex-direction:column;gap:5px;pointer-events:none}
 .fb-chip{background:rgba(60,20,80,.72);border:1px solid rgba(180,130,240,.55);
   color:#e0c8ff;border-radius:16px;padding:4px 11px;font-size:12px;
@@ -782,6 +778,12 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
   #mCamCtrl{left:70px;right:auto;top:136px;bottom:auto;transform:none;flex-direction:row;z-index:25;gap:4px}
   #mCamCtrl .mBtn{width:30px;height:30px;font-size:14px}
 }
+/* Фикс: на планшетах (701–1100px) чат не наезжает на инвентарь */
+@media (min-width: 701px) and (max-width: 1100px){
+  #chatbox{
+    width: min(220px, calc(50vw - 170px));
+  }
+}
 /* === Сумрак-сеть === */
 #socialPanel .mg-panel{width:min(560px,98vw)}
 .social-tabs{display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap}
@@ -852,6 +854,18 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
 .msg.mine{background:rgba(255,150,50,.25);align-self:flex-end;color:#ffe9c4}
 .msg .msg-author{font-size:10px;color:#ffc07a;margin-bottom:2px}
 .msg .msg-time{font-size:9px;color:#8e8677;margin-left:6px}
+.msg .msg-text{display:block;word-wrap:break-word}
+.msg .msg-like{
+  display:inline-block;margin-top:5px;padding:1px 9px;
+  background:none;border:1px solid rgba(255,180,90,.25);
+  border-radius:12px;color:#a99d87;font-size:11px;
+  font-family:inherit;cursor:pointer;transition:.15s;
+}
+.msg .msg-like:hover{border-color:rgba(255,100,140,.55);color:#ff8aa0}
+.msg .msg-like.on{
+  color:#ff6a8a;border-color:rgba(255,100,140,.55);
+  background:rgba(255,100,140,.12)
+}
 .group-friend-check{display:flex;align-items:center;gap:6px;padding:5px 6px;
   border-radius:6px;font-size:12px;color:#e0d5bf;cursor:pointer}
 .group-friend-check:hover{background:rgba(255,180,90,.1)}
@@ -1215,7 +1229,8 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
 
 <!-- ============ HUNGER ============ -->
 <div class="hud" id="hungerHud" style="display:none">
-  <div id="hungerFill"></div>
+  <span>🍖</span>
+  <div><div id="hungerFill" style="width:100%"></div></div>
 </div>
 
 <!-- ============ FIRE LOG COUNTER ============ -->
@@ -1394,20 +1409,20 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
     <div class="mg-head"><span>📱 Мини-игры</span><span class="sp"></span>
       <button id="pmClose">Закрыть</button></div>
     <div class="phone-list">
-      <button data-game="social"><span class="em">🌐</span> Сумрак-сеть</button>
-      <button data-game="inventory"><span class="em">🎒</span> Инвентарь</button>
-      <button data-game="durak"><span class="em">🃏</span> Дурак</button>
-      <button data-game="checkers"><span class="em">⚫</span> Шашки</button>
-      <button data-game="tictactoe"><span class="em">❌</span> Крестики-нолики</button>
-      <button data-game="catgame"><span class="em">🐱</span> Котёнок</button>
-      <button data-game="shootergame"><span class="em">🎯</span> Шутер</button>
-      <button data-game="bombergame"><span class="em">💣</span> Бомбер</button>
-      <button data-game="match3game"><span class="em">💎</span> Три в ряд</button>
-      <button data-game="flappygame"><span class="em">🐦</span> Flappy Bird</button>
-      <button data-game="fishinggame"><span class="em">🎣</span> Рыбалка</button>
-      <button data-game="fireinfo"><span class="em">🔥</span> Хранители огня</button>
-<button data-game="records"><span class="em">🏆</span> Рекорды</button>
-    </div>
+  <button data-game="social"><span class="em">🌐</span> Сумрак-сеть</button>
+  <button data-game="inventory"><span class="em">🎒</span> Инвентарь</button>
+  <button data-game="shootergame"><span class="em">🎯</span> Шутер</button>
+  <button data-game="durak"><span class="em">🃏</span> Дурак</button>
+  <button data-game="checkers"><span class="em">⚫</span> Шашки</button>
+  <button data-game="tictactoe"><span class="em">❌</span> Крестики-нолики</button>
+  <button data-game="catgame"><span class="em">🐱</span> Котёнок</button>
+  <button data-game="bombergame"><span class="em">💣</span> Бомбер</button>
+  <button data-game="match3game"><span class="em">💎</span> Три в ряд</button>
+  <button data-game="flappygame"><span class="em">🐦</span> Flappy Bird</button>
+  <button data-game="fishinggame"><span class="em">🎣</span> Рыбалка</button>
+  <button data-game="fireinfo"><span class="em">🔥</span> Хранители огня</button>
+  <button data-game="records"><span class="em">🏆</span> Рекорды</button>
+</div>
   </div>
 </div>
 
@@ -1514,7 +1529,10 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
       <span>💀 <span id="shKills">0</span></span>
       <span id="shRank">Новичок</span>
     </div>
-    <canvas id="shooterCanvas" width="640" height="400"></canvas>
+    <div class="sh-info" style="justify-content:center">
+      <span id="shExtra" style="color:#ffd060"></span>
+      <span id="shAmmo" style="color:#a0d8ff"></span>
+    </div>
     <div class="mg-btns"><button id="shRestart" class="ghost">Заново</button></div>
   </div>
 </div>
@@ -1763,16 +1781,36 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
       }catch(e){}
     },700);
   }
-  function attach(){
+    function attach(){
     var b=document.getElementById('splashBtn');
     if(!b){setTimeout(attach,50);return;}
     b.onclick=goToMenu;
     document.querySelectorAll('#btnSolo,#btnOnline,#btnEditor').forEach(function(btn){
       btn.addEventListener('click',function(ev){
-        if(!window.__sumrakReady){
-          ev.stopImmediatePropagation();
-          window.__showErr('Игра не смогла загрузиться — нет интернета для загрузки Three.js.');
+        if(window.__sumrakReady) return;   // всё ок
+        ev.stopImmediatePropagation();
+        ev.preventDefault();
+        var errBox = document.getElementById('errBox');
+        var errMsg = document.getElementById('errMsg');
+        // Если модуль уже показал реальную ошибку — не перекрываем
+        if(errBox && errBox.style.display === 'block') return;
+        // Иначе — это просто «ещё грузится». Покажем мягкое сообщение и попробуем снова
+        if(errBox && errMsg){
+          errMsg.textContent = 'Игра загружается… Подождите пару секунд.';
+          errBox.style.display = 'block';
         }
+        var waited = 0;
+        var iv = setInterval(function(){
+          waited += 200;
+          if(window.__sumrakReady){
+            clearInterval(iv);
+            if(errBox) errBox.style.display = 'none';
+            btn.click();
+          } else if(waited >= 8000){
+            clearInterval(iv);
+            if(errMsg) errMsg.textContent = 'Загрузка не завершилась за 8 секунд. Проверьте интернет и обновите страницу.';
+          }
+        }, 200);
       },true);
     });
   }
@@ -1886,7 +1924,7 @@ try{
 
 /* ============ ЗВУК ============ */
 class Ambience{
-  constructor(){this.ready=false;}
+  constructor(){this.ready=false; this._noiseBuf=null; this._rainNode=null;}
   init(){
     if(this.ready)return;
     const Ctx=window.AudioContext||window.webkitAudioContext;
@@ -1924,11 +1962,131 @@ class Ambience{
     g.gain.exponentialRampToValueAtTime(0.0001,t+0.32);
     o.connect(g);g.connect(this.master);o.start(t);o.stop(t+0.35);
   }
-  // Всё остальное — заглушки, чтобы старый код не падал
-  setRain(on){}
-  _tone(){return;}
-  gulp(){}crunch(){}swing(){}thud(){}card(){}chip(){}click(){}
-  meow(){}purr(){}jump(){}pickup(){}spit(){}shot(){}inv(){}
+    // ====== Базовые аудио-хелперы ======
+  _ensureAudio(){
+    if(!this.ready || !this.ctx) return false;
+    if(this.ctx.state === 'suspended') this.ctx.resume().catch(()=>{});
+    return true;
+  }
+  _playTone({freq=440, freqEnd=null, dur=0.1, type='sine', vol=0.15, delay=0}={}){
+    if(!this._ensureAudio()) return;
+    const t = this.ctx.currentTime + delay;
+    const o = this.ctx.createOscillator();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t);
+    if(freqEnd !== null){
+      o.frequency.exponentialRampToValueAtTime(Math.max(1, freqEnd), t + dur);
+    }
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(this.master);
+    o.start(t); o.stop(t + dur + 0.02);
+  }
+  _playNoise({dur=0.15, vol=0.12, filterFreq=2000, delay=0}={}){
+    if(!this._ensureAudio()) return;
+    if(!this._noiseBuf){
+      const size = Math.floor(this.ctx.sampleRate * 1.0);
+      this._noiseBuf = this.ctx.createBuffer(1, size, this.ctx.sampleRate);
+      const d = this._noiseBuf.getChannelData(0);
+      for(let i=0;i<size;i++) d[i] = Math.random()*2-1;
+    }
+    const t = this.ctx.currentTime + delay;
+    const src = this.ctx.createBufferSource();
+    src.buffer = this._noiseBuf;
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = filterFreq;
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(vol, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(filter); filter.connect(g); g.connect(this.master);
+    src.start(t); src.stop(t + dur + 0.02);
+  }
+
+  // ====== Игровые звуки ======
+  click(){ this._playTone({freq:660, freqEnd:880, dur:0.06, type:'triangle', vol:0.08}); }
+  chip(){  this._playTone({freq:880, freqEnd:1320, dur:0.09, type:'sine', vol:0.10}); }
+  inv(){   this._playTone({freq:520, freqEnd:780, dur:0.12, type:'sine', vol:0.11}); }
+  gulp(){
+    this._playTone({freq:300, freqEnd:180, dur:0.12, type:'sine', vol:0.18});
+    this._playTone({freq:280, freqEnd:160, dur:0.12, type:'sine', vol:0.15, delay:0.18});
+  }
+  crunch(){
+    this._playNoise({dur:0.12, vol:0.15, filterFreq:1200});
+    this._playNoise({dur:0.10, vol:0.12, filterFreq:900, delay:0.15});
+  }
+  swing(){ this._playNoise({dur:0.18, vol:0.10, filterFreq:1500}); }
+  thud(){  this._playTone({freq:120, freqEnd:50, dur:0.2, type:'sine', vol:0.22}); }
+  card(){  this._playNoise({dur:0.05, vol:0.08, filterFreq:4000}); }
+  jump(){  this._playTone({freq:440, freqEnd:880, dur:0.15, type:'triangle', vol:0.12}); }
+  pickup(){
+    this._playTone({freq:660, freqEnd:990, dur:0.10, type:'sine', vol:0.12});
+    this._playTone({freq:990, freqEnd:1320, dur:0.08, type:'sine', vol:0.09, delay:0.07});
+  }
+  spit(){
+    this._playNoise({dur:0.1, vol:0.10, filterFreq:3000});
+    this._playTone({freq:1500, freqEnd:500, dur:0.08, type:'sine', vol:0.05});
+  }
+  shot(){
+    this._playNoise({dur:0.06, vol:0.18, filterFreq:4000});
+    this._playTone({freq:200, freqEnd:80, dur:0.08, type:'square', vol:0.10});
+  }
+  meow(){
+    if(!this._ensureAudio()) return;
+    const t = this.ctx.currentTime;
+    const o = this.ctx.createOscillator();
+    o.type='sine';
+    o.frequency.setValueAtTime(600, t);
+    o.frequency.exponentialRampToValueAtTime(900, t+0.1);
+    o.frequency.exponentialRampToValueAtTime(500, t+0.4);
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.15, t+0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+0.45);
+    o.connect(g); g.connect(this.master);
+    o.start(t); o.stop(t+0.5);
+  }
+  purr(){
+    if(!this._ensureAudio()) return;
+    const t = this.ctx.currentTime;
+    const o = this.ctx.createOscillator(); o.type='triangle'; o.frequency.value=30;
+    const lfo = this.ctx.createOscillator(); lfo.type='sine'; lfo.frequency.value=22;
+    const lg = this.ctx.createGain(); lg.gain.value=0.08;
+    lfo.connect(lg); lg.connect(o.frequency);
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.linearRampToValueAtTime(0.12, t+0.1);
+    g.gain.exponentialRampToValueAtTime(0.0001, t+1.0);
+    o.connect(g); g.connect(this.master);
+    lfo.start(t); o.start(t); o.stop(t+1.05); lfo.stop(t+1.05);
+  }
+  setRain(on){
+    if(!this._ensureAudio()) return;
+    if(on && !this._rainNode){
+      if(!this._noiseBuf){
+        const size = Math.floor(this.ctx.sampleRate * 2.0);
+        this._noiseBuf = this.ctx.createBuffer(1, size, this.ctx.sampleRate);
+        const d = this._noiseBuf.getChannelData(0);
+        for(let i=0;i<size;i++) d[i] = Math.random()*2-1;
+      }
+      const src = this.ctx.createBufferSource();
+      src.buffer = this._noiseBuf; src.loop = true;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = 'lowpass'; filter.frequency.value = 800;
+      const g = this.ctx.createGain(); g.gain.value = 0.05;
+      src.connect(filter); filter.connect(g); g.connect(this.master);
+      src.start();
+      this._rainNode = {src, g};
+    } else if(!on && this._rainNode){
+      try{ this._rainNode.src.stop(); }catch(e){}
+      this._rainNode = null;
+    }
+  }
+  _tone(freq, dur){
+    this._playTone({freq: freq||440, dur: dur||0.1, type:'sine', vol:0.1});
+  }
 }
 const snd=new Ambience();
 
@@ -1980,7 +2138,7 @@ renderer.setSize(innerWidth,innerHeight);
 renderer.setPixelRatio(isMobile ? 1.0 : Math.min(devicePixelRatio, 1.5));
 renderer.shadowMap.enabled=!isMobile;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMapping=isMobile?THREE.LinearToneMapping:THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure=1.3;
 $('#game').appendChild(renderer.domElement);
 
@@ -2046,7 +2204,7 @@ const interiorAmbient = new THREE.AmbientLight(0xfff2d8, 0);
 scene.add(interiorAmbient);
 const sunL=new THREE.DirectionalLight(0xffd090,0);sunL.position.set(30,40,20);scene.add(sunL);
 const moonL=new THREE.DirectionalLight(0x8fb0e0,0.28);moonL.position.set(-40,50,-40);scene.add(moonL);
-const fireL=new THREE.PointLight(0xff9a3c,5.0,65,1.15);
+const fireL=new THREE.PointLight(0xff9a3c, isMobile?3.2:5.0, isMobile?26:65, 1.15);
 fireL.position.set(0,1.0,0);
 let campfireCoal = null;
 if(!isMobile){fireL.castShadow=true;fireL.shadow.mapSize.set(512,512);fireL.shadow.camera.far = 30;}
@@ -2319,11 +2477,12 @@ function insideRecordBoardZone(x,z){
     {g:new THREE.ConeGeometry(0.95,2.0,7),y:5.7}
   ];
   const N=isMobile?40:120;
-  for(let i=0;i<N;i++){
+    for(let i=0;i<N;i++){
     const a=rand(0,Math.PI*2),d=rand(15,150);
     const px=Math.cos(a)*d,pz=Math.sin(a)*d;
     if(Math.hypot(px-30,pz-20)<18) continue;
     if(Math.hypot(px-6,pz-5)<2.0) continue;
+    if(px>108&&px<152&&pz>-215&&pz<55) continue;
     if(insideTavernZone(px,pz)) continue;
     if(insideRecordBoardZone(px,pz)) continue;
     const t=new THREE.Group();
@@ -2413,7 +2572,7 @@ campfireCoal = coal;
 
 let firePts,fireData;
 {
-  const N=isMobile?70:240;
+  const N=isMobile?50:240;
   const geo=new THREE.BufferGeometry();
   const pos=new Float32Array(N*3),col=new Float32Array(N*3);
   fireData={life:new Float32Array(N),max:new Float32Array(N),vel:new Float32Array(N*3)};
@@ -3186,8 +3345,10 @@ const lanternLights=[];
     const bucketWater=new THREE.Mesh(new THREE.CircleGeometry(0.19,10),
       new THREE.MeshStandardMaterial({color:0x3060a0,roughness:0.2,transparent:true,opacity:0.85}));
     bucketWater.rotation.x=-Math.PI/2;bucketWater.position.set(0.5,0.38,0.3);g.add(bucketWater);
-    const l=new THREE.PointLight(0xffd080,1.2,7,2);
-    l.position.set(0,2.0,0);g.add(l);
+        if(!isMobile){
+      const l=new THREE.PointLight(0xffd080,1.2,7,2);
+      l.position.set(0,2.0,0);g.add(l);
+    }
     g.position.copy(FISHING_SPOT);
     g.rotation.y=Math.PI/2;
     scene.add(g);
@@ -3273,7 +3434,7 @@ const lanternLights=[];
     const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2,0.55),
       new THREE.MeshBasicMaterial({map:signTex,transparent:true,side:THREE.DoubleSide}));
     sign.position.set(0,3.7,0); doorG.add(sign);
-    const pl = new THREE.PointLight(0x8ac8ff, 1.5, 5, 2);
+        const pl = new THREE.PointLight(0x8ac8ff, 1.5, 5, 2);
     pl.position.set(0,2.0,0); doorG.add(pl);
         doorG.position.set(140, 0, 86);
     scene.add(doorG);
@@ -3447,7 +3608,11 @@ const lanternLights=[];
     const a = rand(0,Math.PI*2), d = rand(2, 12);
     spots.push([MX + Math.cos(a)*d, MZ + Math.sin(a)*d]);
   }
-  function spawnMushroom(x,z){
+    function spawnMushroom(x,z){
+    // Не спавним, если рядом уже лежит активный предмет/гриб
+    for(const it of groundItems){
+      if(it.active && Math.hypot(it.pos.x-x, it.pos.z-z) < 0.8) return;
+    }
     const g = new THREE.Group();
     const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.05,0.18,6),
       new THREE.MeshStandardMaterial({color:0xe8d8c0,roughness:0.9}));
@@ -3640,9 +3805,10 @@ let activeCanvasIsNetwork = false;
     new THREE.MeshBasicMaterial({map:signTex,transparent:true,side:THREE.DoubleSide}));
   sign.position.set(0,2.8,0.05);g.add(sign);
 
-  const backLight=new THREE.PointLight(0xffe6a0,1.2,4,1.8);
-  backLight.position.set(0,1.6,0.3);g.add(backLight);
-
+    if(!isMobile){
+    const backLight=new THREE.PointLight(0xffe6a0,1.2,4,1.8);
+    backLight.position.set(0,1.6,0.3);g.add(backLight);
+  }
   g.position.set(7.5,0,6.5);
   g.rotation.y=Math.atan2(0-7.5,0-6.5);
   scene.add(g);
@@ -3670,8 +3836,10 @@ let bulletinBoard=null;
     n.position.set(-0.95+i*0.45,1.75+rand(-0.2,0.2),0.06);
     n.rotation.z=rand(-0.15,0.15);g.add(n);
   }
-  const bl=new THREE.PointLight(0xffd080,1.0,4.5,2);
-  bl.position.set(0,2.0,0.5);g.add(bl);
+    if(!isMobile){
+    const bl=new THREE.PointLight(0xffd080,1.0,4.5,2);
+    bl.position.set(0,2.0,0.5);g.add(bl);
+  }
 
   const signCanvas=document.createElement('canvas');
   signCanvas.width=400;signCanvas.height=72;
@@ -4168,8 +4336,10 @@ function drawRecordBoard(ctx){
     new THREE.MeshBasicMaterial({map:titleTex,transparent:true,side:THREE.DoubleSide})
   );
   titleMesh.position.set(0,3.55,0.06);g.add(titleMesh);
-  const bl=new THREE.PointLight(0xffd080,1.2,5,2);
-  bl.position.set(0,2.2,0.5);g.add(bl);
+    if(!isMobile){
+    const bl=new THREE.PointLight(0xffd080,1.2,5,2);
+    bl.position.set(0,2.2,0.5);g.add(bl);
+  }
   g.position.set(7,0,-12);
   g.rotation.y=Math.atan2(0-7,0-(-12));
   scene.add(g);
@@ -4227,8 +4397,10 @@ const ALTAR_POS = new THREE.Vector3(0, 0, 30);
     const fl = new THREE.Mesh(new THREE.SphereGeometry(0.04,6,6),
       new THREE.MeshBasicMaterial({color:0xffcc66}));
     fl.scale.y=1.7; fl.position.set(x,1.4,z); g.add(fl);
-    const l = new THREE.PointLight(0xffb060,0.6,3,2);
-    l.position.set(x,1.4,z); g.add(l);
+       if(!isMobile){
+      const l = new THREE.PointLight(0xffb060,0.6,3,2);
+      l.position.set(x,1.4,z); g.add(l);
+    }
   }
   const heartM = new THREE.MeshStandardMaterial({color:0xff4060,emissive:0xff2040,
     emissiveIntensity:0.8,roughness:0.5});
@@ -4237,8 +4409,10 @@ const ALTAR_POS = new THREE.Vector3(0, 0, 30);
   const heart2 = heart1.clone(); heart2.position.x = 0.17; g.add(heart2);
   const heart3 = new THREE.Mesh(new THREE.ConeGeometry(0.3,0.45,8),heartM);
   heart3.rotation.z = Math.PI; heart3.position.set(0,1.45,0); g.add(heart3);
-  const heartL = new THREE.PointLight(0xff4060,1.5,4,2);
-  heartL.position.set(0,1.7,0); g.add(heartL);
+    if(!isMobile){
+    const heartL = new THREE.PointLight(0xff4060,1.5,4,2);
+    heartL.position.set(0,1.7,0); g.add(heartL);
+  }
   g.position.copy(ALTAR_POS);
   scene.add(g);
   addCol(ALTAR_POS.x, ALTAR_POS.z, 1.8);
@@ -4325,8 +4499,10 @@ const ALTAR_POS = new THREE.Vector3(0, 0, 30);
       new THREE.MeshBasicMaterial({color: 0xffd080})
     );
     flame.scale.y = 1.8; flame.position.set(cx2, 0.6, cz2); g.add(flame);
-    const l = new THREE.PointLight(0xffb060, 0.55, 3, 2);
-    l.position.set(cx2, 0.6, cz2); g.add(l);
+       if(!isMobile){
+      const l = new THREE.PointLight(0xffb060, 0.55, 3, 2);
+      l.position.set(cx2, 0.6, cz2); g.add(l);
+    }
   }
 
   // 5) Лепестки роз на земле
@@ -4387,8 +4563,10 @@ const ALTAR_POS = new THREE.Vector3(0, 0, 30);
       new THREE.MeshBasicMaterial({color: 0xffa040})
     );
     flame.scale.y = 2; flame.position.y = 2.1; torchG.add(flame);
-    const tl = new THREE.PointLight(0xff9040, 1.8, 6, 1.8);
-    tl.position.set(0, 2.1, 0); torchG.add(tl);
+       if(!isMobile){
+      const tl = new THREE.PointLight(0xff9040, 1.8, 6, 1.8);
+      tl.position.set(0, 2.1, 0); torchG.add(tl);
+    }
     torchG.position.set(side * 4.5, 0, -0.5);
     g.add(torchG);
     addCol(ALTAR_POS.x + side*4.5, ALTAR_POS.z - 0.5, 0.3);
@@ -4601,10 +4779,11 @@ function spawnBreath(){
   const bushM=new THREE.MeshStandardMaterial({color:0x24402a,roughness:1,flatShading:true});
   const bushM2=new THREE.MeshStandardMaterial({color:0x2c4a30,roughness:1,flatShading:true});
   const bushCount=isMobile?25:50;
-  for(let i=0;i<bushCount;i++){
+    for(let i=0;i<bushCount;i++){
     const a=rand(0,Math.PI*2),d=rand(20,160);
     const px=Math.cos(a)*d,pz=Math.sin(a)*d;
     if(Math.hypot(px-29,pz-20)<13) continue;
+    if(px>108&&px<152&&pz>-215&&pz<55) continue;
     if(insideTavernZone(px,pz)) continue;
     if(insideRecordBoardZone(px,pz)) continue;
     const b=new THREE.Mesh(bushG,i%2?bushM:bushM2);
@@ -4618,6 +4797,10 @@ function spawnBreath(){
 
 /* ============ ПРЕДМЕТЫ НА ЗЕМЛЕ ============ */
 function spawnGroundItem(type,x,z){
+  // Не спавним, если рядом уже лежит активный предмет
+  for(const it of groundItems){
+    if(it.active && Math.hypot(it.pos.x-x, it.pos.z-z) < 0.9) return null;
+  }
   const g=new THREE.Group();
   const mesh=makeItemMeshSimple(type);
   g.add(mesh);g.position.set(x,0.1,z);scene.add(g);
@@ -4663,12 +4846,18 @@ function makeItemMeshSimple(type){
       gg.position.set(Math.cos(a)*0.07,0.08+Math.floor(i/3)*0.08,Math.sin(a)*0.07);
       g.add(gg);
     }
-  } else if(type==='carrot'){
+    } else if(type==='carrot'){
     const c=new THREE.Mesh(new THREE.ConeGeometry(0.08,0.3,6),
       new THREE.MeshStandardMaterial({color:0xe07030,roughness:0.6}));
     c.position.y=0.15;c.rotation.z=Math.PI/2;g.add(c);
   } else if(type==='pie'){
-      } else if(type==='mushroom'){
+    const crust=new THREE.Mesh(new THREE.CylinderGeometry(0.14,0.14,0.06,12),
+      new THREE.MeshStandardMaterial({color:0xd4a04a,roughness:0.85}));
+    crust.position.y=0.03;g.add(crust);
+    const filling=new THREE.Mesh(new THREE.CylinderGeometry(0.11,0.11,0.05,12),
+      new THREE.MeshStandardMaterial({color:0x8a2a1a,roughness:0.7}));
+    filling.position.y=0.06;g.add(filling);
+  } else if(type==='mushroom'){
     const stem=new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.045,0.10,6),
       new THREE.MeshStandardMaterial({color:0xe8d8c0,roughness:0.9}));
     stem.position.y=0.05;g.add(stem);
@@ -4682,7 +4871,6 @@ function makeItemMeshSimple(type){
       dot.position.set(rand(-0.05,0.05),0.13,rand(-0.05,0.05));
       g.add(dot);
     }
-  } else if(type==='rod'){
   } else if(type==='rod'){
     const poleM=new THREE.MeshStandardMaterial({color:0x8a5a2a,roughness:0.7});
     const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.015,0.022,1.5,6),poleM);
@@ -4859,7 +5047,7 @@ const ITEM_LABEL={bottle:'Бутылка',meat:'Мясо',apple:'Яблоко',s
   rod:'Удочка',perch:'Окунь',catfish:'Сом',goldfish:'Золотая рыбка',cooked_fish:'Жареная рыба',log:'Полено',
   log_pine:'Хвойное полено',log_mushroom:'Грибное полено',
   bread:'Хлеб', cheese:'Сыр', fish:'Рыба', grape:'Виноград', carrot:'Морковь', pie:'Пирог',
-  crystal:'Кристалл',mushroom:'Гриб'};
+  crystal:'Кристалл',mushroom:'Гриб',ring:'Кольцо',cigarette:'Сигарета'};
 const ITEM_EMOJI={bottle:'🍾',meat:'🍖',apple:'🍎',stick:'🪵',lantern:'🏮',mug:'☕',
   rod:'🎣',perch:'🐟',catfish:'🐡',goldfish:'🐠',cooked_fish:'🍢',log:'🪵',
   log_pine:'🌿',log_mushroom:'🍄',
@@ -4878,8 +5066,10 @@ const itemPositions=[];
 const itemCount=isMobile?25:50;
 for(let i=0;i<itemCount;i++){
   const a=rand(0,Math.PI*2),d=rand(8,120);
+  const px=Math.cos(a)*d, pz=Math.sin(a)*d;
+  if(px>108&&px<152&&pz>-215&&pz<55) continue;
   const types=['apple','meat','mug','bottle','bread','cheese','fish','grape','carrot','pie'];
-  itemPositions.push([Math.cos(a)*d,Math.sin(a)*d,types[randInt(0,types.length-1)]]);
+  itemPositions.push([px, pz, types[randInt(0,types.length-1)]]);
 }
 itemPositions.forEach(([x,z,t])=>spawnGroundItem(t,x,z));
 
@@ -4910,8 +5100,9 @@ itemPositions.forEach(([x,z,t])=>spawnGroundItem(t,x,z));
         const r = Math.random();
     const logType = r < 0.72 ? 'log' : (r < 0.90 ? 'log_pine' : 'log_mushroom');
     const it=spawnGroundItem(logType,x,z);
-    it.group.rotation.y=rand(0,Math.PI*2);
-    placed++;
+if(!it) continue;   // ← если место занято, пробуем следующую точку
+it.group.rotation.y=rand(0,Math.PI*2);
+placed++;
   }
 }
 
@@ -6350,11 +6541,18 @@ function showInvite(type,fromName,fromId,extra={}){
       if(localPlayer)localPlayer.setClanTag(clan.name);
       showToast('Ты в клане '+clan.name);
     }
-    if(type==='game'){
+        if(type==='game'){
       const hostPlayer=players.get(fromId)||{id:fromId,name:fromName};
       if(extra.gameKey==='d'){showMini('durak');Durak.setOpponent(hostPlayer,extra.seed,false);}
       else if(extra.gameKey==='ck'){showMini('checkers');initCheckers();Checkers.setOpponent(hostPlayer,extra.seed,false);}
       else if(extra.gameKey==='tt'){showMini('tictactoe');initTTT();TTT.setOpponent(hostPlayer,extra.seed,false);}
+      else if(extra.gameKey==='sh'){
+        showMini('shootergame');
+        setTimeout(()=>{
+          if(typeof ShooterGame._injectSetupUI==='function') ShooterGame._injectSetupUI();
+          ShooterGame.joinRoom(extra.room, extra.mode||'coop', fromName);
+        },150);
+      }
     }
   };
   card.querySelector('[data-reject]').onclick=()=>{
@@ -6406,7 +6604,9 @@ this._breathPhase = 0;
     this._zzzSprite = null;
     this._sleepTimer = 0;
     this._wakeTimer = 0;
-    this._bedReturn = null;
+        this._bedReturn = null;
+    this.married = false;
+    this.marriedTo = null;
     this.isOnline=true;
     this.lastFishSize=0;
     this.lastFishId=null;
@@ -6433,7 +6633,7 @@ this._breathPhase = 0;
     if(this.married) prefix += '💍 ';
     if(this.clanName){
       const words=this.clanName.split(/\s+/).filter(w=>w);
-      prefix='"'+words.map(w=>w[0].toUpperCase()).join('')+'" ';
+            prefix='"'+words.map(w=>w[0].toUpperCase()).join('')+'" ';
     }
     const fullText=prefix+this.name;
     this.tag=makeTextSprite(fullText,{fontSize:20});
@@ -6859,10 +7059,14 @@ if(p.elbowR){
     const it=this.item;
     this.item=null;this.itemMesh=null;this.handLight=null;
     if(it)this.equip(it);
-    this.emojiSprite=null;this.bubbleSprite=null;this.tearMeshes=[];
+        this.emojiSprite=null;this.bubbleSprite=null;this.tearMeshes=[];
     this.group.visible=!this.isHidden;
     if(this.highlightOn&&this.highlightLight){this.group.add(this.highlightLight);}
     this.tag.position.y=1.72;
+    // ← сохраняем first-person после смены модели
+    if(this.isLocal && firstPerson && this.parts.head){
+      this.parts.head.visible = false;
+    }
   }
 }
 
@@ -6896,22 +7100,21 @@ function makeLocal(name,color,custom){
   localPlayer=p;players.set('me',p);
 
   // Дефолтный спавн — у костра
-  let sx=0, sz=4.6, syaw=Math.PI;
+  let sx=0, sz=4.6, syaw=Math.PI, sy=0;
 
-  try{
+    try{
     const s=JSON.parse(localStorage.getItem('sumrak_pos')||'null');
     if(s && typeof s.x === 'number' && typeof s.z === 'number'){
       const dist = Math.hypot(s.x, s.z);
-      // Берём сохранённую позицию ТОЛЬКО если она в пределах мира
       if(dist < WORLD_RADIUS - 5 && dist > 1.5){
         sx = s.x; sz = s.z;
         if(typeof s.yaw === 'number') syaw = s.yaw;
+        if(typeof s.y === 'number' && s.y >= 0) sy = s.y;
       }
-      // Иначе (остров / интерьер / битые координаты) — спавн у костра
     }
   }catch(e){}
 
-  p.pos.set(sx, 0, sz);
+  p.pos.set(sx, sy, sz);
 // Страховка: принудительный кламп на случай форс-мажора
 {
   const sd = Math.hypot(p.pos.x, p.pos.z);
@@ -6965,8 +7168,16 @@ document.addEventListener('keydown',e=>{
   if(document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA'){
     if(e.key==='Escape')document.activeElement.blur();return;
   }
+    // Не мешать мини-играм
+  if(document.querySelector('.mgame.show, .modal.show, #editor.show')){
+    if(e.code==='Space' && FishingGame.isActive()){
+      e.preventDefault();
+      FishingGame.handleSpace();
+    }
+    return;
+  }
   keys[e.code]=true;
-  if(e.code==='ControlLeft'||e.code==='ControlRight'){e.preventDefault();if(localPlayer)toggleSit();}
+  if(e.code==='ControlLeft'||e.code==='ControlRight'){ if(localPlayer) toggleSit(); }
   if(e.code==='Space'){
     e.preventDefault();
     if(FishingGame.isActive()){FishingGame.handleSpace();return;}
@@ -7057,15 +7268,26 @@ document.addEventListener('keydown',e=>{
     if(emoteMap[e.code])sendEmoji(emoteMap[e.code]);
   }
 });
-document.addEventListener('keyup',e=>{keys[e.code]=false;});
+document.addEventListener('keyup',e=>{
+  keys[e.code]=false;
+  // keyup тоже игнорируем — на случай если keydown был проглочен
+});
 document.addEventListener('mousedown',e=>{
+  if(document.querySelector('.mgame.show, .modal.show, #editor.show')) return;
   if(e.button===0&&pointerLocked&&localPlayer)useItem();
 });
 document.addEventListener('wheel',e=>{
+  if(document.querySelector('.mgame.show, .modal.show, #editor.show')) return;
   if($('#minimap').classList.contains('full')){
-    e.preventDefault();mapZoom=clamp(mapZoom+(e.deltaY>0?-0.1:0.1),0.5,3);mmFrame=99;return;
+    e.preventDefault();
+    mapZoom = clamp(mapZoom + (e.deltaY>0 ? -0.1 : 0.1), 0.5, 3);
+    mmFrame = 99;
+    return;
   }
-  if(pointerLocked&&localPlayer){e.preventDefault();camDist=clamp(camDist+(e.deltaY>0?0.3:-0.3),1.5,10);}
+  if(pointerLocked && localPlayer){
+    e.preventDefault();
+    camDist = clamp(camDist + (e.deltaY>0 ? 0.3 : -0.3), 1.5, 10);
+  }
 },{passive:false});
 
 function doJump(){
@@ -7117,9 +7339,16 @@ function contextAction(){
   if(inInterior === 'tavern' && currentFloor === 1){
     const _cx = TAVERN_INTERIOR_POS.x, _cz = TAVERN_INTERIOR_POS.z;
     const _obsX = _cx - 15 + 4, _obsZ = _cz + 12 - 4;
-    if(Math.hypot(p.pos.x - _obsX, p.pos.z - _obsZ) < 1.5){
-      const night = window.__stars && window.__stars.material.opacity > 0.4;
-      if(!night){
+        if(Math.hypot(p.pos.x - _obsX, p.pos.z - _obsZ) < 1.5){
+      if(isRaining){
+        showToast('🔭 Идёт дождь — звёзд не видно');
+        return;
+      }
+      const _now = new Date();
+      const _secs = _now.getHours()*3600 + _now.getMinutes()*60 + _now.getSeconds();
+      const _phase = _secs / 86400;
+      const _el = Math.sin((_phase - 0.25) * Math.PI * 2);
+      if(_el > 0.15){
         showToast('🔭 Днём звёзд не видно');
         return;
       }
@@ -7198,13 +7427,15 @@ function contextAction(){
     return;
   }
 
-  const isRawFish=p.item==='perch'||p.item==='catfish'||p.item==='goldfish';
+   const isRawFish=p.item==='perch'||p.item==='catfish'||p.item==='goldfish';
   if(isRawFish&&Math.hypot(p.pos.x,p.pos.z)<3.0){
     const fname=p.item;
+    if(inventory[fname] && inventory[fname] > 0) removeFromInventory(fname, 1);
     p.playAnim('swing',0.7);
     snd.crunch();
     setTimeout(()=>{
       p.equip('cooked_fish');
+      addToInventory('cooked_fish', 1);
       p.lastFishId=fname;
       showToast('🍢 Рыба пожарена!');
       if(Net.online)Net.send({t:'equip',i:'cooked_fish'});
@@ -7267,24 +7498,38 @@ function tryMarry(){
     showToast('💍 Нужно кольцо — купи у бармена (20 💰)');
     return;
   }
-  let partner = null;
+    let partner = null;
   for(const p of players.values()){
     if(p.isLocal) continue;
     if(Math.hypot(p.pos.x - localPlayer.pos.x, p.pos.z - localPlayer.pos.z) < 3.5){
       partner = p; break;
     }
   }
+  if(partner && partner.married){                          // ← ДОБАВЛЕНО
+    showToast('💔 ' + partner.name + ' уже в браке');      // ← ДОБАВЛЕНО
+    return;                                                // ← ДОБАВЛЕНО
+  }                                                        // ← ДОБАВЛЕНО
   localPlayer.married = true;
   localPlayer.marriedTo = partner ? partner.name : 'огонь';
-  if(partner){ partner.married = true; partner.marriedTo = localPlayer.name; }
+  if(partner){ 
+    partner.married = true; 
+    partner.marriedTo = localPlayer.name; 
+    partner._refreshTag();            // ← ДОБАВЛЕНО
+  }
+    if(localPlayer.item === 'ring'){
+    localPlayer.equip(null);
+    if(Net.online) Net.send({t:'equip', i:null});
+  }
   if(inventory.ring) removeFromInventory('ring', 1);
-  else localPlayer.equip(null);
   try{ localStorage.setItem('sumrak_married', JSON.stringify({to: localPlayer.marriedTo})); }catch(e){}
   localPlayer._refreshTag();
   showToast('💒 Свадьба! ' + (partner ? 'Теперь вы с ' + partner.name + ' вместе!' : 'Ты поклялся огню'));
   snd.inv();
   for(let i=0;i<18;i++){
     setTimeout(()=>{ if(localPlayer) localPlayer.emitSmoke(); }, i*90);
+  }
+  if(Net.online && partner){
+    Net.send({t:'married', toId:partner.id, fromName:localPlayer.name});
   }
   addChat('💒 Свадьба', localPlayer.name + (partner ? ' и ' + partner.name : '') + ' заключили союз!',
     '#ff8ac0', {noBubble:true, skipCheck:true});
@@ -7425,12 +7670,12 @@ function renderBarmanDialog(){
     '<button class="barmanBtn" data-act="rumor" style="padding:12px;border-radius:10px;background:rgba(0,0,0,.4);border:1px solid rgba(255,180,90,.3);color:#e0cfae;font-family:inherit;cursor:pointer">🗣 Слух (бесплатно)</button>'+
     '<button id="barmanClose" style="padding:10px;border-radius:10px;background:transparent;border:1px solid rgba(255,180,90,.3);color:#e0cfae;font-family:inherit;cursor:pointer">← Уйти</button>'+
     '</div>';
-  content.querySelectorAll('.barmanBtn').forEach(b=>{
+    content.querySelectorAll('.barmanBtn').forEach(b=>{
     b.onclick = () => {
-      const act = b.dataset.act;
-      if(act === 'speed'){
+      const act = b.dataset.act;          // ← ДОБАВЛЕНА ЭТА СТРОКА
+            if(act === 'speed'){
         if(spendCoins(5)){
-          fortuneSpeedBonus = 0.3;
+          fortuneSpeedBonus += 0.3;
           showToast('⚡ Скорость +30% на 2 минуты');
           setTimeout(()=>{ fortuneSpeedBonus = Math.max(0, fortuneSpeedBonus - 0.3); }, 120000);
           renderBarmanDialog();
@@ -7493,11 +7738,12 @@ function useItem(){
     showToast(p.item==='meat'?'Ты жуёшь мясо':(p.item==='apple'?'Ты грызёшь яблоко':'🍄 Съел гриб'));
     if(inventory[p.item] > 0) removeFromInventory(p.item, 1);
     setTimeout(()=>{p.equip(null);if(Net.online)Net.send({t:'equip',i:null});},1700);
-  } else if(p.item==='cooked_fish'){
+    } else if(p.item==='cooked_fish'){
     p.playAnim('eat',1.8);
     setTimeout(()=>snd.crunch(),350);setTimeout(()=>snd.crunch(),800);
     hunger=clamp(hunger+45,0,100);
     showToast('🍢 Вкусная жареная рыба! Сытость +45');
+    if(inventory[p.item] > 0) removeFromInventory(p.item, 1);
     setTimeout(()=>{p.equip(null);if(Net.online)Net.send({t:'equip',i:null});},1800);
   } else if(p.item==='perch'||p.item==='catfish'||p.item==='goldfish'){
     showToast('Сначала пожарь рыбу на костре (E)');
@@ -7505,6 +7751,13 @@ function useItem(){
     p.playAnim('smoke', 10);
     p._smokeTimer = 0;
     showToast('🚬 Ты закуриваешь...');
+    if(inventory['cigarette'] > 0) removeFromInventory('cigarette', 1);
+    setTimeout(()=>{
+      if(p.item==='cigarette'){
+        p.equip(null);
+        if(Net.online) Net.send({t:'equip',i:null});
+      }
+        }, 10000);
   } else if(p.item==='stick'){
     p.playAnim('swing',0.5);snd.swing();
     for(const pl of players.values()){
@@ -7698,13 +7951,13 @@ function setupMobileControls(){
   bindBtn('mSpitBtn',()=>{if(localPlayer){localPlayer.spit();snd.spit();}});
   bindBtn('mToastBtn',()=>{if(localPlayer)raiseToast();});
   bindBtn('mFortuneBtn',()=>{if(localPlayer)performFortune();});
-  bindBtn('mDanceBtn',()=>{
-  bindBtn('mFullScreenBtn',()=>{ toggleFullscreen(); });
-    if(localPlayer){
-      localPlayer.playAnim('dance',6.0);
-      if(Net.online)Net.send({t:'anim',a:'dance'});
-    }
-  });
+bindBtn('mFullScreenBtn',()=>{ toggleFullscreen(); });
+bindBtn('mDanceBtn',()=>{
+  if(localPlayer){
+    localPlayer.playAnim('dance',6.0);
+    if(Net.online)Net.send({t:'anim',a:'dance'});
+  }
+});
   bindBtn('mZoomIn',()=>setCamDist(camDist-0.7));
   bindBtn('mZoomOut',()=>setCamDist(camDist+0.7));
   const autoCamEl=$('#mAutoCamBtn');
@@ -7943,8 +8196,11 @@ if(__hintClickEl){
 let coins = 0;
 try{ coins = parseInt(localStorage.getItem('sumrak_coins')||'0')||0; }catch(e){}
 function saveCoins(){ try{localStorage.setItem('sumrak_coins',String(coins));}catch(e){} }
-function addCoins(n){ coins += n; saveCoins(); updateCoinsUI();
-  showToast('💰 +'+n+' монет (всего: '+coins+')'); }
+function addCoins(n){
+  coins += n; saveCoins(); updateCoinsUI();
+  showToast('💰 +'+n+' монет (всего: '+coins+')');
+  checkAchievements();
+}
 function spendCoins(n){
   if(coins < n){ showToast('Не хватает монет (нужно '+n+', есть '+coins+')'); return false; }
   coins -= n; saveCoins(); updateCoinsUI(); return true;
@@ -8311,7 +8567,8 @@ function spawnNPCs(n){
     });
     const p=new Player({id,name:NPC_NAMES[i%NPC_NAMES.length],color,isLocal:false,custom:npcC});
     p.setSeat((i+1)%SEAT_COUNT);p.netPos.copy(p.pos);p.isOnline=true;
-    players.set(id,p);
+p.isNPC = true;          // ← ДОБАВЛЕНО
+players.set(id,p);
   }
   updatePlayersList();
 }
@@ -8336,7 +8593,8 @@ function openTradeDialog(targetId, targetName){
 function renderTradeDialog(){
   const el = document.getElementById('tradeContent');
   if(!el || !tradeTarget) return;
-  const types = Object.keys(inventory).filter(t => inventory[t] > 0 && t !== 'log');
+  const types = Object.keys(inventory).filter(t => inventory[t] > 0 &&
+  t !== 'log' && t !== 'log_pine' && t !== 'log_mushroom');
   let html = '';
   if(types.length === 0){
     html = '<div style="text-align:center;color:#7e7768;padding:30px">Пусто — нечего дарить</div>';
@@ -9031,10 +9289,14 @@ function buildPresetGrid(){
     b.dataset.presetIdx=idx;
     if(currentCustom.presetName===pr.name)b.classList.add('on');
     b.innerHTML='<div class="pem">'+pr.emoji+'</div><div>'+pr.name+'</div>';
-    b.onclick=()=>{
+        b.onclick=()=>{
       const c={...DEFAULT_CUSTOM,...pr.c,presetName:pr.name};
-      c.paintPixels=currentCustom.paintPixels?currentCustom.paintPixels.slice():null;
-      c.shirtPixels=currentCustom.shirtPixels?currentCustom.shirtPixels.slice():null;
+      c.paintPixels = pr.c.paintPixels
+        ? pr.c.paintPixels.slice()
+        : (currentCustom.paintPixels ? currentCustom.paintPixels.slice() : null);
+      c.shirtPixels = pr.c.shirtPixels
+        ? pr.c.shirtPixels.slice()
+        : (currentCustom.shirtPixels ? currentCustom.shirtPixels.slice() : null);
       currentCustom=c;
       [...g.children].forEach(x=>x.classList.remove('on'));
       b.classList.add('on');
@@ -9427,12 +9689,62 @@ function renderChatView(){
   if(!chat)return;
   const el=$('#chatMessages'); if(!el)return;
   el.innerHTML='';
+  const myId=mySocId();
+
   chat.messages.forEach(m=>{
+    if(!m.likes) m.likes=[];
+    const liked=m.likes.includes(myId);
+    const cnt=m.likes.length;
     const d=document.createElement('div');
-    d.className='msg'+(m.fromId===mySocId()?' mine':'');
-    d.innerHTML='<div class="msg-author">'+escapeHtml(m.from)+
-      ' <span class="msg-time">'+timeAgo(m.time)+'</span></div>'+
-      escapeHtml(m.text);
+    d.className='msg'+(m.fromId===myId?' mine':'');
+
+    const authorDiv = document.createElement('div');
+    authorDiv.className = 'msg-author';
+    authorDiv.innerHTML = escapeHtml(m.from) +
+      ' <span class="msg-time">'+timeAgo(m.time)+'</span>';
+    d.appendChild(authorDiv);
+
+    if(m.text){
+      const textSpan = document.createElement('span');
+      textSpan.className = 'msg-text';
+      textSpan.textContent = m.text;
+      d.appendChild(textSpan);
+    }
+
+    if(m.canvas && m.canvas.pixels){
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'margin-top:6px;display:inline-block;position:relative;cursor:pointer';
+      const cv = document.createElement('canvas');
+      cv.width = 140; cv.height = 140;
+      cv.style.cssText = 'border-radius:8px;border:1px solid rgba(255,180,90,.4);'+
+        'background:#fffbe8;display:block;transition:transform .15s';
+      wrap.appendChild(cv);
+      ccRender(cv, m.canvas.pixels, m.canvas.w || CC_W, m.canvas.h || CC_H);
+
+      const expandIcon = document.createElement('div');
+      expandIcon.textContent = '⤢';
+      expandIcon.style.cssText = 'position:absolute;top:4px;right:4px;background:rgba(0,0,0,.65);'+
+        'color:#ffd9a4;border-radius:5px;padding:0 5px;font-size:12px;line-height:1.5;pointer-events:none';
+      wrap.appendChild(expandIcon);
+
+      wrap.onclick = (e) => { e.stopPropagation(); openCanvasViewer(m.canvas); };
+      wrap.onmouseenter = () => { cv.style.transform = 'scale(1.03)'; };
+      wrap.onmouseleave = () => { cv.style.transform = ''; };
+
+      d.appendChild(wrap);
+    }
+
+    const likeBtn = document.createElement('button');
+    likeBtn.className = 'msg-like' + (liked ? ' on' : '');
+    likeBtn.style.display = 'block';
+    likeBtn.textContent = (liked?'❤':'♡') + (cnt>0?' '+cnt:'');
+    likeBtn.onclick = (e) => {
+      e.stopPropagation();
+      if(!m.id){ m.id='m'+m.time+Math.random().toString(36).slice(2,6); saveSocial(); }
+      toggleMsgLike(social.activeChatId, m.id);
+    };
+    d.appendChild(likeBtn);
+
     el.appendChild(d);
   });
   el.scrollTop=el.scrollHeight;
@@ -9440,24 +9752,291 @@ function renderChatView(){
 function sendChatMessage(cid,text){
   text=(text||'').trim(); if(!text)return;
   const chat=social.chats[cid]; if(!chat)return;
-  const msg={from:localPlayer?localPlayer.name:'???',fromId:mySocId(),
-    text,time:Date.now()};
+  const msg={
+    id:'m'+Date.now()+Math.random().toString(36).slice(2,6),
+    from:localPlayer?localPlayer.name:'???',
+    fromId:mySocId(),
+    text, time:Date.now(), likes:[]
+  };
   chat.messages.push(msg);
   saveSocial(); renderChatView(); renderChats();
   if(Net.online){
     if(chat.type==='dm'){
       const otherId=chat.members.find(m=>m!==mySocId());
       if(otherId)Net.send({t:'chat',text:SOCIAL_PREFIX+JSON.stringify({
-        k:'dm', chatId:cid, text, to:otherId, from:msg.from, time:msg.time
+        k:'dm', chatId:cid, text, to:otherId, from:msg.from,
+        time:msg.time, msgId:msg.id
       })});
     } else {
       Net.send({t:'chat',text:SOCIAL_PREFIX+JSON.stringify({
         k:'group_msg', chatId:cid, text, members:chat.members,
-        from:msg.from, time:msg.time
+        from:msg.from, time:msg.time, msgId:msg.id
       })});
     }
   }
 }
+function toggleMsgLike(cid, msgId){
+  const chat=social.chats[cid]; if(!chat)return;
+  const msg=chat.messages.find(m=>m.id===msgId); if(!msg)return;
+  if(!msg.likes) msg.likes=[];
+  const myId=mySocId();
+  const idx=msg.likes.indexOf(myId);
+  if(idx>=0){ msg.likes.splice(idx,1); }
+  else { msg.likes.push(myId); snd.chip(); }
+  saveSocial(); renderChatView();
+  if(Net.online){
+    if(chat.type==='dm'){
+      const otherId=chat.members.find(m=>m!==myId);
+      if(otherId)Net.send({t:'chat',text:SOCIAL_PREFIX+JSON.stringify({
+        k:'msg_like', chatId:cid, msgId, fromId:myId, to:otherId
+      })});
+    } else {
+      Net.send({t:'chat',text:SOCIAL_PREFIX+JSON.stringify({
+        k:'msg_like', chatId:cid, msgId, fromId:myId, members:chat.members
+      })});
+    }
+  }
+}
+// ══════════════ CHAT CANVAS ══════════════
+const CC_W = 24, CC_H = 24;
+const CC_COLORS = ['#000000','#ffffff','#8a2020','#ff5050','#e0a040','#ffd040','#40c040','#40a0e0','#8040e0','#ff80c0'];
+let ccModal = null;
+let ccDrawState = null;
+
+function getChatCanvas(cid){
+  const chat = social.chats[cid];
+  if(!chat) return null;
+  if(!chat.canvas || chat.canvas.w !== CC_W || chat.canvas.h !== CC_H){
+    chat.canvas = { w: CC_W, h: CC_H, pixels: new Array(CC_W*CC_H).fill(null) };
+  }
+  return chat.canvas;
+}
+
+function ccRender(cvEl, pixels, w, h){
+  if(!pixels || !cvEl) return;
+  w = w || CC_W; h = h || CC_H;
+  const ctx = cvEl.getContext('2d');
+  const sx = cvEl.width / w, sy = cvEl.height / h;
+  ctx.clearRect(0,0,cvEl.width,cvEl.height);
+  ctx.fillStyle = '#fffbe8';
+  ctx.fillRect(0,0,cvEl.width,cvEl.height);
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const c = pixels[y*w+x];
+    if(c){ ctx.fillStyle = c; ctx.fillRect(x*sx, y*sy, sx, sy); }
+  }
+  if(cvEl.dataset.grid === '1'){
+    ctx.strokeStyle = 'rgba(0,0,0,.07)'; ctx.lineWidth = 1;
+    for(let i=0;i<=w;i++){ ctx.beginPath(); ctx.moveTo(i*sx,0); ctx.lineTo(i*sx,cvEl.height); ctx.stroke(); }
+    for(let i=0;i<=h;i++){ ctx.beginPath(); ctx.moveTo(0,i*sy); ctx.lineTo(cvEl.width,i*sy); ctx.stroke(); }
+  }
+}
+
+function ccSetupModal(){
+  if(ccModal) return;
+  ccModal = document.createElement('div');
+  ccModal.id = 'chatCanvasModal';
+  ccModal.className = 'modal';
+  ccModal.innerHTML = `
+    <div class="mp" style="width:min(440px,96vw);padding:16px">
+      <button class="mclose" id="ccClose">✕</button>
+      <h2 style="font-size:17px">🎨 Холст чата</h2>
+      <div style="text-align:center;margin-bottom:10px;color:#a99d87;font-size:11px">Рисуй пальцем или мышью · Закрой — черновик сохранится</div>
+      <div style="display:flex;justify-content:center">
+        <canvas id="ccDrawCanvas" width="360" height="360"
+          style="background:#fffbe8;border-radius:8px;border:2px solid rgba(255,180,90,.4);
+          touch-action:none;cursor:crosshair;display:block;max-width:100%"></canvas>
+      </div>
+      <div id="ccColorBar" style="display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:12px 0"></div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:4px">
+        <button id="ccSendBtn" style="flex:1;padding:11px;border-radius:9px;border:none;
+          background:linear-gradient(#ffb457,#dd741d);color:#2a1403;font-family:inherit;
+          font-weight:bold;cursor:pointer;font-size:13px">📤 Отправить в чат</button>
+        <button id="ccClearBtn" style="padding:11px 14px;border-radius:9px;
+          background:transparent;border:1px solid rgba(255,180,90,.3);color:#e0cfae;
+          font-family:inherit;cursor:pointer;font-size:13px">Очистить</button>
+      </div>
+    </div>`;
+  document.body.appendChild(ccModal);
+
+  const drawCv = ccModal.querySelector('#ccDrawCanvas');
+  drawCv.dataset.grid = '1';
+  let painting = false;
+
+  function getPx(clientX, clientY){
+    const r = drawCv.getBoundingClientRect();
+    const x = Math.floor((clientX - r.left) / r.width * CC_W);
+    const y = Math.floor((clientY - r.top) / r.height * CC_H);
+    if(x<0||x>=CC_W||y<0||y>=CC_H) return null;
+    return {x, y};
+  }
+  function paint(x, y){
+    if(!ccDrawState) return;
+    const ch = social.chats[ccDrawState.cid];
+    if(!ch || !ch.canvas) return;
+    ch.canvas.pixels[y*CC_W+x] = ccDrawState.color;
+    ccRender(drawCv, ch.canvas.pixels);
+  }
+
+  drawCv.addEventListener('mousedown', e => {
+    e.preventDefault(); painting = true;
+    const p = getPx(e.clientX, e.clientY); if(p) paint(p.x, p.y);
+  });
+  drawCv.addEventListener('mousemove', e => {
+    if(!painting) return;
+    const p = getPx(e.clientX, e.clientY); if(p) paint(p.x, p.y);
+  });
+  window.addEventListener('mouseup', () => {
+    if(painting){ painting = false; if(ccDrawState) saveSocial(); }
+  });
+  drawCv.addEventListener('touchstart', e => {
+    e.preventDefault(); painting = true;
+    const t = e.touches[0];
+    const p = getPx(t.clientX, t.clientY); if(p) paint(p.x, p.y);
+  }, {passive:false});
+  drawCv.addEventListener('touchmove', e => {
+    e.preventDefault(); if(!painting) return;
+    const t = e.touches[0];
+    const p = getPx(t.clientX, t.clientY); if(p) paint(p.x, p.y);
+  }, {passive:false});
+  drawCv.addEventListener('touchend', e => {
+    e.preventDefault(); painting = false; if(ccDrawState) saveSocial();
+  }, {passive:false});
+  drawCv.addEventListener('touchcancel', () => { painting = false; if(ccDrawState) saveSocial(); });
+
+  const cb = ccModal.querySelector('#ccColorBar');
+  CC_COLORS.forEach(c => {
+    const b = document.createElement('button');
+    b.style.cssText = 'width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.3);background:'+c+';cursor:pointer;padding:0;transition:transform .12s';
+    if(c === '#ffffff') b.style.border = '2px solid #888';
+    b.dataset.color = c;
+    b.onclick = () => {
+      if(!ccDrawState) return;
+      ccDrawState.color = c;
+      cb.querySelectorAll('button').forEach(x => { x.style.outline=''; x.style.outlineOffset=''; x.style.transform=''; });
+      b.style.outline = '3px solid #ffd060';
+      b.style.outlineOffset = '2px';
+      b.style.transform = 'scale(1.15)';
+    };
+    cb.appendChild(b);
+  });
+
+  ccModal.querySelector('#ccClose').onclick = () => closeChatCanvas();
+  ccModal.querySelector('#ccClearBtn').onclick = () => {
+    if(!ccDrawState) return;
+    const ch = social.chats[ccDrawState.cid];
+    if(!ch || !ch.canvas) return;
+    ch.canvas.pixels = new Array(CC_W*CC_H).fill(null);
+    ccRender(drawCv, ch.canvas.pixels);
+    saveSocial();
+  };
+  ccModal.querySelector('#ccSendBtn').onclick = () => {
+    if(ccDrawState) sendChatCanvas(ccDrawState.cid);
+  };
+  ccModal.addEventListener('click', e => { if(e.target === ccModal) closeChatCanvas(); });
+}
+
+function openChatCanvas(cid){
+  if(!social.chats[cid]) return;
+  ccSetupModal();
+  const canvas = getChatCanvas(cid);
+  const prevColor = (ccDrawState && ccDrawState.color) || '#000000';
+  ccDrawState = { cid, color: prevColor };
+  const drawCv = ccModal.querySelector('#ccDrawCanvas');
+  ccRender(drawCv, canvas.pixels);
+  const cb = ccModal.querySelector('#ccColorBar');
+  cb.querySelectorAll('button').forEach(x => {
+    if(x.dataset.color === prevColor){
+      x.style.outline = '3px solid #ffd060';
+      x.style.outlineOffset = '2px';
+      x.style.transform = 'scale(1.15)';
+    } else {
+      x.style.outline=''; x.style.outlineOffset=''; x.style.transform='';
+    }
+  });
+  ccModal.classList.add('show');
+}
+
+function closeChatCanvas(){
+  if(ccModal) ccModal.classList.remove('show');
+  saveSocial();
+}
+
+function sendChatCanvas(cid){
+  const chat = social.chats[cid]; if(!chat) return;
+  const canvas = getChatCanvas(cid); if(!canvas) return;
+  if(!canvas.pixels.some(p => p)){ showToast('Холст пуст — нарисуй что-нибудь'); return; }
+
+  const myId = mySocId();
+  const msg = {
+    id: 'm'+Date.now()+Math.random().toString(36).slice(2,6),
+    from: localPlayer ? localPlayer.name : '???',
+    fromId: myId,
+    text: '',
+    time: Date.now(),
+    likes: [],
+    canvas: { w: CC_W, h: CC_H, pixels: canvas.pixels.slice() }
+  };
+  chat.messages.push(msg);
+
+  canvas.pixels = new Array(CC_W*CC_H).fill(null);
+
+  saveSocial();
+  renderChatView();
+  renderChats();
+
+  if(ccModal){
+    const drawCv = ccModal.querySelector('#ccDrawCanvas');
+    if(drawCv) ccRender(drawCv, canvas.pixels);
+  }
+
+  if(Net.online){
+    if(chat.type === 'dm'){
+      const otherId = chat.members.find(m => m !== myId);
+      if(otherId) Net.send({t:'chat', text:SOCIAL_PREFIX+JSON.stringify({
+        k:'dm', chatId:cid, text:'', to:otherId, from:msg.from,
+        time:msg.time, msgId:msg.id, canvas:msg.canvas
+      })});
+    } else {
+      Net.send({t:'chat', text:SOCIAL_PREFIX+JSON.stringify({
+        k:'group_msg', chatId:cid, text:'', members:chat.members,
+        from:msg.from, time:msg.time, msgId:msg.id, canvas:msg.canvas
+      })});
+    }
+  }
+
+  showToast('🎨 Рисунок отправлен');
+  snd.chip();
+  setTimeout(() => { if(ccModal && ccModal.classList.contains('show')) closeChatCanvas(); }, 500);
+}
+
+function openCanvasViewer(canvasData){
+  if(!canvasData) return;
+  let modal = document.getElementById('chatCanvasViewModal');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'chatCanvasViewModal';
+    modal.className = 'modal';
+    modal.innerHTML = `
+      <div class="mp" style="width:min(500px,96vw);padding:14px">
+        <button class="mclose" id="ccvClose">✕</button>
+        <div style="display:flex;justify-content:center;margin-top:8px">
+          <canvas id="ccvCanvas"
+            style="background:#fffbe8;border-radius:10px;border:2px solid rgba(255,180,90,.4);
+            display:block;max-width:100%;image-rendering:pixelated"></canvas>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.querySelector('#ccvClose').onclick = () => modal.classList.remove('show');
+    modal.addEventListener('click', e => { if(e.target === modal) modal.classList.remove('show'); });
+  }
+  const cv = modal.querySelector('#ccvCanvas');
+  const w = canvasData.w || CC_W, h = canvasData.h || CC_H;
+  const size = Math.min(440, innerWidth - 100, innerHeight - 200);
+  cv.width = size; cv.height = size;
+  ccRender(cv, canvasData.pixels, w, h);
+  modal.classList.add('show');
+}
+// ══════════════════════════════════════════
 function createGroupChat(name,memberIds){
   const cid='g'+Date.now()+Math.random().toString(36).slice(2,6);
   const members=[mySocId(),...memberIds];
@@ -9544,15 +10123,35 @@ function handleSocialMsg(data,fromId){
       social.chats[cid]={type:'dm',name:otherName,
         members:[mySocId(),fromId],messages:[]};
     }
-    social.chats[cid].messages.push({
-      from:data.from||'???',fromId,text:data.text,time:data.time||Date.now()
+            social.chats[cid].messages.push({
+      id:data.msgId||('m'+Date.now()+Math.random().toString(36).slice(2,6)),
+      from:data.from||'???',fromId,text:data.text,
+      time:data.time||Date.now(),likes:[],
+      canvas: data.canvas || null
     });
     saveSocial();
-    showToast('💬 '+data.from+': '+data.text.slice(0,60));
+    if(data.canvas) showToast('🎨 '+data.from+' прислал рисунок');
+    else showToast('💬 '+data.from+': '+(data.text||'').slice(0,60));
     snd.inv();
     if(currentGame==='socialPanel'){
       renderChats();
       if(social.activeChatId===cid)renderChatView();
+    }
+    return;
+  }  if(data.k==='msg_like'){
+    const myId=mySocId();
+    if(data.to && data.to!==myId) return;
+    if(data.members && !data.members.includes(myId)) return;
+    const chat=social.chats[data.chatId]; if(!chat)return;
+    const msg=chat.messages.find(m=>m.id===data.msgId); if(!msg)return;
+    if(!msg.likes) msg.likes=[];
+    const likerId=data.fromId||fromId;
+    const idx=msg.likes.indexOf(likerId);
+    if(idx>=0) msg.likes.splice(idx,1);
+    else msg.likes.push(likerId);
+    saveSocial();
+    if(currentGame==='socialPanel' && social.activeChatId===data.chatId){
+      renderChatView();
     }
     return;
   }
@@ -9574,15 +10173,19 @@ function handleSocialMsg(data,fromId){
       social.chats[cid]={type:'group',name:'Группа',
         members:data.members||[],messages:[]};
     }
-    social.chats[cid].messages.push({
-      from:data.from||'???',fromId,text:data.text,time:data.time||Date.now()
+            social.chats[cid].messages.push({
+      id:data.msgId||('m'+Date.now()+Math.random().toString(36).slice(2,6)),
+      from:data.from||'???',fromId,text:data.text,
+      time:data.time||Date.now(),likes:[],
+      canvas: data.canvas || null
     });
     saveSocial();
     if(currentGame==='socialPanel'){
       renderChats();
       if(social.activeChatId===cid)renderChatView();
     } else if(fromId!==mySocId()){
-      showToast('👥 '+data.from+': '+data.text.slice(0,50));
+      if(data.canvas) showToast('🎨 '+data.from+' прислал рисунок');
+      else showToast('👥 '+data.from+': '+(data.text||'').slice(0,50));
     }
     return;
   }
@@ -9670,6 +10273,8 @@ $('#profileBioSave').onclick=()=>{
 /* ============ МИНИ-ИГРЫ: контроллер ============ */
 let currentGame=null;
 function showMini(id){
+  // FIX: сбрасываем зажатые клавиши, чтобы персонаж не «уезжал» под меню
+  for(const k in keys) keys[k] = false;
   $$('.mgame').forEach(el=>el.classList.remove('show'));
   currentGame=id;
   if(id)document.getElementById(id).classList.add('show');
@@ -9688,7 +10293,7 @@ $$('.phone-list button').forEach(b=>{
     else if(g==='checkers'){showMini('checkers');initCheckers();}
     else if(g==='tictactoe'){showMini('tictactoe');initTTT();}
     else if(g==='catgame'){showMini('catgame');initCat();}
-    else if(g==='shootergame'){showMini('shootergame');ShooterGame.start();}
+    else if(g==='shootergame'){showMini('shootergame');ShooterGame.open();}
     else if(g==='bombergame'){showMini('bombergame');BomberGame.start();}
     else if(g==='match3game'){showMini('match3game');Match3Game.start();}
     else if(g==='flappygame'){showMini('flappygame');FlappyGame.start();}
@@ -9700,12 +10305,12 @@ $$('.phone-list button').forEach(b=>{
   };
 });
 $$('.mgame [data-back]').forEach(b=>{
+  if(b.closest('#fishinggame')) return;   // у рыбалки свой обработчик close()
   b.onclick=()=>{
     snd.click();
-    if(currentGame==='shootergame')ShooterGame.stop();
+    if(currentGame==='shootergame')ShooterGame.exit();
     if(currentGame==='bombergame')BomberGame.stop();
     if(currentGame==='flappygame')FlappyGame.stop();
-    if(currentGame==='fishinggame')FishingGame.close();
     showMini('phoneMenu');
   };
 });
@@ -10012,11 +10617,14 @@ const Durak=(()=>{
     render();
     if(!over&&!onlineMode)setTimeout(foeTurn,900);
   }
-  function checkEnd(){
+    function checkEnd(){
     if(over)return;
     if(deck.length===0){
-      if(hands.me.length===0){over=true;msg('🎉 Ты вышел!');}
-      else if(hands.foe.length===0){over=true;msg('😔 Ты — дурак.');}
+      const meOut  = hands.me.length  === 0;
+      const foeOut = hands.foe.length === 0;
+      if(meOut && foeOut){ over=true; msg('🤝 Ничья!'); }
+      else if(meOut){ over=true; msg('🎉 Ты вышел!'); }
+      else if(foeOut){ over=true; msg('😔 Ты — дурак.'); }
     }
   }
 
@@ -10024,7 +10632,13 @@ const Durak=(()=>{
     bind(){
       el.bito.onclick=()=>{if(!el.bito.disabled)bito();};
       el.take.onclick=()=>{if(!el.take.disabled)take();};
-      el.nw.onclick=()=>{snd.card();newGame(null,true);};
+      el.nw.onclick=()=>{
+        if(onlineMode){
+          showToast('В сетевой партии новая игра — только через приглашение');
+          return;
+        }
+        snd.card();newGame(null,true);
+      };
       newGame(null,true);
     },
     setOpponent(p,seed,host){
@@ -10032,14 +10646,18 @@ const Durak=(()=>{
       msg('Игра с '+p.name);
       newGame(seed,host);
     },
-    applyMove(move){
+        applyMove(move){
       if(!onlineMode)return;
       if(move.type==='attack'){
+        const idx=hands.foe.findIndex(c=>c.r===move.card.r&&c.s===move.card.s);
+        if(idx>=0) hands.foe.splice(idx,1);
         table.push({atk:move.card,def:null});
         attackerIsMe=false;
         msg('Соперник ходит. Отбивай или бери.');
         render();
       } else if(move.type==='defend'){
+        const idx=hands.foe.findIndex(c=>c.r===move.card.r&&c.s===move.card.s);
+        if(idx>=0) hands.foe.splice(idx,1);
         const u=table.find(p=>!p.def);
         if(u)u.def=move.card;
         msg('Отбито. Твой ход — добавь или «Бито».');
@@ -10051,7 +10669,8 @@ const Durak=(()=>{
       } else if(move.type==='take'){
         table.forEach(p=>{hands.foe.push(p.atk);if(p.def)hands.foe.push(p.def);});
         table=[];sortH(hands.foe);refill();
-        msg('Соперник забрал. Соперник снова атакует.');
+        attackerIsMe=true;
+        msg('Соперник забрал. Ты снова атакуешь.');
         render();
       }
     }
@@ -10063,6 +10682,7 @@ Durak.bind();
 const Checkers=(()=>{
   let board=null,turn='w',selected=null,over=false;
   let opponent=null,onlineMode=false;
+  let myColor='w';   // ← ДОБАВЛЕНО
   const bEl=$('#ck-board'),msgEl=$('#ck-msg');
   function init(){
     board=[];
@@ -10070,7 +10690,9 @@ const Checkers=(()=>{
       for(let x=0;x<8;x++){let p=null;
         if((x+y)%2===1){if(y<3)p={c:'b',k:false};else if(y>4)p={c:'w',k:false};}
         row.push(p);}board.push(row);}
-    turn='w';selected=null;over=false;msgEl.textContent='Твой ход.';render();
+    turn='w';selected=null;over=false;
+msgEl.textContent = (turn===myColor) ? 'Твой ход.' : 'Ход соперника...';
+render();
   }
   function render(){
     bEl.innerHTML='';
@@ -10103,17 +10725,19 @@ const Checkers=(()=>{
     if(board[ty][tx].c==='b'&&ty===7)board[ty][tx].k=true;
   }
   function onClick(x,y){
-    if(over||turn!=='w')return;
+    if(over||turn!==myColor)return;               // ← было turn!=='w'
     const p=board[y][x];
     if(selected){const ms=getMoves(selected.x,selected.y);const m=ms.find(mm=>mm.x===x&&mm.y===y);
       if(m){applyM(selected.x,selected.y,x,y,m);
+        const nextTurn = (myColor==='w'?'b':'w');   // ←
         if(onlineMode&&opponent&&Net.online){
           Net.send({t:'gameMove',game:'checkers',move:{from:{x:selected.x,y:selected.y},to:{x,y}}});
-          selected=null;turn='b';render();return;
+          selected=null;turn=nextTurn;render();return;
         }
-        selected=null;turn='b';render();
+        selected=null;turn=nextTurn;render();
         if(checkEnd())return;setTimeout(aiMove,450);return;}}
-    if(p&&p.c==='w')selected={x,y};else selected=null;render();
+    if(p&&p.c===myColor)selected={x,y};else selected=null;   // ← было p.c==='w'
+    render();
   }
   function aiMove(){
     if(over||onlineMode)return;const all=[];
@@ -10122,7 +10746,7 @@ const Checkers=(()=>{
     if(all.length===0){msgEl.textContent='Ты победил!';over=true;return;}
     const jmp=all.filter(a=>a.m.jump);const pool=jmp.length?jmp:all;
     const pick=pool[randInt(0,pool.length-1)];
-    applyM(pick.x,pick.y,pick.m.x,pick.m.y,pick.m);turn='w';render();checkEnd();
+    applyM(pick.x,pick.y,pick.m.x,pick.m.y,pick.m);turn=myColor;render();checkEnd();
   }
   function checkEnd(){
     let w=0,b=0;
@@ -10133,12 +10757,17 @@ const Checkers=(()=>{
   }
   return {
     bind(){$('#ck-new').onclick=()=>{snd.click();init();};init();},
-    setOpponent(p,seed,host){opponent=p;onlineMode=true;msgEl.textContent='Игра с '+p.name;init();},
+    setOpponent(p,seed,host){
+      opponent=p;onlineMode=true;
+      myColor = host ? 'w' : 'b';              // ←
+      msgEl.textContent='Игра с '+p.name;
+      init();
+    },
     applyMove(move){
       if(!onlineMode)return;
       applyM(move.from.x,move.from.y,move.to.x,move.to.y,
         getMoves(move.from.x,move.from.y).find(m=>m.x===move.to.x&&m.y===move.to.y)||{});
-      turn='w';render();checkEnd();
+      turn=myColor;render();checkEnd();        // ← было turn='w'
     }
   };
 })();
@@ -10148,8 +10777,13 @@ function initCheckers(){Checkers.bind();}
 const TTT=(()=>{
   let board=null,over=false,turn='x';
   let opponent=null,onlineMode=false;
+  let mySymbol='x';   // ← ДОБАВЛЕНО
   const bEl=$('#tt-board'),msgEl=$('#tt-msg');
-  function init(){board=Array(9).fill(null);over=false;turn='x';msgEl.textContent='Твой ход.';render();}
+  function init(){
+    board=Array(9).fill(null);over=false;turn='x';
+    msgEl.textContent = (turn===mySymbol) ? 'Твой ход.' : 'Ход соперника...';
+    render();
+  }
   function render(wl=null){
     bEl.innerHTML='';
     for(let i=0;i<9;i++){
@@ -10159,19 +10793,27 @@ const TTT=(()=>{
     }
   }
   function onClick(i){
-    if(over||turn!=='x'||board[i])return;board[i]='x';snd.click();render();
+    if(over||turn!==mySymbol||board[i])return;    // ←
+    board[i]=mySymbol;snd.click();render();        // ← было 'x'
     if(check())return;
+    const nextTurn = (mySymbol==='x'?'o':'x');     // ←
     if(onlineMode&&opponent&&Net.online){
       Net.send({t:'gameMove',game:'tictactoe',move:{idx:i}});
-      turn='o';return;
+      turn=nextTurn;return;
     }
-    turn='o';setTimeout(aiMove,350);
+    turn=nextTurn;setTimeout(aiMove,350);
   }
   function check(){
     const lines=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
-    for(const L of lines){const a=L[0],b=L[1],c=L[2];
+    for(const L of lines){
+      const a=L[0],b=L[1],c=L[2];
       if(board[a]&&board[a]===board[b]&&board[a]===board[c]){
-        over=true;msgEl.textContent=board[a]==='x'?'🎉 Победа!':'😔 Поражение.';render(L);return true;}}
+        over=true;
+        msgEl.textContent = board[a]===mySymbol ? '🎉 Победа!' : '😔 Поражение.';
+        render(L);
+        return true;
+      }
+    }
     if(board.every(v=>v)){over=true;msgEl.textContent='Ничья!';return true;}
     return false;
   }
@@ -10184,15 +10826,23 @@ const TTT=(()=>{
     if(best<0){for(const L of lines){const vals=L.map(i=>board[i]);
       if(vals.filter(v=>v==='x').length===2&&vals.includes(null)){best=L[vals.indexOf(null)];break;}}}
     if(best<0){const order=[4,0,2,6,8,1,3,5,7];for(const i of order)if(!board[i]){best=i;break;}}
-    if(best>=0)board[best]='o';turn='x';render();check();
+    const oppSymbol = mySymbol==='x'?'o':'x';
+    if(best>=0)board[best]=oppSymbol;
+    turn=mySymbol;render();check();
   }
   return {
     bind(){$('#tt-new').onclick=()=>{snd.click();init();};init();},
-    setOpponent(p,seed,host){opponent=p;onlineMode=true;msgEl.textContent='Игра с '+p.name;init();},
+    setOpponent(p,seed,host){
+      opponent=p;onlineMode=true;
+      mySymbol = host ? 'x' : 'o';              // ←
+      msgEl.textContent='Игра с '+p.name;
+      init();
+    },
     applyMove(move){
       if(!onlineMode)return;
       if(board[move.idx])return;
-      board[move.idx]='o';turn='x';render();
+      const oppSymbol = mySymbol==='x'?'o':'x';
+      board[move.idx]=oppSymbol;turn=mySymbol;render();
       if(!check())msgEl.textContent='Твой ход.';
     }
   };
@@ -10272,185 +10922,1650 @@ const CatGame=(()=>{
 })();
 function initCat(){CatGame.bind();}
 
-/* ============ ШУТЕР ============ */
-const ShooterGame=(()=>{
-  const canvas=$('#shooterCanvas'),ctx=canvas.getContext('2d');
-  let rafId=null,playing=false;
-  let player={x:0,y:0,hp:100,r:14};
-  let bullets=[],enemies=[],particles=[];
-  let keys2={},aimX=640,aimY=400,shootCd=0,spawnCd=0;
-  let wave=1,score=0,kills=0;
-  function resizeCanvas(){
-    canvas.width=Math.min(640,window.innerWidth-40);
-    canvas.height=Math.min(400,window.innerHeight-260);
+/* ============ 3D ШУТЕР (сеть + bloom + звук) ============ */
+const ShooterGame = (() => {
+  // ═══════════ КОНСТАНТЫ ═══════════
+  const ARENA = 80;                    // ← было 40
+  const EYE = 1.7;
+  const PLAYER_R = 0.4;
+  const GRAVITY = 22;
+  const MOVE = 6;
+  const SPRINT = 1.55;
+  const JUMP_V = 7.5;
+  const MAX_BULLETS  = isMobile ? 60 : 200;
+  const MAX_PARTICLES= isMobile ? 80 : 300;
+  const MAX_ENEMIES  = isMobile ? 8  : 25;
+  const PVP_KILLS_TO_WIN = 5;
+
+  // ← скорость пуль увеличена в 3–4 раза
+  const WEAPONS = {
+    pistol:  {name:'Пистолет',  dmg:25, rate:0.28,mag:12,reload:1.2,spread:0.010,speed:320,pellets:1,color:0xffe060,auto:false},
+    smg:     {name:'ПП',        dmg:14, rate:0.08,mag:30,reload:1.5,spread:0.030,speed:360,pellets:1,color:0xffe060,auto:true},
+    rifle:   {name:'Автомат',   dmg:28, rate:0.12,mag:30,reload:1.8,spread:0.015,speed:420,pellets:1,color:0xffe060,auto:true},
+    shotgun: {name:'Дробовик',  dmg:14, rate:0.75,mag:6, reload:2.2,spread:0.13, speed:300,pellets:8,color:0xffa040,auto:false},
+    sniper:  {name:'Снайперка', dmg:120,rate:1.1, mag:5, reload:2.5,spread:0.002,speed:600,pellets:1,color:0xffe060,auto:false},
+    rocket:  {name:'Гранатомёт',dmg:80, rate:1.4, mag:2, reload:3.0,spread:0.02, speed:200,pellets:1,color:0xff6020,auto:false,splash:6}
+  };
+  const ENEMY_TYPES = {
+    runner: {hp:30, speed:4.5,radius:0.4, height:1.6,dmg:12,color:0xc04040,score:10, shootRate:0},
+    bomber: {hp:20, speed:6,  radius:0.35,height:1.4,dmg:35,color:0xff4020,score:15, shootRate:0, explode:true},
+    shooter:{hp:45, speed:3,  radius:0.45,height:1.7,dmg:10,color:0xc08020,score:25, shootRate:2.0},
+    tank:   {hp:120,speed:2.5,radius:0.6, height:2.0,dmg:25,color:0x8a2a8a,score:40, shootRate:0},
+    boss:   {hp:800,speed:2,  radius:1.0, height:2.8,dmg:40,color:0xff2060,score:500,shootRate:1.2}
+  };
+
+  // ═══════════ СОСТОЯНИЕ ═══════════
+  let active=false, rafId=null, lastT=0, pointerLocked=false, initDone=false;
+  let mode='solo';
+  let roomId=null, isHost=false, hostId=null;
+  let pvpKillsMe=0, pvpKillsThem=0, pvpEnded=false;
+
+  let shCanvas=null, shRenderer=null, shScene=null, shCamera=null, hudEl=null;
+  let bloom=null;
+
+  const player={ pos:new THREE.Vector3(0,EYE,8), velY:0, onGround:true,
+    yaw:0, pitch:0, hp:100, maxHp:100, weapon:'pistol', ammo:{},
+    reloading:0, shootCd:0, bobPhase:0, recoil:0 };
+
+  const keys={}; let mouseDown=false;
+  const colliders=[];
+  const enemies=[], enemyPool=[];
+  const bulletsData=[]; let bulletsMesh=null;
+  const particlesData=[]; let particlesMesh=null;
+  const pickupPool=[];
+  const peers=new Map();
+
+  let weaponViewModel=null, muzzleFlashMesh=null, muzzleFlashT=0;
+  let aiming=false;
+  const BASE_FOV = 75;
+  const SNIPER_FOV = 22;
+  let wave=1, score=0, kills=0, waveState='break', waveT=2, waveLeft=0;
+  let enemyNetId=1;
+
+  const _tmpM=new THREE.Matrix4();
+  const _hiddenM=new THREE.Matrix4().makeScale(0,0,0);
+  const _tmpColor=new THREE.Color();
+
+  let lastPosSendT=0, lastSnapT=0;
+
+  // ═══════════ ЗВУК — у каждого оружия свой ═══════════
+  const Snd = {
+    _noiseBuf:null,
+    _ensure(){
+      if(!snd || !snd.ready || !snd.ctx || !snd.master) return false;
+      if(!this._noiseBuf){
+        const size = Math.floor(snd.ctx.sampleRate * 0.1);
+        this._noiseBuf = snd.ctx.createBuffer(1, size, snd.ctx.sampleRate);
+        const d = this._noiseBuf.getChannelData(0);
+        for(let i=0;i<size;i++) d[i] = Math.random()*2-1;
+      }
+      return true;
+    },
+    shoot(weaponKey){
+      if(!this._ensure()) return;
+      const t = snd.ctx.currentTime;
+      const cfg = {
+        pistol:  {f1:220, f2:70,  dur:0.09, vol:0.10, type:'square',   noise:0.55},
+        smg:     {f1:200, f2:60,  dur:0.06, vol:0.075,type:'square',   noise:0.45},
+        rifle:   {f1:180, f2:50,  dur:0.11, vol:0.12, type:'square',   noise:0.65},
+        shotgun: {f1:130, f2:35,  dur:0.18, vol:0.17, type:'sawtooth', noise:0.95},
+        sniper:  {f1:300, f2:80,  dur:0.22, vol:0.15, type:'sawtooth', noise:0.85},
+        rocket:  {f1:90,  f2:25,  dur:0.28, vol:0.14, type:'sawtooth', noise:0.70}
+      }[weaponKey] || {f1:180, f2:60, dur:0.09, vol:0.10, type:'square', noise:0.55};
+
+      // тон
+      const o = snd.ctx.createOscillator();
+      o.type = cfg.type;
+      o.frequency.setValueAtTime(cfg.f1, t);
+      o.frequency.exponentialRampToValueAtTime(cfg.f2, t + cfg.dur);
+      const g = snd.ctx.createGain();
+      g.gain.setValueAtTime(cfg.vol, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + cfg.dur + 0.04);
+      o.connect(g); g.connect(snd.master);
+      o.start(t); o.stop(t + cfg.dur + 0.05);
+
+      // шумовой «удар»
+      const n = snd.ctx.createBufferSource();
+      n.buffer = this._noiseBuf;
+      const ng = snd.ctx.createGain();
+      ng.gain.setValueAtTime(cfg.vol * cfg.noise, t);
+      ng.gain.exponentialRampToValueAtTime(0.001, t + 0.05);
+      n.connect(ng); ng.connect(snd.master);
+      n.start(t);
+    },
+    switchSound(){
+      if(!this._ensure()) return;
+      const t = snd.ctx.currentTime;
+      const o = snd.ctx.createOscillator();
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(420, t);
+      o.frequency.exponentialRampToValueAtTime(750, t + 0.05);
+      const g = snd.ctx.createGain();
+      g.gain.setValueAtTime(0.045, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+      o.connect(g); g.connect(snd.master);
+      o.start(t); o.stop(t + 0.08);
+    },
+    pickup(){
+      if(!this._ensure()) return;
+      const t=snd.ctx.currentTime;
+      const o=snd.ctx.createOscillator(); o.type='sine';
+      o.frequency.setValueAtTime(550,t);
+      o.frequency.exponentialRampToValueAtTime(1000,t+0.11);
+      const g=snd.ctx.createGain();
+      g.gain.setValueAtTime(0.11,t);
+      g.gain.exponentialRampToValueAtTime(0.001,t+0.16);
+      o.connect(g); g.connect(snd.master); o.start(t); o.stop(t+0.18);
+    },
+    hit(){
+      if(!this._ensure()) return;
+      const t=snd.ctx.currentTime;
+      const o=snd.ctx.createOscillator(); o.type='sawtooth';
+      o.frequency.setValueAtTime(90,t);
+      o.frequency.exponentialRampToValueAtTime(30,t+0.15);
+      const g=snd.ctx.createGain();
+      g.gain.setValueAtTime(0.13,t);
+      g.gain.exponentialRampToValueAtTime(0.001,t+0.2);
+      o.connect(g); g.connect(snd.master); o.start(t); o.stop(t+0.22);
+    },
+    reload(){
+      if(!this._ensure()) return;
+      const t=snd.ctx.currentTime;
+      const o=snd.ctx.createOscillator(); o.type='square';
+      o.frequency.setValueAtTime(300,t);
+      o.frequency.exponentialRampToValueAtTime(500,t+0.06);
+      const g=snd.ctx.createGain();
+      g.gain.setValueAtTime(0.05,t);
+      g.gain.exponentialRampToValueAtTime(0.001,t+0.08);
+      o.connect(g); g.connect(snd.master); o.start(t); o.stop(t+0.1);
+    }
+  };
+
+  // ═══════════ BLOOM ═══════════
+  class SimpleBloom {
+    constructor(renderer,scene,camera){
+      this.renderer=renderer; this.scene=scene; this.camera=camera;
+      const v=new THREE.Vector2(); renderer.getSize(v);
+      const w=v.x, h=v.y;
+
+      this.sceneRT=new THREE.WebGLRenderTarget(w,h,{
+        minFilter:THREE.LinearFilter, magFilter:THREE.LinearFilter,
+        format:THREE.RGBAFormat, type:THREE.UnsignedByteType
+      });
+      const bw=Math.max(1,Math.floor(w/2)), bh=Math.max(1,Math.floor(h/2));
+      this.brightRT=new THREE.WebGLRenderTarget(bw,bh,{
+        minFilter:THREE.LinearFilter, magFilter:THREE.LinearFilter, format:THREE.RGBAFormat
+      });
+      this.blurRT=new THREE.WebGLRenderTarget(bw,bh,{
+        minFilter:THREE.LinearFilter, magFilter:THREE.LinearFilter, format:THREE.RGBAFormat
+      });
+
+      this.quadScene=new THREE.Scene();
+      this.quadCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+      this.quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2),
+        new THREE.MeshBasicMaterial({depthTest:false,depthWrite:false}));
+      this.quadScene.add(this.quad);
+
+      const vs=`varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}`;
+
+      this.brightMat=new THREE.ShaderMaterial({
+        uniforms:{ tDiffuse:{value:this.sceneRT.texture}, threshold:{value:0.82} },
+        vertexShader:vs,
+        fragmentShader:`uniform sampler2D tDiffuse;uniform float threshold;varying vec2 vUv;
+          void main(){vec4 c=texture2D(tDiffuse,vUv);
+          float lum=dot(c.rgb,vec3(0.299,0.587,0.114));
+          float b=smoothstep(threshold,threshold+0.35,lum);
+          gl_FragColor=vec4(c.rgb*b,1.0);}`,
+        depthTest:false, depthWrite:false
+      });
+
+      this.blurMat=new THREE.ShaderMaterial({
+        uniforms:{ tDiffuse:{value:null}, dir:{value:new THREE.Vector2(1,0)},
+                   res:{value:new THREE.Vector2(bw,bh)} },
+        vertexShader:vs,
+        fragmentShader:`uniform sampler2D tDiffuse;uniform vec2 dir;uniform vec2 res;varying vec2 vUv;
+          void main(){vec2 t=dir/res;vec3 s=vec3(0.0);
+          s+=texture2D(tDiffuse,vUv+t*vec2(-4.0,0.0)).rgb*0.05;
+          s+=texture2D(tDiffuse,vUv+t*vec2(-3.0,0.0)).rgb*0.09;
+          s+=texture2D(tDiffuse,vUv+t*vec2(-2.0,0.0)).rgb*0.12;
+          s+=texture2D(tDiffuse,vUv+t*vec2(-1.0,0.0)).rgb*0.15;
+          s+=texture2D(tDiffuse,vUv).rgb*0.18;
+          s+=texture2D(tDiffuse,vUv+t*vec2(1.0,0.0)).rgb*0.15;
+          s+=texture2D(tDiffuse,vUv+t*vec2(2.0,0.0)).rgb*0.12;
+          s+=texture2D(tDiffuse,vUv+t*vec2(3.0,0.0)).rgb*0.09;
+          s+=texture2D(tDiffuse,vUv+t*vec2(4.0,0.0)).rgb*0.05;
+          gl_FragColor=vec4(s,1.0);}`,
+        depthTest:false, depthWrite:false
+      });
+
+      this.combineMat=new THREE.ShaderMaterial({
+        uniforms:{ tScene:{value:this.sceneRT.texture},
+                   tBloom:{value:this.blurRT.texture},
+                   strength:{value:0.75} },
+        vertexShader:vs,
+        fragmentShader:`uniform sampler2D tScene;uniform sampler2D tBloom;uniform float strength;
+          varying vec2 vUv;void main(){vec3 s=texture2D(tScene,vUv).rgb;
+          vec3 b=texture2D(tBloom,vUv).rgb;gl_FragColor=vec4(s+b*strength,1.0);}`,
+        depthTest:false, depthWrite:false
+      });
+    }
+    setSize(w,h){
+      this.sceneRT.setSize(w,h);
+      const bw=Math.max(1,Math.floor(w/2)), bh=Math.max(1,Math.floor(h/2));
+      this.brightRT.setSize(bw,bh); this.blurRT.setSize(bw,bh);
+      this.blurMat.uniforms.res.value.set(bw,bh);
+    }
+    render(){
+      const r=this.renderer;
+      r.setRenderTarget(this.sceneRT); r.clear();
+      r.render(this.scene,this.camera);
+      this.quad.material=this.brightMat;
+      r.setRenderTarget(this.brightRT); r.clear();
+      r.render(this.quadScene,this.quadCam);
+      this.blurMat.uniforms.tDiffuse.value=this.brightRT.texture;
+      this.blurMat.uniforms.dir.value.set(1,0);
+      this.quad.material=this.blurMat;
+      r.setRenderTarget(this.blurRT); r.clear();
+      r.render(this.quadScene,this.quadCam);
+      this.blurMat.uniforms.tDiffuse.value=this.blurRT.texture;
+      this.blurMat.uniforms.dir.value.set(0,1);
+      this.quad.material=this.blurMat;
+      r.setRenderTarget(this.brightRT); r.clear();
+      r.render(this.quadScene,this.quadCam);
+      this.combineMat.uniforms.tBloom.value=this.brightRT.texture;
+      this.quad.material=this.combineMat;
+      r.setRenderTarget(null); r.clear();
+      r.render(this.quadScene,this.quadCam);
+    }
   }
-  function start(){
-    playing=true;resizeCanvas();
-    player={x:canvas.width/2,y:canvas.height/2,hp:100,r:14};
-    bullets=[];enemies=[];particles=[];
-    wave=1;score=0;kills=0;spawnCd=0;shootCd=0;
-    updateHUD();
-    if(rafId)cancelAnimationFrame(rafId);
-    loop();
+
+  // ═══════════ ИНИЦИАЛИЗАЦИЯ — ЯРКИЙ СВЕТ ═══════════
+  function initScene(){
+    if(initDone) return; initDone=true;
+
+    shCanvas=document.createElement('canvas');
+    shCanvas.id='sh3Canvas';
+    shCanvas.style.cssText='position:fixed;inset:0;z-index:80;display:none;width:100%;height:100%;cursor:crosshair;background:#000';
+    document.body.appendChild(shCanvas);
+
+    shRenderer=new THREE.WebGLRenderer({canvas:shCanvas,antialias:!isMobile,powerPreference:'high-performance'});
+    shRenderer.setPixelRatio(isMobile?0.75:Math.min(devicePixelRatio,1.5));
+    shRenderer.setSize(innerWidth,innerHeight);
+    shRenderer.shadowMap.enabled=false;
+    shRenderer.toneMapping=THREE.ACESFilmicToneMapping;
+    shRenderer.toneMappingExposure=1.35;   // ← ярче
+
+    shScene=new THREE.Scene();
+    shScene.background=new THREE.Color(0x4a5568);        // ← светло-серо-синий
+    shScene.fog=new THREE.Fog(0x4a5568, 100, 200);       // ← дальше и светлее
+
+    shCamera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.05,300);
+    shCamera.rotation.order='YXZ';
+    shScene.add(shCamera);
+
+    // ─── СВЕТ: ярко ───
+    const hemi=new THREE.HemisphereLight(0xb8c8e0, 0x556677, 1.5);   // было 1.0
+    shScene.add(hemi);
+    const amb=new THREE.AmbientLight(0x8899aa, 0.8);                  // было 0.4
+    shScene.add(amb);
+    const sun=new THREE.DirectionalLight(0xffffff, 1.8);              // было 1.0
+    sun.position.set(40, 60, 30);
+    shScene.add(sun);
+    const fill=new THREE.DirectionalLight(0xaabbcc, 0.6);
+    fill.position.set(-40, 30, -20);
+    shScene.add(fill);
+
+    // цветные источники для неона
+    for(let i=0;i<4;i++){
+      const a=i/4*Math.PI*2+Math.PI/4;
+      const l=new THREE.PointLight([0xff8844,0x44aaff,0xff44aa,0x88ff44][i], 2.5, 30, 1.6);
+      l.position.set(Math.cos(a)*ARENA*0.75, 5, Math.sin(a)*ARENA*0.75);
+      shScene.add(l);
+    }
+
+    buildArena();
+    buildWeaponView();
+    buildInstancedPools();
+    buildEnemyPool();
+    buildPickupPool();
+    buildHUD();
+
+    if(!isMobile){
+      try{ bloom=new SimpleBloom(shRenderer,shScene,shCamera); }
+      catch(e){ bloom=null; }
+    }
+
+    window.addEventListener('resize',onResize);
+    document.addEventListener('keydown',onKeyDown);
+    document.addEventListener('keyup',onKeyUp);
+    document.addEventListener('mousemove',onMouseMove);
+    document.addEventListener('mousedown',onMouseDown);
+    document.addEventListener('mouseup',onMouseUp);
+    document.addEventListener('pointerlockchange',onPointerLockChange);
+    shCanvas.addEventListener('click',()=>{ if(active && !pointerLocked) shCanvas.requestPointerLock(); });
+    shCanvas.addEventListener('contextmenu', e=>e.preventDefault());
   }
-  function stop(){playing=false;if(rafId){cancelAnimationFrame(rafId);rafId=null;}}
-  function updateHUD(){
-    $('#shHP').textContent=Math.max(0,Math.round(player.hp));
-    $('#shScore').textContent=score;
-    $('#shWave').textContent=wave;
-    $('#shKills').textContent=kills;
-    let rank='Новичок';
-    if(score>=200)rank='Стрелок';
-    if(score>=500)rank='Снайпер';
-    if(score>=1000)rank='Ветеран';
-    if(score>=2000)rank='Мастер';
-    if(score>=5000)rank='Легенда';
-    $('#shRank').textContent=rank;
+
+  // ═══════════ АРЕНА — 28 УКРЫТИЙ ═══════════
+  function buildArena(){
+    // пол
+    const floor=new THREE.Mesh(new THREE.PlaneGeometry(ARENA*2, ARENA*2),
+      new THREE.MeshStandardMaterial({color:0x5a5a64, roughness:0.85}));   // ← светлее пол
+    floor.rotation.x=-Math.PI/2; shScene.add(floor);
+
+    const grid=new THREE.GridHelper(ARENA*2, 40, 0x8899aa, 0x445566);
+    grid.position.y=0.02; shScene.add(grid);
+
+    // стены
+    const wallM=new THREE.MeshStandardMaterial({color:0x6a6a78, roughness:0.85});
+    const wallH=8;
+    const walls=[
+      [0, wallH/2, -ARENA, ARENA*2, wallH, 0.8],
+      [0, wallH/2,  ARENA, ARENA*2, wallH, 0.8],
+      [-ARENA, wallH/2, 0, 0.8, wallH, ARENA*2],
+      [ ARENA, wallH/2, 0, 0.8, wallH, ARENA*2]
+    ];
+    for(const [x,y,z,sx,sy,sz] of walls){
+      const w=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz), wallM);
+      w.position.set(x,y,z); shScene.add(w);
+    }
+
+    // укрытия
+    const boxM=new THREE.MeshStandardMaterial({color:0x8a7a68, roughness:0.9});
+    const boxM2=new THREE.MeshStandardMaterial({color:0x6a7a8a, roughness:0.9});
+    const boxDefs = [
+      // внутреннее кольцо
+      {x:-15,z:-15,s:2.5,m:boxM},  {x:15,z:-15,s:2.5,m:boxM},
+      {x:-15,z: 15,s:2.5,m:boxM},  {x:15,z: 15,s:2.5,m:boxM},
+      // среднее кольцо
+      {x:-30,z:-20,s:3.0,m:boxM2}, {x: 0,z:-30,s:3.0,m:boxM},
+      {x: 30,z:-20,s:3.0,m:boxM2}, {x:-30,z:  0,s:3.0,m:boxM},
+      {x: 30,z:  0,s:3.0,m:boxM2}, {x:-30,z: 20,s:3.0,m:boxM},
+      {x:  0,z: 30,s:3.0,m:boxM2}, {x: 30,z: 20,s:3.0,m:boxM},
+      // внешнее кольцо
+      {x:-55,z:-25,s:3.5,m:boxM2}, {x:-55,z: 25,s:3.5,m:boxM},
+      {x: 55,z:-25,s:3.5,m:boxM},  {x: 55,z: 25,s:3.5,m:boxM2},
+      {x:-25,z:-55,s:3.5,m:boxM},  {x: 25,z:-55,s:3.5,m:boxM2},
+      {x:-25,z: 55,s:3.5,m:boxM2}, {x: 25,z: 55,s:3.5,m:boxM},
+      // углы-крепости
+      {x:-50,z:-50,s:4.5,m:boxM2}, {x: 50,z:-50,s:4.5,m:boxM},
+      {x:-50,z: 50,s:4.5,m:boxM},  {x: 50,z: 50,s:4.5,m:boxM2},
+      // доп. укрытия между кольцами
+      {x:-10,z:-35,s:2.0,m:boxM},  {x: 10,z:-35,s:2.0,m:boxM2},
+      {x:-10,z: 35,s:2.0,m:boxM2}, {x: 10,z: 35,s:2.0,m:boxM},
+      {x:-40,z:-10,s:2.5,m:boxM},  {x: 40,z:-10,s:2.5,m:boxM2},
+      {x:-40,z: 10,s:2.5,m:boxM2}, {x: 40,z: 10,s:2.5,m:boxM}
+    ];
+    for(const b of boxDefs){
+      const mesh=new THREE.Mesh(new THREE.BoxGeometry(b.s, b.s, b.s), b.m);
+      mesh.position.set(b.x, b.s/2, b.z);
+      shScene.add(mesh);
+      colliders.push({x:b.x, z:b.z, r:b.s*0.72});
+    }
   }
-  function spawnEnemy(){
-    const side=randInt(0,3);let x,y;
-    if(side===0){x=rand(0,canvas.width);y=-20;}
-    else if(side===1){x=canvas.width+20;y=rand(0,canvas.height);}
-    else if(side===2){x=rand(0,canvas.width);y=canvas.height+20;}
-    else{x=-20;y=rand(0,canvas.height);}
-    const bigChance=Math.min(0.4,0.1+wave*0.04);
-    const type=Math.random()<bigChance?'big':'small';
-    const baseSpeed=type==='big'?40:70;
-    const waveBonus=Math.min(30,wave*3);
-    enemies.push({x,y,vx:0,vy:0,r:type==='big'?22:14,
-      hp:type==='big'?3:1,maxhp:type==='big'?3:1,
-      speed:baseSpeed+waveBonus,
-      color:type==='big'?'#8a2a8a':'#c03030',type});
+
+  function buildWeaponView(){
+    weaponViewModel=new THREE.Group();
+    const bodyM=new THREE.MeshStandardMaterial({color:0x4a4a54, roughness:0.7, metalness:0.4});
+    const body=new THREE.Mesh(new THREE.BoxGeometry(0.09,0.13,0.4),bodyM);
+    body.position.set(0.25,-0.22,-0.45); weaponViewModel.add(body);
+    const barrel=new THREE.Mesh(new THREE.BoxGeometry(0.05,0.05,0.3),bodyM);
+    barrel.position.set(0.25,-0.2,-0.7); weaponViewModel.add(barrel);
+    muzzleFlashMesh=new THREE.Mesh(new THREE.SphereGeometry(0.09,6,5),
+      new THREE.MeshBasicMaterial({color:0xffee88,transparent:true,opacity:0.9}));
+    muzzleFlashMesh.position.set(0.25,-0.2,-0.88);
+    muzzleFlashMesh.visible=false;
+    weaponViewModel.add(muzzleFlashMesh);
+    shCamera.add(weaponViewModel);
   }
-  function shoot(){
-    if(shootCd>0)return;shootCd=0.18;
-    const dx=aimX-player.x,dy=aimY-player.y;
-    const len=Math.hypot(dx,dy)||1;
-    bullets.push({x:player.x,y:player.y,vx:dx/len*520,vy:dy/len*520,r:4,life:2});
-    snd.shot();
+
+  function buildInstancedPools(){
+    const bGeo=new THREE.SphereGeometry(0.07,4,4);
+    const bMat=new THREE.MeshBasicMaterial({color:0xffe060});
+    bulletsMesh=new THREE.InstancedMesh(bGeo,bMat,MAX_BULLETS);
+    bulletsMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    bulletsMesh.frustumCulled=false;
+    shScene.add(bulletsMesh);
+    for(let i=0;i<MAX_BULLETS;i++){
+      bulletsData.push({active:false,pos:new THREE.Vector3(),vel:new THREE.Vector3(),dmg:0,life:0,splash:0});
+      bulletsMesh.setMatrixAt(i,_hiddenM);
+    }
+    bulletsMesh.instanceMatrix.needsUpdate=true;
+
+    const pGeo=new THREE.BoxGeometry(0.12,0.12,0.12);
+    const pMat=new THREE.MeshBasicMaterial({color:0xffffff});
+    particlesMesh=new THREE.InstancedMesh(pGeo,pMat,MAX_PARTICLES);
+    particlesMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    particlesMesh.frustumCulled=false;
+    shScene.add(particlesMesh);
+    for(let i=0;i<MAX_PARTICLES;i++){
+      particlesData.push({active:false,pos:new THREE.Vector3(),vel:new THREE.Vector3(),life:0,maxLife:0});
+      particlesMesh.setMatrixAt(i,_hiddenM);
+      particlesMesh.setColorAt(i,_tmpColor.setHex(0xffffff));
+    }
+    particlesMesh.instanceMatrix.needsUpdate=true;
+    if(particlesMesh.instanceColor) particlesMesh.instanceColor.needsUpdate=true;
   }
-  function loop(){
-    if(!playing)return;rafId=requestAnimationFrame(loop);
-    const dt=1/60;
-    let mvx=0,mvy=0;
-    if(keys2['w']||keys2['ArrowUp'])mvy-=1;
-    if(keys2['s']||keys2['ArrowDown'])mvy+=1;
-    if(keys2['a']||keys2['ArrowLeft'])mvx-=1;
-    if(keys2['d']||keys2['ArrowRight'])mvx+=1;
-    const ml=Math.hypot(mvx,mvy);if(ml>0){mvx/=ml;mvy/=ml;}
-    player.x+=mvx*200*dt;player.y+=mvy*200*dt;
-    player.x=clamp(player.x,player.r,canvas.width-player.r);
-    player.y=clamp(player.y,player.r,canvas.height-player.r);
-    if(keys2[' '])shoot();
-    shootCd-=dt;spawnCd-=dt;
-    const spawnRate=Math.max(0.15,1.2-wave*0.1);
-    if(spawnCd<=0){spawnEnemy();spawnCd=spawnRate;}
-    for(let i=enemies.length-1;i>=0;i--){
-      const e=enemies[i];
-      const dx=player.x-e.x,dy=player.y-e.y;
-      const d=Math.hypot(dx,dy)||1;
-      e.x+=dx/d*e.speed*dt;e.y+=dy/d*e.speed*dt;
-      if(d<e.r+player.r){
-        player.hp-=e.type==='big'?25:12;
-        e.x-=dx/d*30;e.y-=dy/d*30;
-        for(let k=0;k<6;k++)particles.push({x:e.x,y:e.y,
-          vx:rand(-80,80),vy:rand(-80,80),life:0.5,color:'#ff6060'});
-        if(player.hp<=0){endGame();return;}
+
+  function createEnemyMesh(){
+    const g=new THREE.Group();
+    const bodyMat=new THREE.MeshStandardMaterial({color:0xc04040, roughness:0.7,
+      emissive:0xc04040, emissiveIntensity:0.2});
+    const body=new THREE.Mesh(new THREE.CapsuleGeometry(0.35,0.6,3,6),bodyMat);
+    body.position.y=0.7; g.add(body);
+    const head=new THREE.Mesh(new THREE.SphereGeometry(0.28,8,6),bodyMat);
+    head.position.y=1.35; g.add(head);
+    const eyeMat=new THREE.MeshBasicMaterial({color:0xffffff});
+    const eyeL=new THREE.Mesh(new THREE.SphereGeometry(0.055,4,4),eyeMat);
+    eyeL.position.set(-0.1,1.4,0.22); g.add(eyeL);
+    const eyeR=eyeL.clone(); eyeR.position.x=0.1; g.add(eyeR);
+    g.userData.bodyMat=bodyMat; g.userData.bodyMesh=body; g.userData.headMesh=head;
+    return g;
+  }
+
+  function buildEnemyPool(){
+    for(let i=0;i<MAX_ENEMIES;i++){
+      const g=createEnemyMesh(); g.visible=false; shScene.add(g);
+      enemyPool.push({group:g,alive:false,remote:false,netId:0,type:'runner',hp:0,maxHp:0,
+        radius:0.4,height:1.6,dmg:10,speed:4,score:10,flashT:0,attackCd:0,
+        shootCd:0,shootRate:0,explode:false,targetX:0,targetZ:0});
+    }
+  }
+
+  function buildPickupPool(){
+    for(let i=0;i<15;i++){
+      const g=new THREE.Group();
+      const coreMesh=new THREE.Mesh(new THREE.OctahedronGeometry(0.3,0),
+        new THREE.MeshStandardMaterial({color:0x40ff60, emissive:0x40ff60, emissiveIntensity:0.9}));
+      g.add(coreMesh);
+      const light=new THREE.PointLight(0x40ff60,0.9,4,1.8); g.add(light);
+      g.visible=false; shScene.add(g);
+      pickupPool.push({group:g,coreMesh,light,active:false,type:'health',weapon:null,timer:0});
+    }
+  }
+
+  // ═══════════ ПИРЫ ═══════════
+  function createPeerMesh(color,name){
+    const g=new THREE.Group();
+    const col=color!==undefined?color:0xff8080;
+    const mat=new THREE.MeshStandardMaterial({color:col, roughness:0.7,
+      emissive:col, emissiveIntensity:0.15});
+    const body=new THREE.Mesh(new THREE.CapsuleGeometry(0.35,0.9,4,8),mat);
+    body.position.y=0.9; g.add(body);
+    const head=new THREE.Mesh(new THREE.SphereGeometry(0.25,8,6),mat);
+    head.position.y=1.65; g.add(head);
+    const gun=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.1,0.4),
+      new THREE.MeshStandardMaterial({color:0x333333}));
+    gun.position.set(0.35,1.2,-0.35); g.add(gun);
+    g.userData.gun=gun;
+    let tag;
+    try{ tag=makeTextSprite(name,{fontSize:18}); }catch(e){ tag=null; }
+    if(tag){ tag.position.y=2.2; g.add(tag); g.userData.tag=tag; }
+    const hpBg=new THREE.Sprite(new THREE.SpriteMaterial({color:0x330000,depthTest:false}));
+    hpBg.scale.set(1,0.12,1); hpBg.position.y=2.05;
+    g.add(hpBg);
+    const hpFg=new THREE.Sprite(new THREE.SpriteMaterial({color:0xff3030,depthTest:false}));
+    hpFg.scale.set(1,0.12,1); hpFg.position.set(0,2.05,0.01);
+    g.add(hpFg);
+    g.userData.hpBg=hpBg; g.userData.hpFg=hpFg;
+    return g;
+  }
+
+  function addPeer(id,name,color,x,z,yaw){
+    if(peers.has(id)) return;
+    const group=createPeerMesh(color,name);
+    group.position.set(x||0,0,z||0);
+    group.rotation.y=yaw||0;
+    shScene.add(group);
+    peers.set(id,{id,name,color,group,targetX:x||0,targetZ:z||0,targetYaw:yaw||0,hp:100});
+    updateWaitUI();
+  }
+
+  function removePeer(id){
+    const p=peers.get(id);
+    if(!p) return;
+    if(p.group.parent) p.group.parent.remove(p.group);
+    peers.delete(id);
+    updateWaitUI();
+  }
+
+  function updatePeerVisual(dt){
+    for(const p of peers.values()){
+      const g=p.group;
+      g.position.x += (p.targetX - g.position.x) * Math.min(1, dt*12);
+      g.position.z += (p.targetZ - g.position.z) * Math.min(1, dt*12);
+      let diff = p.targetYaw - g.rotation.y;
+      while(diff>Math.PI) diff-=Math.PI*2;
+      while(diff<-Math.PI) diff+=Math.PI*2;
+      g.rotation.y += diff * Math.min(1, dt*12);
+      const fg=g.userData.hpFg;
+      if(fg){
+        const frac=Math.max(0,Math.min(1,p.hp/100));
+        fg.scale.x = frac;
+        fg.position.x = -(1-frac)*0.5;
       }
     }
-    for(let i=bullets.length-1;i>=0;i--){
-      const b=bullets[i];b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt;
-      if(b.life<=0||b.x<0||b.y<0||b.x>canvas.width||b.y>canvas.height){bullets.splice(i,1);continue;}
-      for(let j=enemies.length-1;j>=0;j--){
-        const e=enemies[j];const dx=b.x-e.x,dy=b.y-e.y;
-        if(dx*dx+dy*dy<(e.r+b.r)*(e.r+b.r)){
-          e.hp--;
-          for(let k=0;k<4;k++)particles.push({x:e.x,y:e.y,
-            vx:rand(-100,100),vy:rand(-100,100),life:0.4,color:'#ffcc60'});
-          if(e.hp<=0){enemies.splice(j,1);score+=e.type==='big'?50:10;kills++;
-            wave=Math.max(wave,1+Math.floor(score/200));}
-          bullets.splice(i,1);break;
+  }
+
+  // ═══════════ СПАВН / УРОН ═══════════
+  function spawnEnemy(type,remoteNetId,remoteX,remoteZ){
+    let e=null;
+    for(const en of enemyPool){ if(!en.alive){ e=en; break; } }
+    if(!e) return null;
+    const T=ENEMY_TYPES[type];
+    const bm=e.group.userData.bodyMat;
+    bm.color.setHex(T.color); bm.emissive.setHex(T.color); bm.emissiveIntensity=0.2;
+    e.group.userData.bodyMesh.scale.set(T.radius/0.35, T.height/1.6, T.radius/0.35);
+    e.group.userData.headMesh.scale.setScalar(T.radius/0.35);
+    e.group.userData.headMesh.position.y=T.height-0.25;
+
+    let px, pz;
+    if(remoteX!==undefined && remoteZ!==undefined){
+      px=remoteX; pz=remoteZ;
+    } else {
+      const a=Math.random()*Math.PI*2, d=25+Math.random()*20;
+      px=Math.max(-ARENA+3, Math.min(ARENA-3, player.pos.x+Math.cos(a)*d));
+      pz=Math.max(-ARENA+3, Math.min(ARENA-3, player.pos.z+Math.sin(a)*d));
+    }
+    e.group.position.set(px,0,pz); e.group.visible=true;
+    e.alive=true; e.type=type;
+    e.hp=T.hp+Math.floor(T.hp*(wave-1)*0.1);
+    e.maxHp=e.hp; e.radius=T.radius; e.height=T.height; e.dmg=T.dmg;
+    e.speed=T.speed+Math.min(2,wave*0.15); e.score=T.score;
+    e.flashT=0; e.attackCd=1.0; e.shootCd=T.shootRate; e.shootRate=T.shootRate;
+    e.explode=!!T.explode; e.targetX=px; e.targetZ=pz;
+
+    if(remoteNetId!==undefined){ e.remote=true; e.netId=remoteNetId; }
+    else { e.remote=false; e.netId=enemyNetId++; }
+
+    if(mode==='coop' && isHost && !e.remote){
+      netSend('enemySpawn',{ id:e.netId, type, x:px, z:pz });
+    }
+    enemies.push(e);
+    return e;
+  }
+
+  function damageEnemy(e,dmg,fromHit){
+    if(!e.alive) return;
+    e.hp-=dmg; e.flashT=0.1;
+    e.group.userData.bodyMat.emissiveIntensity=1.5;
+    if(mode==='coop' && !isHost && !fromHit && e.remote){
+      netSend('hit',{ enemyId:e.netId, dmg });
+      return;
+    }
+    if(e.hp<=0){
+      e.alive=false; e.group.visible=false;
+      const idx=enemies.indexOf(e); if(idx>=0) enemies.splice(idx,1);
+      kills++; score+=e.score;
+      if(e.explode) explode(e.group.position,3,40);
+      spawnHitParticles(e.group.position,12);
+      const r=Math.random();
+      if(r<0.25) spawnPickup(e.group.position,'health');
+      else if(r<0.5) spawnPickup(e.group.position,'ammo');
+      else if(e.type==='boss'||r<0.55){
+        const opts=['smg','rifle','shotgun','sniper','rocket'];
+        spawnPickup(e.group.position,'weapon',opts[Math.floor(Math.random()*opts.length)]);
+      }
+      if(mode==='coop' && isHost && !e.remote){
+        netSend('enemyDead',{ id:e.netId });
+      }
+    }
+  }
+
+  function explode(pos,radius,dmg){
+    for(const e of [...enemies]){
+      if(!e.alive) continue;
+      const d=Math.hypot(e.group.position.x-pos.x,e.group.position.z-pos.z);
+      if(d<radius) damageEnemy(e,Math.floor(dmg*(1-d/radius)));
+    }
+    const pd=Math.hypot(player.pos.x-pos.x,player.pos.z-pos.z);
+    if(pd<radius) damagePlayer(Math.floor(dmg*0.5*(1-pd/radius)));
+    spawnHitParticles(pos,20,0xff8020);
+  }
+
+  function damagePlayer(dmg){
+    if(pvpEnded) return;
+    player.hp-=dmg;
+    Snd.hit();
+    if(player.hp<=0){
+      player.hp=0;
+      if(mode==='pvp'){
+        player.hp=player.maxHp;
+        player.pos.set(0,EYE,8);
+        player.velY=0;
+        player.yaw=0; player.pitch=0;
+        player.weapon='pistol';
+        for(const k in WEAPONS) player.ammo[k]=WEAPONS[k].mag;
+        netSend('pdead',{});
+        pvpKillsThem++;
+        if(pvpKillsThem>=PVP_KILLS_TO_WIN) endPvp(false);
+        updateHUD();
+      } else {
+        gameOver();
+      }
+    }
+  }
+
+  function spawnPickup(pos,type,weapon){
+    let p=null;
+    for(const pk of pickupPool){ if(!pk.active){ p=pk; break; } }
+    if(!p) return;
+    p.active=true; p.type=type; p.weapon=weapon; p.timer=20;
+    p.group.position.set(pos.x,0.8,pos.z); p.group.visible=true;
+    let color=0x40ff60;
+    if(type==='health') color=0x40ff60;
+    else if(type==='ammo') color=0xffd060;
+    else if(type==='weapon') color=0x60a0ff;
+    p.coreMesh.material.color.setHex(color);
+    p.coreMesh.material.emissive.setHex(color);
+    p.light.color.setHex(color);
+  }
+
+  function updatePickups(dt){
+    for(const p of pickupPool){
+      if(!p.active) continue;
+      p.timer-=dt;
+      if(p.timer<=0){ p.active=false; p.group.visible=false; continue; }
+      p.group.rotation.y+=dt*2;
+      p.group.position.y=0.8+Math.sin(performance.now()*0.003)*0.15;
+      const dx=player.pos.x-p.group.position.x, dz=player.pos.z-p.group.position.z;
+      if(dx*dx+dz*dz<2.25) applyPickup(p);
+    }
+  }
+
+  function applyPickup(p){
+    if(p.type==='health'){ player.hp=Math.min(player.maxHp,player.hp+30); }
+    else if(p.type==='ammo'){
+      for(const k in WEAPONS) player.ammo[k]=WEAPONS[k].mag;
+      player.reloading=0;
+    } else if(p.type==='weapon' && p.weapon){
+      player.weapon=p.weapon;
+      player.ammo[p.weapon]=WEAPONS[p.weapon].mag;
+      player.reloading=0;
+    }
+    Snd.pickup();
+    p.active=false; p.group.visible=false;
+  }
+
+  // ═══════════ ПУЛИ — БЫСТРЫЕ + СУБСТЕПЫ ═══════════
+  function spawnBullet(pos,vel,dmg,splash){
+    for(let i=0;i<MAX_BULLETS;i++){
+      if(!bulletsData[i].active){
+        const b=bulletsData[i];
+        b.active=true; b.pos.copy(pos); b.vel.copy(vel);
+        b.dmg=dmg; b.life=2.0; b.splash=splash||0;
+        return;
+      }
+    }
+  }
+
+  function updateBullets(dt){
+    let needsUpdate=false;
+    for(let i=0;i<MAX_BULLETS;i++){
+      const b=bulletsData[i];
+      if(!b.active) continue;
+
+      // субстепы для быстрых пуль
+      const bSpeed = b.vel.length();
+      const subSteps = Math.min(6, Math.max(1, Math.ceil(bSpeed * dt / 0.5)));
+      const subDt = dt / subSteps;
+      let hit=false;
+
+      for(let s=0; s<subSteps && !hit; s++){
+        b.pos.x += b.vel.x * subDt;
+        b.pos.y += b.vel.y * subDt;
+        b.pos.z += b.vel.z * subDt;
+
+        if(mode!=='pvp'){
+          for(const e of enemies){
+            if(!e.alive) continue;
+            const dx=b.pos.x-e.group.position.x;
+            const dy=b.pos.y-(e.group.position.y+e.height*0.5);
+            const dz=b.pos.z-e.group.position.z;
+            const r=e.radius+0.2;
+            if(dx*dx+dy*dy+dz*dz<r*r){
+              if(b.splash>0) explode(b.pos,b.splash,b.dmg);
+              else damageEnemy(e,b.dmg);
+              hit=true; break;
+            }
+          }
+        }
+        if(!hit && mode==='pvp'){
+          for(const p of peers.values()){
+            const dx=b.pos.x-p.group.position.x;
+            const dy=b.pos.y-(p.group.position.y+0.9);
+            const dz=b.pos.z-p.group.position.z;
+            if(dx*dx+dy*dy+dz*dz<0.7){
+              netSend('phit',{ to:p.id, dmg:b.dmg });
+              hit=true; break;
+            }
+          }
+        }
+        if(!hit && (Math.abs(b.pos.x)>ARENA || Math.abs(b.pos.z)>ARENA || b.pos.y<0 || b.pos.y>25)){
+          hit=true; break;
+        }
+        if(!hit){
+          for(const c of colliders){
+            const dx=b.pos.x-c.x, dz=b.pos.z-c.z;
+            if(b.pos.y<10 && Math.hypot(dx,dz)<c.r){ hit=true; break; }
+          }
+        }
+      }
+
+      b.life-=dt;
+
+      if(hit || b.life<=0){
+        b.active=false;
+        bulletsMesh.setMatrixAt(i,_hiddenM);
+        needsUpdate=true;
+      } else {
+        _tmpM.makeTranslation(b.pos.x,b.pos.y,b.pos.z);
+        bulletsMesh.setMatrixAt(i,_tmpM);
+        needsUpdate=true;
+      }
+    }
+    if(needsUpdate) bulletsMesh.instanceMatrix.needsUpdate=true;
+  }
+
+  function spawnParticle(pos,vel,color,life){
+    for(let i=0;i<MAX_PARTICLES;i++){
+      if(!particlesData[i].active){
+        const p=particlesData[i];
+        p.active=true; p.pos.copy(pos); p.vel.copy(vel);
+        p.life=life; p.maxLife=life;
+        _tmpColor.setHex(color);
+        particlesMesh.setColorAt(i,_tmpColor);
+        if(particlesMesh.instanceColor) particlesMesh.instanceColor.needsUpdate=true;
+        return;
+      }
+    }
+  }
+
+  function spawnHitParticles(pos,count,color){
+    color=color||0xffaa40;
+    for(let i=0;i<count;i++){
+      const vel=new THREE.Vector3(
+        (Math.random()-0.5)*8,
+        Math.random()*6+1,
+        (Math.random()-0.5)*8);
+      spawnParticle(pos,vel,color,0.4+Math.random()*0.4);
+    }
+  }
+
+  function updateParticles(dt){
+    let needsUpdate=false;
+    for(let i=0;i<MAX_PARTICLES;i++){
+      const p=particlesData[i];
+      if(!p.active) continue;
+      p.pos.x+=p.vel.x*dt; p.pos.y+=p.vel.y*dt; p.pos.z+=p.vel.z*dt;
+      p.vel.y-=15*dt; p.life-=dt;
+      if(p.life<=0 || p.pos.y<-1){
+        p.active=false;
+        particlesMesh.setMatrixAt(i,_hiddenM);
+        needsUpdate=true;
+      } else {
+        const s=Math.max(0.3, p.life/p.maxLife);
+        _tmpM.makeScale(s,s,s);
+        _tmpM.setPosition(p.pos.x,p.pos.y,p.pos.z);
+        particlesMesh.setMatrixAt(i,_tmpM);
+        needsUpdate=true;
+      }
+    }
+    if(needsUpdate) particlesMesh.instanceMatrix.needsUpdate=true;
+  }
+
+  // ═══════════ СТРЕЛЬБА ═══════════
+  function fire(){
+    if(player.reloading>0 || player.shootCd>0 || pvpEnded) return;
+    const w=WEAPONS[player.weapon];
+    if(player.ammo[player.weapon]<=0){ startReload(); return; }
+    player.ammo[player.weapon]--;
+    player.shootCd=w.rate;
+
+    const baseDir=new THREE.Vector3(0,0,-1).applyEuler(shCamera.rotation);
+    const startPos=new THREE.Vector3();
+    shCamera.getWorldPosition(startPos);
+    startPos.y-=0.15;
+
+    for(let p=0;p<w.pellets;p++){
+      const d=baseDir.clone();
+      d.x+=(Math.random()-0.5)*w.spread*2;
+      d.y+=(Math.random()-0.5)*w.spread*2;
+      d.z+=(Math.random()-0.5)*w.spread*2;
+      d.normalize().multiplyScalar(w.speed);
+      spawnBullet(startPos,d,w.dmg,w.splash||0);
+    }
+
+    Snd.shoot(player.weapon);   // ← звук зависит от оружия
+    player.pitch+=0.008;
+    player.recoil=1.0;
+    if(muzzleFlashMesh){ muzzleFlashMesh.visible=true; muzzleFlashT=0.05; }
+
+    if(mode==='pvp') netSend('shot',{});
+    if(player.ammo[player.weapon]<=0) startReload();
+  }
+
+  function startReload(){
+    const w=WEAPONS[player.weapon];
+    if(player.reloading>0 || player.ammo[player.weapon]===w.mag) return;
+    player.reloading=w.reload;
+    Snd.reload();
+  }
+
+  function switchWeapon(name){
+    if(!WEAPONS[name] || player.reloading>0 || name===player.weapon) return;
+    player.weapon=name;
+    if(player.ammo[name]===undefined) player.ammo[name]=WEAPONS[name].mag;
+       player.reloading=0;
+    player.shootCd=Math.max(player.shootCd,0.15);
+    aiming=false;
+    Snd.switchSound();
+    updateWeaponBar();
+  }
+
+  // ═══════════ ОБНОВЛЕНИЯ ═══════════
+  function updatePlayer(dt){
+    if(pvpEnded) return;
+    let mx=0,mz=0;
+    if(keys['KeyW']||keys['ArrowUp']) mz+=1;
+    if(keys['KeyS']||keys['ArrowDown']) mz-=1;
+    if(keys['KeyA']||keys['ArrowLeft']) mx-=1;
+    if(keys['KeyD']||keys['ArrowRight']) mx+=1;
+    const len=Math.hypot(mx,mz);
+    if(len>0){
+      mx/=len; mz/=len;
+      const spd=MOVE*((keys['ShiftLeft']||keys['ShiftRight'])?SPRINT:1);
+      const sinY=Math.sin(player.yaw), cosY=Math.cos(player.yaw);
+      const dx=(-sinY*mz+cosY*mx)*spd*dt;
+      const dz=(-cosY*mz-sinY*mx)*spd*dt;
+      let nx=player.pos.x+dx, nz=player.pos.z+dz;
+      const lim=ARENA-0.8;
+      nx=Math.max(-lim,Math.min(lim,nx));
+      nz=Math.max(-lim,Math.min(lim,nz));
+      for(const c of colliders){
+        const cdx=nx-c.x, cdz=nz-c.z;
+        const d=Math.hypot(cdx,cdz);
+        const minD=c.r+PLAYER_R;
+        if(d<minD && d>0.001){
+          const push=minD-d;
+          nx+=(cdx/d)*push; nz+=(cdz/d)*push;
+        }
+      }
+      player.pos.x=nx; player.pos.z=nz;
+      player.bobPhase+=dt*spd*1.4;
+    } else {
+      player.bobPhase*=0.9;
+    }
+    if(!player.onGround){
+      player.velY-=GRAVITY*dt;
+      player.pos.y+=player.velY*dt;
+      if(player.pos.y<=EYE){ player.pos.y=EYE; player.velY=0; player.onGround=true; }
+    }
+    if(player.shootCd>0) player.shootCd-=dt;
+    if(player.reloading>0){
+      player.reloading-=dt;
+      if(player.reloading<=0) player.ammo[player.weapon]=WEAPONS[player.weapon].mag;
+    }
+    if(player.recoil>0) player.recoil=Math.max(0,player.recoil-dt*8);
+
+    if(mouseDown && WEAPONS[player.weapon].auto && player.shootCd<=0 && player.reloading<=0) fire();
+
+    const bobY=Math.abs(Math.sin(player.bobPhase))*0.03;
+    shCamera.position.set(player.pos.x, player.pos.y+bobY, player.pos.z);
+    shCamera.rotation.y=player.yaw;
+    shCamera.rotation.x=player.pitch;
+
+    if(weaponViewModel){
+      weaponViewModel.position.x=Math.sin(player.bobPhase)*0.015;
+      weaponViewModel.position.y=Math.abs(Math.cos(player.bobPhase*0.5))*0.01;
+      weaponViewModel.position.z=player.recoil*0.08;
+    }
+        if(muzzleFlashT>0){ muzzleFlashT-=dt; if(muzzleFlashT<=0) muzzleFlashMesh.visible=false; }
+
+    // ─── Прицел снайперки ───
+    const wantScope = aiming && player.weapon==='sniper' && !pvpEnded;
+    const targetFov = wantScope ? SNIPER_FOV : BASE_FOV;
+    shCamera.fov += (targetFov - shCamera.fov) * Math.min(1, dt*14);
+    shCamera.updateProjectionMatrix();
+
+    const scopeEl = document.getElementById('sh3Scope');
+    if(scopeEl) scopeEl.style.display = wantScope ? 'block' : 'none';
+    if(weaponViewModel) weaponViewModel.visible = !wantScope;
+  }
+
+  function updateEnemies(dt){
+    if(mode==='coop' && !isHost){
+      for(const e of enemies){
+        if(!e.alive) continue;
+        e.group.position.x += (e.targetX - e.group.position.x) * Math.min(1, dt*10);
+        e.group.position.z += (e.targetZ - e.group.position.z) * Math.min(1, dt*10);
+        if(e.flashT>0){ e.flashT-=dt; if(e.flashT<=0) e.group.userData.bodyMat.emissiveIntensity=0.2; }
+        const dx=player.pos.x-e.group.position.x;
+        const dz=player.pos.z-e.group.position.z;
+        e.group.rotation.y=Math.atan2(dx,dz);
+        const dist = Math.hypot(dx, dz);
+        // ← Клиент тоже получает урон от врагов (раньше он был бессмертен)
+        if(dist<1.8 && !e.shootRate){
+          e.attackCd = (e.attackCd||0) - dt;
+          if(e.attackCd<=0){ e.attackCd=0.9; damagePlayer(e.dmg); }
+        }
+        if(e.shootRate>0 && dist<20){
+          e.shootCd = (e.shootCd||0) - dt;
+          if(e.shootCd<=0){
+            e.shootCd=e.shootRate;
+            const dir = new THREE.Vector3(dx,0,dz).normalize();
+            const spawnPos = e.group.position.clone(); spawnPos.y = e.height*0.6;
+            spawnBullet(spawnPos, dir.multiplyScalar(40), 10, 0);
+          }
+        }
+      }
+      return;
+    }
+    for(const e of enemies){
+      if(!e.alive) continue;
+      if(e.flashT>0){ e.flashT-=dt; if(e.flashT<=0) e.group.userData.bodyMat.emissiveIntensity=0.2; }
+      const dx=player.pos.x-e.group.position.x;
+      const dz=player.pos.z-e.group.position.z;
+      const dist=Math.hypot(dx,dz);
+      if(dist>1.2){
+        const nx=(dx/dist)*e.speed*dt, nz=(dz/dist)*e.speed*dt;
+        let newX=e.group.position.x+nx, newZ=e.group.position.z+nz;
+        for(const c of colliders){
+          if(Math.hypot(newX-c.x,newZ-c.z)<c.r+e.radius){
+            newX=e.group.position.x; newZ=e.group.position.z; break;
+          }
+        }
+        const lim=ARENA-1;
+        newX=Math.max(-lim,Math.min(lim,newX));
+        newZ=Math.max(-lim,Math.min(lim,newZ));
+        e.group.position.x=newX; e.group.position.z=newZ;
+      }
+      e.group.rotation.y=Math.atan2(dx,dz);
+      if(dist<1.8 && !e.shootRate){
+        e.attackCd-=dt;
+        if(e.attackCd<=0){ e.attackCd=0.9; damagePlayer(e.dmg); }
+      }
+      if(e.shootRate>0 && dist<20){
+        e.shootCd-=dt;
+        if(e.shootCd<=0){
+          e.shootCd=e.shootRate;
+          const dir=new THREE.Vector3(dx,0,dz).normalize();
+          const spawnPos=e.group.position.clone(); spawnPos.y=e.height*0.6;
+          spawnBullet(spawnPos, dir.multiplyScalar(40), 10, 0);
         }
       }
     }
-    for(let i=particles.length-1;i>=0;i--){
-      const p=particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;
-      p.vx*=0.95;p.vy*=0.95;p.life-=dt;
-      if(p.life<=0)particles.splice(i,1);
+  }
+
+  function pickEnemyType(){
+    const r=Math.random();
+    if(wave<2) return 'runner';
+    if(wave<4) return r<0.7?'runner':'bomber';
+    if(wave<6) return r<0.5?'runner':(r<0.8?'bomber':'shooter');
+    if(wave<10) return r<0.4?'runner':(r<0.6?'bomber':(r<0.85?'shooter':'tank'));
+    return r<0.3?'runner':(r<0.5?'bomber':(r<0.7?'shooter':'tank'));
+  }
+
+  function updateWave(dt){
+    if(mode==='pvp') return;
+    if(mode==='coop' && !isHost) return;
+    if(waveState==='break'){
+      waveT-=dt; if(waveT<=0) startWave();
+    } else if(waveState==='spawning'){
+      waveT-=dt;
+      if(waveT<=0){
+        if(waveLeft>0){
+          const isBoss=wave%5===0 && waveLeft===1;
+          spawnEnemy(isBoss?'boss':pickEnemyType());
+          waveLeft--; waveT=0.35;
+        } else waveState='fighting';
+      }
+    } else if(waveState==='fighting'){
+      let alive=0;
+      for(const e of enemies) if(e.alive) alive++;
+      if(alive===0){
+        wave++; waveState='break'; waveT=3;
+        score+=wave*50;
+        player.hp=Math.min(player.maxHp,player.hp+15);
+        if(mode==='coop' && isHost) netSend('wave',{ wave, state:'break', t:waveT });
+      }
     }
-    updateHUD();render();
   }
-  function endGame(){
-    playing=false;if(rafId){cancelAnimationFrame(rafId);rafId=null;}
-    const W=canvas.width,H=canvas.height;
-    ctx.fillStyle='rgba(0,0,0,.8)';ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='#ff6060';ctx.font='bold 40px Georgia';ctx.textAlign='center';
-    ctx.fillText('Игра окончена',W/2,H/2-40);
-    ctx.fillStyle='#ffd9a4';ctx.font='bold 24px Georgia';
-    ctx.fillText('Очки: '+score,W/2,H/2+10);
-    ctx.font='20px Georgia';ctx.fillStyle='#70ff70';
-    ctx.fillText('Убито: '+kills,W/2,H/2+40);
-    ctx.font='16px Georgia';ctx.fillStyle='#a99d87';
-    ctx.fillText('Нажми «Заново»',W/2,H/2+80);
+
+  function startWave(){
+    waveState='spawning';
+    waveLeft=Math.floor(3+wave*1.2);
+    if(wave%5===0) waveLeft+=1;
+    waveT=0.3;
+    if(mode==='coop' && isHost) netSend('wave',{ wave, state:'spawning', t:waveT });
   }
-  function render(){
-    const W=canvas.width,H=canvas.height;
-    ctx.fillStyle='#1a1a22';ctx.fillRect(0,0,W,H);
-    ctx.strokeStyle='rgba(120,140,180,.08)';ctx.lineWidth=1;
-    for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
-    for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
-    ctx.fillStyle='#ffe060';
-    bullets.forEach(b=>{ctx.beginPath();ctx.arc(b.x,b.y,b.r,0,Math.PI*2);ctx.fill();});
-    enemies.forEach(e=>{
-      ctx.fillStyle=e.color;ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.fill();
-      ctx.strokeStyle='#000';ctx.lineWidth=2;ctx.stroke();
-      if(e.maxhp>1){ctx.fillStyle='#300';ctx.fillRect(e.x-e.r,e.y-e.r-8,e.r*2,4);
-        ctx.fillStyle='#f44';ctx.fillRect(e.x-e.r,e.y-e.r-8,e.r*2*(e.hp/e.maxhp),4);}
-      const dx=player.x-e.x,dy=player.y-e.y;const d=Math.hypot(dx,dy)||1;
-      ctx.fillStyle='#fff';ctx.beginPath();
-      ctx.arc(e.x+dx/d*4-dy/d*4,e.y+dy/d*4+dx/d*4,2.5,0,Math.PI*2);
-      ctx.arc(e.x+dx/d*4+dy/d*4,e.y+dy/d*4-dx/d*4,2.5,0,Math.PI*2);ctx.fill();
+
+  // ═══════════ СЕТЬ ═══════════
+  function netSend(sub,extra){
+    if(!Net.online || !roomId) return;
+    Net.send({ t:'sh', sub, room:roomId, ...extra });
+  }
+  function netActive(){ return (mode==='coop'||mode==='pvp') && Net.online && roomId; }
+
+  function onNet(m){
+    if(!roomId || m.room!==roomId || m.from===Net.id) return;
+    switch(m.sub){
+      case 'join':{
+        if(!isHost) break;
+        addPeer(m.from, m.name||'?', m.color, m.x, m.z, m.yaw);
+        netSend('hello',{ to:m.from, name:localPlayer?localPlayer.name:'?',
+          color:localPlayer?localPlayer.color:0xff8080 });
+        if(mode==='coop'){
+          netSend('welcome',{ to:m.from, mode, wave, waveState, waveT,
+            enemies:enemies.filter(e=>e.alive).map(e=>({id:e.netId, type:e.type,
+              x:e.group.position.x, z:e.group.position.z, hp:e.hp})) });
+        }
+        if(mode==='pvp') netSend('welcome',{ to:m.from, mode });
+        break;
+      }
+      case 'hello':{
+        if(m.to!==Net.id) break;
+        addPeer(m.from, m.name||'?', m.color, 0, 0, 0);
+        break;
+      }
+      case 'welcome':{
+        if(m.to!==Net.id) break;
+        if(m.wave!==undefined) wave=m.wave;
+        if(m.waveState!==undefined) waveState=m.waveState;
+        if(m.waveT!==undefined) waveT=m.waveT;
+        if(m.enemies && Array.isArray(m.enemies)){
+          for(const en of m.enemies) spawnEnemy(en.type, en.id, en.x, en.z);
+        }
+        break;
+      }
+      case 'start':{ if(!active) startGame(mode); break; }
+      case 'leave':{
+        removePeer(m.from);
+        if(!isHost && m.from===hostId){
+          if(typeof showToast==='function') showToast('Хост покинул игру');
+          stopGame();
+          if(typeof showMini==='function') showMini('phoneMenu');
+        }
+        break;
+      }
+      case 'pos':{
+        const p=peers.get(m.from);
+        if(!p) break;
+        if(typeof m.x==='number'){ p.targetX=m.x; p.targetZ=m.z; }
+        if(typeof m.yaw==='number') p.targetYaw=m.yaw;
+        if(typeof m.hp==='number') p.hp=m.hp;
+        break;
+      }
+      case 'shot':{
+        const p=peers.get(m.from);
+        if(!p) break;
+        const pos=p.group.position.clone(); pos.y=1.2;
+        spawnHitParticles(pos,3,0xffe060);
+        break;
+      }
+      case 'enemySpawn':{ if(!isHost) spawnEnemy(m.type, m.id, m.x, m.z); break; }
+      case 'enemyPos':{
+        if(isHost || !Array.isArray(m.list)) break;
+        for(const ed of m.list){
+          let e=null;
+          for(const en of enemies) if(en.alive && en.netId===ed.id){ e=en; break; }
+          if(!e) e=spawnEnemy(ed.type, ed.id, ed.x, ed.z);
+          else { e.targetX=ed.x; e.targetZ=ed.z; e.hp=ed.hp; }
+        }
+        const ids=new Set(m.list.map(x=>x.id));
+        for(let i=enemies.length-1;i>=0;i--){
+          const e=enemies[i];
+          if(e.remote && !ids.has(e.netId)){
+            e.alive=false; e.group.visible=false; enemies.splice(i,1);
+          }
+        }
+        break;
+      }
+      case 'enemyDead':{
+        if(isHost) break;
+        for(let i=enemies.length-1;i>=0;i--){
+          const e=enemies[i];
+          if(e.netId===m.id){
+            e.alive=false; e.group.visible=false;
+            spawnHitParticles(e.group.position,10);
+            score+=e.score; kills++;
+            enemies.splice(i,1);
+            break;
+          }
+        }
+        break;
+      }
+      case 'hit':{
+        if(!isHost) break;
+        for(const e of enemies){
+          if(e.alive && e.netId===m.enemyId){ damageEnemy(e, m.dmg, true); break; }
+        }
+        break;
+      }
+      case 'wave':{
+        if(isHost) break;
+        wave=m.wave; waveState=m.state; waveT=m.t;
+        break;
+      }
+            case 'phit':{
+        if(m.to!==Net.id) break;
+        if(mode==='pvp' && !pvpEnded) damagePlayer(m.dmg);
+        break;
+      }
+      case 'pdead':{
+        if(pvpEnded) break;
+        pvpKillsMe++;
+        if(pvpKillsMe >= PVP_KILLS_TO_WIN) endPvp(true);
+        else updateHUD();
+        break;
+      }
+      case 'pwin':{
+        if(pvpEnded) break;
+        endPvp(false);   // хост сообщил, что мы проиграли
+        break;
+      }
+    }
+  }
+
+  function startCoopRoom(){
+    if(!Net.online){ if(typeof showToast==='function') showToast('Нет соединения'); return; }
+    mode='coop'; isHost=true; roomId=genCode(); hostId=Net.id;
+    netSend('roomCreated',{});
+    showWaitUI();
+    if(typeof showToast==='function') showToast('Комната '+roomId);
+  }
+  function startPvpRoom(){
+    if(!Net.online){ if(typeof showToast==='function') showToast('Нет соединения'); return; }
+    mode='pvp'; isHost=true; roomId=genCode(); hostId=Net.id;
+    netSend('roomCreated',{});
+    showWaitUI();
+    if(typeof showToast==='function') showToast('Комната '+roomId);
+  }
+  function genCode(){
+    const L='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let s=''; for(let i=0;i<4;i++) s+=L[Math.floor(Math.random()*L.length)];
+    return s;
+  }
+  function joinRoomCode(code,m){
+    if(!Net.online){ if(typeof showToast==='function') showToast('Нет соединения'); return; }
+    roomId=code; mode=m||'coop'; isHost=false;
+    netSend('join',{ name:localPlayer?localPlayer.name:'?',
+      color:localPlayer?localPlayer.color:0xff8080, x:0, z:0, yaw:0 });
+    if(typeof showToast==='function') showToast('Подключаемся к '+code);
+  }
+  function hostStart(){ if(!isHost) return; netSend('start',{}); startGame(mode); }
+
+  // ═══════════ GAME OVER / PVP END ═══════════
+  function gameOver(){
+    active=false;
+    if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
+    if(document.pointerLockElement===shCanvas) document.exitPointerLock();
+    if(score>(parseInt(localStorage.getItem('sumrak_shooter3d_best')||'0')||0)){
+      try{ localStorage.setItem('sumrak_shooter3d_best', String(score)); }catch(e){}
+      if(typeof submitRecord==='function') submitRecord('shooter', score);
+    }
+    const pauseEl=document.getElementById('sh3PauseHint');
+    if(pauseEl){
+      pauseEl.innerHTML=
+        '<div style="font-size:24px;color:#ff6060;margin-bottom:8px">💀 Игра окончена</div>'+
+        '<div style="margin-bottom:12px">Очки: <b>'+score+'</b> · Волна: <b>'+wave+'</b> · Убито: <b>'+kills+'</b></div>'+
+        '<button id="sh3RetryBtn" style="margin:8px 4px;padding:10px 20px;border-radius:8px;background:#ffb457;color:#2a1403;border:none;font-family:inherit;font-weight:bold;cursor:pointer;font-size:14px;pointer-events:auto">Заново</button>'+
+        '<button id="sh3ExitBtn2" style="margin:8px 4px;padding:10px 20px;border-radius:8px;background:rgba(200,80,80,.5);color:#ffd9a4;border:1px solid rgba(200,80,80,.6);font-family:inherit;cursor:pointer;font-size:14px;pointer-events:auto">В меню</button>';
+      pauseEl.style.display='block';
+      document.getElementById('sh3RetryBtn').onclick=()=>{
+        pauseEl.style.display='none';
+        resetGame();
+        active=true; lastT=performance.now(); loop();
+        setTimeout(()=>{ if(active&&!pointerLocked) shCanvas.requestPointerLock(); },100);
+      };
+      document.getElementById('sh3ExitBtn2').onclick=()=>exitToMenu();
+    }
+  }
+
+  function endPvp(win){
+    pvpEnded=true;
+    const pauseEl=document.getElementById('sh3PauseHint');
+    if(pauseEl){
+      pauseEl.innerHTML=
+        '<div style="font-size:24px;color:'+(win?'#ffd060':'#ff6060')+';margin-bottom:8px">'+
+          (win?'🏆 Победа!':'💀 Поражение')+'</div>'+
+        '<div style="margin-bottom:12px">'+pvpKillsMe+' : '+pvpKillsThem+'</div>'+
+        '<button id="sh3PvpExit" style="margin:8px 4px;padding:10px 20px;border-radius:8px;background:#ffb457;color:#2a1403;border:none;font-family:inherit;font-weight:bold;cursor:pointer;font-size:14px;pointer-events:auto">В меню</button>';
+      pauseEl.style.display='block';
+      document.getElementById('sh3PvpExit').onclick=()=>exitToMenu();
+    }
+    if(win) netSend('pwin',{});
+  }
+
+  // ═══════════ HUD (с панелью оружия) ═══════════
+  function buildHUD(){
+    hudEl=document.createElement('div');
+    hudEl.id='sh3HUD';
+    hudEl.style.cssText='position:fixed;inset:0;z-index:81;pointer-events:none;display:none;font-family:Georgia,serif';
+    hudEl.innerHTML=`
+      <style>
+        #sh3WeaponBar{position:absolute;bottom:90px;left:50%;transform:translateX(-50%);display:flex;gap:6px;pointer-events:auto;flex-wrap:wrap;justify-content:center;max-width:92vw;}
+        .sh3-wslot{padding:6px 10px;border-radius:8px;background:rgba(20,24,30,.8);border:1px solid rgba(255,180,90,.35);color:#c9bda6;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;transition:.15s;}
+        .sh3-wslot:hover{border-color:#ffd9a4;transform:translateY(-2px);}
+        .sh3-wslot.active{background:linear-gradient(#ffb457,#dd741d);color:#2a1403;border-color:#ffd9a4;font-weight:bold;box-shadow:0 0 12px rgba(255,180,90,.6);}
+        .sh3-wnum{font-size:9px;opacity:.6;font-family:monospace;}
+        .sh3-wslot.active .sh3-wnum{opacity:.85;}
+      </style>
+      <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:22px;height:22px">
+        <div style="position:absolute;left:50%;top:0;width:2px;height:8px;background:#fff;margin-left:-1px;box-shadow:0 0 3px #000"></div>
+        <div style="position:absolute;left:50%;bottom:0;width:2px;height:8px;background:#fff;margin-left:-1px;box-shadow:0 0 3px #000"></div>
+        <div style="position:absolute;top:50%;left:0;height:2px;width:8px;background:#fff;margin-top:-1px;box-shadow:0 0 3px #000"></div>
+        <div style="position:absolute;top:50%;right:0;height:2px;width:8px;background:#fff;margin-top:-1px;box-shadow:0 0 3px #000"></div>
+      </div>
+      <div style="position:absolute;top:16px;left:50%;transform:translateX(-50%);text-align:center;color:#ffd9a4;text-shadow:0 2px 4px #000;font-size:14px;letter-spacing:.05em">
+        <span id="sh3Wave">Волна 1</span> · <span id="sh3Score">★ 0</span> · <span id="sh3Kills">💀 0</span> · <span id="sh3PvpScore" style="display:none">⚔ 0:0</span>
+      </div>
+      <div style="position:absolute;bottom:24px;left:24px;color:#fff;text-shadow:0 2px 4px #000">
+        <div style="font-size:12px;color:#ff8080;margin-bottom:4px">❤ <span id="sh3HP">100</span></div>
+        <div style="width:200px;height:10px;background:rgba(0,0,0,.6);border-radius:5px;overflow:hidden;border:1px solid rgba(255,255,255,.2)">
+          <div id="sh3HPBar" style="width:100%;height:100%;background:linear-gradient(90deg,#c03030,#ff6060);transition:width .15s"></div>
+        </div>
+      </div>
+      <div style="position:absolute;bottom:24px;right:24px;color:#ffd9a4;text-shadow:0 2px 4px #000;text-align:right">
+        <div id="sh3Weapon" style="font-size:12px;color:#a99d87;letter-spacing:.05em">Пистолет</div>
+        <div id="sh3Ammo" style="font-size:26px;font-weight:bold">12 / 12</div>
+      </div>
+      <div id="sh3WeaponBar"></div>
+      <div style="position:absolute;top:12px;right:12px;pointer-events:auto">
+        <button id="sh3TopExit" style="padding:6px 12px;border-radius:8px;background:rgba(0,0,0,.65);color:#ffd9a4;border:1px solid rgba(255,180,90,.3);font-family:inherit;cursor:pointer;font-size:12px">✕ Меню</button>
+      </div>
+      <div id="sh3PauseHint" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:16px;text-align:center;display:none;text-shadow:0 2px 4px #000;background:rgba(0,0,0,.85);padding:20px 30px;border-radius:12px;pointer-events:none;max-width:80vw">
+        <div style="margin-bottom:12px">Нажми на экран, чтобы прицелиться</div>
+                <button id="sh3PauseExitBtn" style="padding:10px 24px;border-radius:8px;background:#ffb457;color:#2a1403;border:none;font-family:inherit;font-weight:bold;cursor:pointer;font-size:14px;pointer-events:auto">Выйти в меню</button>
+      </div>
+      <div id="sh3Scope" style="display:none;position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 50% 50%, transparent 0, transparent 28vmin, rgba(0,0,0,.94) 31vmin, #000 100%);">
+        <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:60vmin;height:60vmin;border-radius:50%;border:2px solid rgba(0,0,0,.85);box-shadow:inset 0 0 30px rgba(0,0,0,.8),0 0 20px rgba(0,0,0,.95);"></div>
+        <div style="position:absolute;left:50%;top:50%;width:60vmin;height:2px;background:#000;transform:translate(-50%,-50%);"></div>
+        <div style="position:absolute;left:50%;top:50%;width:2px;height:60vmin;background:#000;transform:translate(-50%,-50%);"></div>
+        <div style="position:absolute;left:50%;top:50%;width:14vmin;height:14vmin;border:1px solid rgba(0,0,0,.7);border-radius:50%;transform:translate(-50%,-50%);"></div>
+        <div style="position:absolute;left:50%;top:50%;width:8px;height:8px;border-radius:50%;background:#000;transform:translate(-50%,-50%);"></div>
+        <div style="position:absolute;left:50%;top:50%;width:34vmin;height:1px;background:rgba(0,0,0,.45);transform:translate(-50%,-50%);"></div>
+        <div style="position:absolute;left:50%;top:50%;width:1px;height:34vmin;background:rgba(0,0,0,.45);transform:translate(-50%,-50%);"></div>
+        <div style="position:absolute;left:50%;top:calc(50% + 32vmin);transform:translate(-50%,-50%);font-family:monospace;color:rgba(255,255,255,.35);font-size:10px;letter-spacing:.25em;text-shadow:0 0 4px #000;">SNIPER · 8×</div>
+      </div>`;
+    document.body.appendChild(hudEl);
+    document.getElementById('sh3TopExit').onclick=()=>exitToMenu();
+    document.getElementById('sh3PauseExitBtn').onclick=()=>exitToMenu();
+    buildWeaponBar();
+  }
+
+  function buildWeaponBar(){
+    const bar=document.getElementById('sh3WeaponBar');
+    if(!bar) return;
+    bar.innerHTML='';
+    const keys=['pistol','smg','rifle','shotgun','sniper','rocket'];
+    const nums=['1','2','3','4','5','6'];
+    keys.forEach((k, i)=>{
+      const w=WEAPONS[k];
+      const slot=document.createElement('div');
+      slot.className='sh3-wslot';
+      slot.dataset.w=k;
+      slot.innerHTML='<span class="sh3-wnum">'+nums[i]+'</span><span>'+w.name+'</span>';
+      slot.onclick=()=>{ if(active) switchWeapon(k); };
+      bar.appendChild(slot);
     });
-    particles.forEach(p=>{ctx.fillStyle=p.color;ctx.globalAlpha=clamp(p.life*2,0,1);
-      ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fill();});
-    ctx.globalAlpha=1;
-    const angle=Math.atan2(aimY-player.y,aimX-player.x);
-    ctx.save();ctx.translate(player.x,player.y);ctx.rotate(angle);
-    ctx.fillStyle='#60a0ff';ctx.beginPath();
-    ctx.moveTo(player.r,0);ctx.lineTo(-player.r*0.7,-player.r*0.7);
-    ctx.lineTo(-player.r*0.7,player.r*0.7);ctx.closePath();ctx.fill();
-    ctx.strokeStyle='#fff';ctx.lineWidth=2;ctx.stroke();
-    ctx.fillStyle='#404a5a';ctx.fillRect(0,-3,player.r+8,6);
-    ctx.restore();
-    ctx.strokeStyle='rgba(255,200,80,.6)';ctx.lineWidth=1.5;
-    ctx.beginPath();ctx.arc(aimX,aimY,10,0,Math.PI*2);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(aimX-14,aimY);ctx.lineTo(aimX+14,aimY);ctx.stroke();
-    ctx.beginPath();ctx.moveTo(aimX,aimY-14);ctx.lineTo(aimX,aimY+14);ctx.stroke();
+    updateWeaponBar();
   }
-  document.addEventListener('keydown',e=>{
-    if(!playing)return;
-    const k=e.key.length===1?e.key.toLowerCase():e.key;
-    keys2[k]=true;if(k===' '){e.preventDefault();shoot();}
-  });
-  document.addEventListener('keyup',e=>{const k=e.key.length===1?e.key.toLowerCase():e.key;keys2[k]=false;});
-  canvas.addEventListener('mousemove',e=>{
-    const r=canvas.getBoundingClientRect();
-    aimX=(e.clientX-r.left)/r.width*canvas.width;
-    aimY=(e.clientY-r.top)/r.height*canvas.height;
-  });
-  canvas.addEventListener('mousedown',()=>{if(playing)shoot();});
-  canvas.addEventListener('touchstart',e=>{
-    e.preventDefault();const t=e.touches[0];const r=canvas.getBoundingClientRect();
-    aimX=(t.clientX-r.left)/r.width*canvas.width;
-    aimY=(t.clientY-r.top)/r.height*canvas.height;if(playing)shoot();
-  },{passive:false});
-  canvas.addEventListener('touchmove',e=>{
-    e.preventDefault();const t=e.touches[0];const r=canvas.getBoundingClientRect();
-    aimX=(t.clientX-r.left)/r.width*canvas.width;
-    aimY=(t.clientY-r.top)/r.height*canvas.height;
-  },{passive:false});
-  $('#shRestart').onclick=()=>start();
-  return {start,stop};
+
+  function updateWeaponBar(){
+    const bar=document.getElementById('sh3WeaponBar');
+    if(!bar) return;
+    bar.querySelectorAll('.sh3-wslot').forEach(el=>{
+      el.classList.toggle('active', el.dataset.w===player.weapon);
+    });
+  }
+
+  function updateHUD(){
+    const w=WEAPONS[player.weapon];
+    const hpBar=document.getElementById('sh3HPBar');
+    const hpTxt=document.getElementById('sh3HP');
+    if(hpBar) hpBar.style.width=Math.max(0,player.hp)+'%';
+    if(hpTxt) hpTxt.textContent=Math.max(0,Math.round(player.hp));
+    const ammoEl=document.getElementById('sh3Ammo');
+    if(ammoEl){
+      if(player.reloading>0) ammoEl.textContent='🔄 '+Math.ceil(player.reloading*10)/10+'с';
+      else ammoEl.textContent=player.ammo[player.weapon]+' / '+w.mag;
+    }
+    const wEl=document.getElementById('sh3Weapon');
+    if(wEl) wEl.textContent=w.name;
+    const scoreEl=document.getElementById('sh3Score');
+    if(scoreEl) scoreEl.textContent='★ '+score;
+    const waveEl=document.getElementById('sh3Wave');
+    if(waveEl){
+      if(mode==='pvp') waveEl.style.display='none';
+      else{
+        waveEl.style.display='';
+        if(waveState==='break') waveEl.textContent='⏸ Волна '+wave+' · '+Math.ceil(waveT);
+        else waveEl.textContent='🎯 Волна '+wave;
+      }
+    }
+    const killsEl=document.getElementById('sh3Kills');
+    if(killsEl) killsEl.textContent='💀 '+kills;
+    const pvpEl=document.getElementById('sh3PvpScore');
+    if(pvpEl){
+      if(mode==='pvp'){ pvpEl.style.display=''; pvpEl.textContent='⚔ '+pvpKillsMe+' : '+pvpKillsThem; }
+      else pvpEl.style.display='none';
+    }
+    updateWeaponBar();
+  }
+
+  // ═══════════ ВВОД ═══════════
+  function onKeyDown(e){
+    if(!active) return;
+    if(document.activeElement&&(document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA')) return;
+    keys[e.code]=true;
+    if(e.code==='Space'){
+      e.preventDefault();
+      if(player.onGround && !pvpEnded){ player.velY=JUMP_V; player.onGround=false; }
+    }
+    if(e.code==='KeyR') startReload();
+    if(e.code==='Digit1') switchWeapon('pistol');
+    if(e.code==='Digit2') switchWeapon('smg');
+    if(e.code==='Digit3') switchWeapon('rifle');
+    if(e.code==='Digit4') switchWeapon('shotgun');
+    if(e.code==='Digit5') switchWeapon('sniper');
+    if(e.code==='Digit6') switchWeapon('rocket');
+  }
+  function onKeyUp(e){ keys[e.code]=false; }
+  function onMouseMove(e){
+    if(!active||!pointerLocked||pvpEnded) return;
+    player.yaw-=e.movementX*0.0022;
+    player.pitch-=e.movementY*0.0022;
+    player.pitch=Math.max(-Math.PI/2+0.05, Math.min(Math.PI/2-0.05, player.pitch));
+  }
+    function onMouseDown(e){
+    if(!active||!pointerLocked) return;
+    if(e.button===0){
+      mouseDown=true;
+      if(!WEAPONS[player.weapon].auto) fire();
+    } else if(e.button===2){
+      e.preventDefault();
+      aiming=true;
+    }
+  }
+  function onMouseUp(e){
+    if(e.button===0) mouseDown=false;
+    else if(e.button===2) aiming=false;
+  }
+  function onPointerLockChange(){
+    pointerLocked=document.pointerLockElement===shCanvas;
+    const pauseEl=document.getElementById('sh3PauseHint');
+    if(pauseEl&&active){
+      if(pointerLocked) pauseEl.style.display='none';
+      else if(pauseEl.innerHTML.indexOf('Игра окончена')===-1 &&
+              pauseEl.innerHTML.indexOf('Победа')===-1 &&
+              pauseEl.innerHTML.indexOf('Поражение')===-1)
+        pauseEl.style.display='block';
+    }
+  }
+  function onResize(){
+    if(!shRenderer) return;
+    shCamera.aspect=innerWidth/innerHeight;
+    shCamera.updateProjectionMatrix();
+    shRenderer.setSize(innerWidth,innerHeight);
+    if(bloom) bloom.setSize(innerWidth,innerHeight);
+  }
+
+  // ═══════════ ЦИКЛ ═══════════
+  function loop(){
+    if(!active){ rafId=null; return; }
+    rafId=requestAnimationFrame(loop);
+    const now=performance.now();
+    const dt=Math.min((now-lastT)/1000, 0.05);
+    lastT=now;
+
+    updatePlayer(dt);
+    if(mode!=='pvp') updateEnemies(dt);
+    updateBullets(dt);
+    updateParticles(dt);
+    updatePickups(dt);
+    if(mode!=='pvp') updateWave(dt);
+    updatePeerVisual(dt);
+    updateHUD();
+
+    if(netActive()){
+      if(now-lastPosSendT>66){
+        lastPosSendT=now;
+        netSend('pos',{
+          x:+player.pos.x.toFixed(2),
+          z:+player.pos.z.toFixed(2),
+          yaw:+player.yaw.toFixed(2),
+          hp:Math.round(player.hp)
+        });
+      }
+      if(mode==='coop' && isHost && now-lastSnapT>100){
+        lastSnapT=now;
+        netSend('enemyPos',{
+          list:enemies.filter(e=>e.alive).map(e=>({
+            id:e.netId, type:e.type,
+            x:+e.group.position.x.toFixed(2),
+            z:+e.group.position.z.toFixed(2),
+            hp:e.hp
+          }))
+        });
+      }
+    }
+
+    if(bloom && !isMobile){
+      try{ bloom.render(); }
+      catch(e){ bloom=null; shRenderer.render(shScene,shCamera); }
+    } else {
+      shRenderer.render(shScene,shCamera);
+    }
+  }
+
+  // ═══════════ RESET / START / STOP ═══════════
+  function resetGame(){
+    player.pos.set(0,EYE,8);
+    player.velY=0; player.onGround=true; player.yaw=0; player.pitch=0;
+    player.hp=player.maxHp; player.weapon='pistol'; player.ammo={};
+    for(const k in WEAPONS) player.ammo[k]=WEAPONS[k].mag;
+    player.reloading=0; player.shootCd=0; player.bobPhase=0; player.recoil=0;
+    aiming=false;
+    if(shCamera){ shCamera.fov=BASE_FOV; shCamera.updateProjectionMatrix(); }
+    wave=1; score=0; kills=0; waveState='break'; waveT=2.5; waveLeft=0;
+    pvpKillsMe=0; pvpKillsThem=0; pvpEnded=false;
+    enemyNetId=1;
+    for(const e of enemyPool){ e.alive=false; e.group.visible=false; }
+    enemies.length=0;
+    for(let i=0;i<MAX_BULLETS;i++){
+      bulletsData[i].active=false;
+      bulletsMesh.setMatrixAt(i,_hiddenM);
+    }
+    bulletsMesh.instanceMatrix.needsUpdate=true;
+    for(let i=0;i<MAX_PARTICLES;i++){
+      particlesData[i].active=false;
+      particlesMesh.setMatrixAt(i,_hiddenM);
+    }
+    particlesMesh.instanceMatrix.needsUpdate=true;
+    for(const p of pickupPool){ p.active=false; p.group.visible=false; }
+    const pauseEl=document.getElementById('sh3PauseHint');
+    if(pauseEl){
+      pauseEl.innerHTML='<div style="margin-bottom:12px">Нажми на экран, чтобы прицелиться</div>'+
+        '<button id="sh3PauseExitBtn" style="padding:10px 24px;border-radius:8px;background:#ffb457;color:#2a1403;border:none;font-family:inherit;font-weight:bold;cursor:pointer;font-size:14px;pointer-events:auto">Выйти в меню</button>';
+      pauseEl.style.display='none';
+      document.getElementById('sh3PauseExitBtn').onclick=()=>exitToMenu();
+    }
+    updateWeaponBar();
+  }
+
+  function startGame(m){
+    if(m) mode=m;
+    initScene();
+    if(document.activeElement && document.activeElement!==document.body) document.activeElement.blur();
+    const panel=document.querySelector('#shootergame .mg-panel');
+    if(panel) panel.style.display='none';
+    shCanvas.style.display='block';
+    hudEl.style.display='block';
+    document.body.classList.add('shooter-active');
+    resetGame();
+    active=true;
+    lastT=performance.now();
+    if(rafId) cancelAnimationFrame(rafId);
+    loop();
+    setTimeout(()=>{
+      if(active && !pointerLocked){ try{ shCanvas.requestPointerLock(); }catch(e){} }
+    }, 100);
+  }
+
+  function stopGame(){
+    active=false;
+    if(rafId){ cancelAnimationFrame(rafId); rafId=null; }
+    if(document.pointerLockElement===shCanvas) document.exitPointerLock();
+    if(shCanvas) shCanvas.style.display='none';
+    if(hudEl) hudEl.style.display='none';
+    document.body.classList.remove('shooter-active');
+    const panel=document.querySelector('#shootergame .mg-panel');
+    if(panel) panel.style.display='';
+        for(const k in keys) keys[k]=false;
+    mouseDown=false;
+    aiming=false;
+    if(shCamera){ shCamera.fov=BASE_FOV; shCamera.updateProjectionMatrix(); }
+  }
+
+     function exitToMenu(){
+    if(roomId && Net.online){
+      Net.send({t:'sh', sub:'leave', room:roomId});
+    }
+    roomId=null; isHost=false; hostId=null;
+    for(const id of [...peers.keys()]) removePeer(id);
+    stopGame();
+    // Сброс состояния ожидания и возврат на экран выбора режима
+    const list = document.getElementById('sh3ModeList');
+    const wait = document.getElementById('sh3Wait');
+    const codeInput = document.getElementById('sh3JoinCode');
+    if(list) list.style.display='flex';      // ← было '' — терялся flex
+    if(wait) wait.style.display='none';
+    if(codeInput) codeInput.value='';
+    if(typeof showMini==='function') showMini('shootergame');
+  }
+
+  function exitShooterCompletely(){
+    if(roomId && Net.online){
+      Net.send({t:'sh', sub:'leave', room:roomId});
+    }
+    roomId=null; isHost=false; hostId=null;
+    for(const id of [...peers.keys()]) removePeer(id);
+    stopGame();
+    if(typeof showMini==='function') showMini('phoneMenu');
+  }
+
+  // ═══════════ UI: SETUP / WAIT ═══════════
+  function injectSetupUI(){
+    const panel=document.querySelector('#shootergame .mg-panel');
+    if(!panel) return;
+    if(document.getElementById('sh3Setup')) return;
+    panel.innerHTML='';
+    const setup=document.createElement('div');
+    setup.id='sh3Setup';
+    setup.style.cssText='padding:14px;text-align:center';
+    setup.innerHTML=`
+      <div style="font-size:22px;color:#ffd9a4;margin-bottom:8px">🎯 3D Шутер</div>
+      <div style="color:#a99d87;font-size:12px;margin-bottom:16px">Выбери режим</div>
+      <div id="sh3ModeList" style="display:flex;flex-direction:column;gap:10px;max-width:300px;margin:0 auto">
+        <button data-sh-mode="solo" style="padding:14px;border-radius:10px;border:1px solid rgba(255,180,90,.35);background:linear-gradient(#ffb457,#dd741d);color:#2a1403;font-family:inherit;font-weight:bold;cursor:pointer;font-size:15px">▶ Соло</button>
+        <button data-sh-mode="coop-host" style="padding:14px;border-radius:10px;border:1px solid rgba(255,180,90,.35);background:linear-gradient(#8090ff,#5050cc);color:#fff;font-family:inherit;font-weight:bold;cursor:pointer;font-size:15px">👥 Кооп — создать</button>
+        <button data-sh-mode="pvp-host" style="padding:14px;border-radius:10px;border:1px solid rgba(255,180,90,.35);background:linear-gradient(#ff6080,#aa2040);color:#fff;font-family:inherit;font-weight:bold;cursor:pointer;font-size:15px">⚔ PvP — создать</button>
+        <div style="display:flex;gap:6px;margin-top:4px">
+          <input id="sh3JoinCode" placeholder="КОД" maxlength="4"
+            style="flex:1;padding:10px;border-radius:8px;background:rgba(0,0,0,.5);
+            border:1px solid rgba(255,180,90,.3);color:#f2e9d9;font-family:inherit;
+            text-align:center;letter-spacing:3px;font-weight:bold;text-transform:uppercase;outline:none">
+          <button id="sh3JoinCoop" style="padding:10px 14px;border-radius:8px;background:rgba(120,140,255,.4);color:#fff;border:1px solid rgba(120,140,255,.6);font-family:inherit;cursor:pointer;font-size:12px;font-weight:bold">Кооп →</button>
+          <button id="sh3JoinPvp" style="padding:10px 14px;border-radius:8px;background:rgba(255,80,120,.4);color:#fff;border:1px solid rgba(255,80,120,.6);font-family:inherit;cursor:pointer;font-size:12px;font-weight:bold">PvP →</button>
+        </div>
+      </div>
+      <div id="sh3Wait" style="display:none;margin-top:16px;padding:14px;background:rgba(0,0,0,.4);border-radius:10px">
+        <div style="color:#ffd9a4;font-size:13px;margin-bottom:6px">Комната: <b id="sh3RoomCode" style="color:#ffd060;letter-spacing:3px;font-size:18px">----</b></div>
+        <div id="sh3WaitPeers" style="color:#a99d87;font-size:12px;margin-bottom:10px;min-height:18px">Ожидание игроков…</div>
+        <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">
+          <button id="sh3StartBtn" style="padding:10px 20px;border-radius:8px;background:#ffb457;color:#2a1403;border:none;font-family:inherit;font-weight:bold;cursor:pointer;font-size:13px;display:none">▶ Старт</button>
+          <button id="sh3LeaveBtn" style="padding:10px 20px;border-radius:8px;background:rgba(200,80,80,.4);color:#ffd9a4;border:1px solid rgba(200,80,80,.6);font-family:inherit;cursor:pointer;font-size:13px">← Назад</button>
+        </div>
+      </div>
+      <div style="margin-top:14px;color:#7e7768;font-size:11px;line-height:1.5">
+        WASD · мышь · ЛКМ · Space · R · 1-6 · ESC
+      </div>
+      <button id="sh3SetupBack" style="margin-top:14px;padding:9px 20px;border-radius:8px;background:transparent;color:#e0cfae;border:1px solid rgba(255,180,90,.3);font-family:inherit;cursor:pointer;font-size:13px">← Меню</button>
+    `;
+    panel.appendChild(setup);
+
+    setup.querySelectorAll('[data-sh-mode]').forEach(b=>{
+      b.onclick=()=>{
+        const m=b.dataset.shMode;
+        if(m==='solo'){ mode='solo'; startGame('solo'); }
+        else if(m==='coop-host') startCoopRoom();
+        else if(m==='pvp-host') startPvpRoom();
+      };
+    });
+    document.getElementById('sh3JoinCoop').onclick=()=>{
+      const c=(document.getElementById('sh3JoinCode').value||'').trim().toUpperCase();
+      if(c.length<4){ if(typeof showToast==='function') showToast('Код минимум 4'); return; }
+      joinRoomCode(c,'coop'); mode='coop'; isHost=false; startGame('coop');
+    };
+    document.getElementById('sh3JoinPvp').onclick=()=>{
+      const c=(document.getElementById('sh3JoinCode').value||'').trim().toUpperCase();
+      if(c.length<4){ if(typeof showToast==='function') showToast('Код минимум 4'); return; }
+      joinRoomCode(c,'pvp'); mode='pvp'; isHost=false; startGame('pvp');
+    };
+        document.getElementById('sh3StartBtn').onclick=()=>{ if(isHost) hostStart(); };
+    document.getElementById('sh3LeaveBtn').onclick=()=>exitToMenu();
+    const backBtn=document.getElementById('sh3SetupBack');
+    if(backBtn) backBtn.onclick=()=>exitShooterCompletely();
+  }
+
+  function showWaitUI(){
+    const list=document.getElementById('sh3ModeList');
+    const wait=document.getElementById('sh3Wait');
+    const code=document.getElementById('sh3RoomCode');
+    if(list) list.style.display='none';
+    if(wait) wait.style.display='block';
+    if(code) code.textContent=roomId||'----';
+    updateWaitUI();
+  }
+
+  function updateWaitUI(){
+    const wait=document.getElementById('sh3Wait');
+    if(!wait) return;
+    if(!roomId){ wait.style.display='none'; return; }
+    wait.style.display='block';
+    const code=document.getElementById('sh3RoomCode');
+    if(code) code.textContent=roomId;
+    const peersEl=document.getElementById('sh3WaitPeers');
+    const startBtn=document.getElementById('sh3StartBtn');
+    if(peersEl){
+      if(peers.size===0) peersEl.textContent='Ожидание игроков…';
+      else{
+        const names=[...peers.values()].map(p=>p.name).join(', ');
+        peersEl.innerHTML='Игроков: <b>'+(peers.size+1)+'</b> · '+names;
+      }
+    }
+    if(startBtn) startBtn.style.display=(isHost && peers.size>=1)?'inline-block':'none';
+  }
+
+  // ═══════════ ПУБЛИЧНЫЙ API ═══════════
+    return {
+    open(){
+      initScene();
+      injectSetupUI();
+      // всегда возвращаемся к выбору режима
+      const list = document.getElementById('sh3ModeList');
+      const wait = document.getElementById('sh3Wait');
+      if(list) list.style.display='flex';
+      if(wait) wait.style.display='none';
+    },
+    stop(){ stopGame(); },
+    exit(){ exitToMenu(); },
+    start(){ initScene(); mode='solo'; startGame('solo'); },
+    joinRoom(code,m){ joinRoomCode(code,m); },
+    onNet(m){ onNet(m); },
+    _injectSetupUI: injectSetupUI
+  };
 })();
 
 /* ============ БОМБЕР ============ */
@@ -11408,7 +13523,7 @@ function handleNet(m){
       sendSyncPacket();
       addChat('Сумрак',m.name+' подсаживается','#c9a86a',{noBubble:true,skipCheck:true});
       updatePlayersList();break;
-    case 'sync':{
+        case 'sync':{
       if(m.id===Net.id)break;
       let p=players.get(m.id);
       if(!p&&m.name&&m.color!==undefined){
@@ -11421,6 +13536,12 @@ function handleNet(m){
           if(m.r!==undefined)p.targetYaw=m.r;
         }
         if(m.clan!==undefined&&p.clanName!==m.clan)p.setClanTag(m.clan);
+        // ─── Синхронизация брака ───
+        if(m.married!==undefined && p.married!==!!m.married){
+          p.married = !!m.married;
+          p.marriedTo = m.marriedTo||null;
+          p._refreshTag();
+        }
         p.isOnline=true;
       }
       break;
@@ -11433,24 +13554,30 @@ function handleNet(m){
         updatePlayersList();}
       break;
     }
-    case 'state':{
+        case 'state':{
       const p=players.get(m.id);
       if(p){p.netPos.set(m.x,m.y,m.z);p.targetYaw=m.r;p.sitting=!!m.s;
         if(m.i!==undefined&&m.i!==p.item)p.equip(m.i);p.isOnline=true;}
       break;
     }
-      case 'chat':{
+        case 'equip':{
+      if(m.id===Net.id) break;
+      const p=players.get(m.id);
+      if(p && m.i!==undefined && m.i!==p.item) p.equip(m.i);
+      break;
+    }
+    case 'chat':{
+      if(m.id===Net.id) break;   // FIX: не дублируем своё сообщение
       if(m.text && typeof m.text==='string' && m.text.startsWith(SOCIAL_PREFIX)){
-        if(m.id!==Net.id){
-          try{ handleSocialMsg(JSON.parse(m.text.slice(SOCIAL_PREFIX.length)), m.id); }catch(e){}
-        }
+        try{ handleSocialMsg(JSON.parse(m.text.slice(SOCIAL_PREFIX.length)), m.id); }catch(e){}
         break;
       }
             const p=players.get(m.id);
       addChat(p?p.name:'???',m.text,'#a9c8ff',{type:'general',speakerId:m.id});
       break;
     }
-    case 'clanchat':{
+        case 'clanchat':{
+      if(m.id===Net.id) break;   // FIX: эхо
       if(clan.name&&m.clan===clan.name){const p=players.get(m.id);
         addChat(p?p.name:'???',m.text,'#c8a0ff',{type:'clan',speakerId:m.id});}
       break;
@@ -11494,7 +13621,8 @@ function handleNet(m){
     }
     case 'hit':{const p=players.get(m.target);if(p)p.showEmoji('😵');break;}
     case 'spit':{const p=players.get(m.id);if(p)p.spit();break;}
-    case 'toast':{
+        case 'toast':{
+      if(m.id===Net.id) break;   // FIX: эхо
       const p=players.get(m.id);
       if(p){
         p.toastGlow(3.0);
@@ -11512,7 +13640,8 @@ function handleNet(m){
         {type:'general',speakerId:m.id});
       break;
     }
-        case 'firelog':{
+                case 'firelog':{
+      if(m.id===Net.id) break;   // FIX: эхо (иначе fireBoostTimer удвоится)
       if(typeof m.count==='number'&&m.count>0&&m.count<1000){
         if(m.fireType === 'log_pine'){
           fireColorOverride = {r:0.35, g:1.0, b:0.45};
@@ -11551,6 +13680,22 @@ function handleNet(m){
         {noBubble:true,skipCheck:true});
       break;
     }
+
+    case 'married':{
+      if(m.toId !== Net.id) break;
+      if(localPlayer && !localPlayer.married){
+        localPlayer.married = true;
+        localPlayer.marriedTo = m.fromName || '???';
+        localPlayer._refreshTag();
+        try{ localStorage.setItem('sumrak_married', JSON.stringify({to: localPlayer.marriedTo})); }catch(e){}
+        showToast('💍 ' + (m.fromName||'Партнёр') + ' вступил(а) с тобой в брак');
+        addChat('💒 Свадьба', (m.fromName||'???') + ' и ты — теперь вместе!',
+          '#ff8ac0', {noBubble:true, skipCheck:true});
+        snd.inv();
+      }
+      break;
+    }
+
     case 'divorce':{
       if(m.toId !== Net.id) break;
       if(localPlayer){
@@ -11608,9 +13753,10 @@ function handleNet(m){
         container.appendChild(card);
         break;
       }
-      showInvite(m.type,m.from,m.id,{
+            showInvite(m.type,m.from,m.id,{
         clanName:m.clanName,clanTag:m.clanTag,
-        gameName:m.gameName,gameKey:m.gameKey,seed:m.seed
+        gameName:m.gameName,gameKey:m.gameKey,seed:m.seed,
+        room:m.room, mode:m.mode
       });
       break;
     }
@@ -11633,6 +13779,9 @@ function handleNet(m){
       } else showToast('Приглашение отклонено');
       break;
     }
+    case 'sh':
+      if(typeof ShooterGame.onNet==='function') ShooterGame.onNet(m);
+      break;
     case 'gameMove':{
       const p=players.get(m.id);
       if(!p)break;
@@ -11663,19 +13812,32 @@ function handleNet(m){
       }
       break;
     }
-    case 'chestPut':{
+              case 'chestPut':{
+      if(m.id===Net.id) break;   // FIX: эхо (иначе предмет спишется/прибавится дважды)
       if(m.clan === clan.name){
         const chest = loadChest();
         if(m.from === 'put'){
           chest[m.type] = (chest[m.type]||0) + m.count;
+        } else if(m.from === 'take'){
+          chest[m.type] = Math.max(0, (chest[m.type]||0) - m.count);
+          if(chest[m.type] <= 0) delete chest[m.type];
         }
         saveChest(chest);
         if(document.getElementById('clanChestPanel').classList.contains('show')) renderClanChest();
       }
       break;
     }
-    case 'clanUpdate':{
+        case 'clanUpdate':{
       if(m.name!==undefined){
+        // ← Защита: принимаем только от лидера нашего клана или если мы без клана
+        const _sender = players.get(m.id);
+        const _senderName = _sender ? _sender.name : null;
+        const _isOurLeader = clan.leader && clan.leader === _senderName;
+        const _noClan = !clan.name;
+        if(!_isOurLeader && !_noClan){
+          console.warn('clanUpdate ignored (not our leader):', _senderName);
+          break;
+        }
         clan.name=m.name;clan.tag=m.tag||'';clan.leader=m.leader;
         clan.helper=m.helper||null;clan.rules=m.rules||'';
         clan.members=new Set(m.members||[]);
@@ -11718,6 +13880,8 @@ function sendSyncPacket(){
     color:localPlayer.color,
     custom:currentCustom,
     clan:clan.name,
+    married:!!localPlayer.married,
+    marriedTo:localPlayer.marriedTo||null,
     x:+localPlayer.pos.x.toFixed(2),
     y:+localPlayer.pos.y.toFixed(2),
     z:+localPlayer.pos.z.toFixed(2),
@@ -11821,11 +13985,12 @@ $('#mmZoomOut').onclick=()=>{mapZoom=clamp(mapZoom-0.2,0.5,3);mmFrame=99;};
 let worldTime=0;
 const FULL_CYCLE=2400;
 let isRaining=false,rainTimeLeft=0;
-const RAIN_DURATION=300,PRE_RAIN=60;
+const RAIN_DURATION=120,PRE_RAIN=40;   // 120/2400 = 5% суток ≈ 1.2 часа вечером
 
 function computeWorldTime(){
   const now=new Date();
-  const secs=now.getUTCHours()*3600+now.getUTCMinutes()*60+now.getUTCSeconds();
+  // Локальное время игрока: полдень — яркий день, полночь — тёмная ночь
+  const secs=now.getHours()*3600+now.getMinutes()*60+now.getSeconds();
   return (secs/86400)*FULL_CYCLE;
 }
 
@@ -11885,17 +14050,18 @@ function setSeason(s){
 }
 
 const _dayTop=new THREE.Color(0x2a4a70),_dayBot=new THREE.Color(0x88a8c0);
-const _nightTop=new THREE.Color(0x060a12),_nightBot=new THREE.Color(0x1c2735);
+const _nightTop=new THREE.Color(0x0e1826),_nightBot=new THREE.Color(0x2a3a4a);
 const _duskTop=new THREE.Color(0x6a3a3a),_duskBot=new THREE.Color(0xd08040);
 const _rainTop=new THREE.Color(0x2a3040),_rainBot=new THREE.Color(0x505a68);
 const _winterTop=new THREE.Color(0xa8b8d8),_winterBot=new THREE.Color(0xd8e8f8);
 const _topWork=new THREE.Color(),_botWork=new THREE.Color();
 function updateDN(dt){
   tickAutoSeason();
-    const hour = new Date().getUTCHours();
+     const hour = new Date().getHours();
   let fogBoost = 1;
-  if(hour >= 4 && hour <= 8) fogBoost = 2.6;
-  else if(hour >= 17 && hour <= 21) fogBoost = 1.9;
+  if(hour >= 4 && hour <= 8) fogBoost = 2.2;      // утренний туман
+  else if(hour >= 17 && hour <= 21) fogBoost = 1.7; // вечерний
+  else if(hour >= 22 || hour <= 3) fogBoost = 0.6;  // ночью воздух чище
   scene.fog.density = Math.min((isMobile?0.015:0.017) * fogBoost, 0.048);
   worldTime=computeWorldTime();
   const phase=worldTime/FULL_CYCLE;
@@ -11936,16 +14102,17 @@ function updateDN(dt){
     bot.lerp(_winterBot,0.35);
   }
   skyU.top.value.copy(top);skyU.bot.value.copy(bot);
-  if(!currentSeason||currentSeason==='summer'){
-    scene.fog.color.copy(bot).multiplyScalar(0.6);
-    scene.background.copy(bot).multiplyScalar(0.4);
+   if(!currentSeason||currentSeason==='summer'){
+    scene.fog.color.copy(bot).multiplyScalar(nightF > 0.5 ? 1.1 : 0.75);
+    scene.background.copy(bot).multiplyScalar(0.55);
   } else {
-    scene.background.copy(bot).multiplyScalar(0.4);
+    scene.fog.color.copy(bot).multiplyScalar(0.85);
+    scene.background.copy(bot).multiplyScalar(0.55);
   }
-    hemi.intensity=(0.24+dayF*0.66+nightF*0.5)*(isRaining?0.72:1);
+      hemi.intensity=(0.24+dayF*0.66+nightF*0.75)*(isRaining?0.72:1);
   sunL.intensity=dayF*1.75*(isRaining?0.35:1);
-  moonL.intensity=nightF*0.55;
-  baseAmbient.intensity=0.16+nightF*0.18+(isMobile?0.12:0);
+  moonL.intensity=nightF*0.85;
+  baseAmbient.intensity=0.16+nightF*0.32+(isMobile?0.14:0);
   const orbitR=200,orbitY=100;
   const sunAngle=phase*Math.PI*2-Math.PI/2;
   const moonAngle=sunAngle+Math.PI;
@@ -11963,8 +14130,19 @@ function updateDN(dt){
     window.__moon.position.set(moonX,moonY,orbitR*0.5);
     moonL.position.copy(window.__moon.position);
   }
-  if(window.__stars)window.__stars.material.opacity=nightF*0.85*(isRaining?0.1:1);
+    if(window.__stars)window.__stars.material.opacity=nightF*0.85*(isRaining?0.1:1);
+
+        if(window.__stars)window.__stars.material.opacity=nightF*0.85*(isRaining?0.1:1);
+
+    // FIX: светлячки гаснут днём
+    const _ffVisible = dayF < 0.35;
+    fireflies.forEach(f => {
+      f.visible = _ffVisible;
+      f.material.opacity = Math.max(0, 1 - dayF * 1.8);
+    });
+
   if(fireBoostTimer>0) fireBoostTimer-=dt;
+
   const boostK=clamp(fireBoostTimer/30,0,1);
   const boostLevel=clamp(fireBoostTimer/MAX_FIRE_BOOST,0,1);
     fireL.intensity=(3.5+nightF*3.0)+Math.sin(performance.now()*0.011)*0.25
@@ -11997,7 +14175,7 @@ if(fireColorTimer > 0 && fireColorOverride){
     fireBoostGlow.scale.setScalar(1+boostLevel*1.6+boostK*0.4);
     fireBoostGlow.material.opacity=0.10+boostLevel*0.35+boostK*0.12;
   }
-  renderer.toneMappingExposure=(1.05+dayF*0.35)*(isMobile?1.22:1);
+  renderer.toneMappingExposure=(1.05+dayF*0.35+nightF*0.30)*(isMobile?1.22:1);
   if(rainPoints){
     rainPoints.visible=isRaining;
     if(isRaining&&localPlayer){
@@ -12653,9 +14831,7 @@ g.add(makeChandelier(10, 0, H - 0.3));
     crestLight.position.set(0, 3.3, -D/2 + 1.0);
     g.add(crestLight);
   }
-  g.position.copy(TAVERN_INTERIOR_POS);
-  g.position.copy(TAVERN_INTERIOR_POS);
-  g.position.copy(TAVERN_INTERIOR_POS);
+    g.position.copy(TAVERN_INTERIOR_POS);
   g.visible = false;
   scene.add(g);
   tavernInteriorGroup = g;
@@ -13500,6 +15676,16 @@ function exitInterior(){
   if(caveInteriorGroup) caveInteriorGroup.visible = false;
   inInterior = null;
   localPlayer._interiorSeat = undefined;
+
+  // ← ДОБАВЛЕНО: сброс позы сидения и «следа» интерьерного стула
+  localPlayer.sitting      = false;
+  localPlayer.sitGround    = false;
+  localPlayer.seat         = -1;
+  localPlayer._prevInteriorX = undefined;
+  localPlayer._prevInteriorZ = undefined;
+  localPlayer._interiorFloor = undefined;
+  // ← конец добавленного блока
+
   if(interiorReturnPos){
     localPlayer.pos.set(interiorReturnPos.x, 0, interiorReturnPos.z);
     localPlayer.yaw = interiorReturnPos.yaw;
@@ -13548,6 +15734,13 @@ const _camHead=new THREE.Vector3();
 let _lastRenderT=0;
 function animate(){
   requestAnimationFrame(animate);
+
+  // главный мир спит, пока активен 3D-шутер
+  if(document.body.classList.contains('shooter-active')){
+    clock.getDelta();
+    return;
+  }
+
   const dt=Math.min(clock.getDelta(),0.05);
   const t=performance.now()*0.001;
   updateDN(dt);
@@ -13762,8 +15955,10 @@ if(clanIslandGroup && clanIslandGroup.visible && clanIslandGroup.userData.clanFi
   });
   if(localPlayer){
     const p=localPlayer;
-        let mx=0,mz=0;
-    if(!p.sitting && !p.lieDown){
+    // FIX: пока открыто меню / модалка / редактор — не читаем ввод
+    const _uiBlocking = !!document.querySelector('.mgame.show, .modal.show, #editor.show');
+    let mx=0,mz=0;
+    if(!p.sitting && !p.lieDown && !_uiBlocking){
       if(keys['KeyW']||keys['ArrowUp'])mz+=1;
       if(keys['KeyS']||keys['ArrowDown'])mz-=1;
       if(keys['KeyA']||keys['ArrowLeft'])mx-=1;
@@ -14010,21 +16205,14 @@ if(!p.onGround){p.velY-=12*dt;p.pos.y+=p.velY*dt;
     if(!onClanIsland && !inInterior &&
    (!window.__posSaveT || performance.now() - window.__posSaveT > 2000)){
   window.__posSaveT = performance.now();
-  try{localStorage.setItem('sumrak_pos',JSON.stringify({x:p.pos.x,z:p.pos.z,yaw:p.yaw}));}catch(e){}
+  try{localStorage.setItem('sumrak_pos',JSON.stringify({x:p.pos.x,y:p.pos.y,z:p.pos.z,yaw:p.yaw}));}catch(e){}
 }
   }
      for(const p of players.values()){
     if(p.isLocal)continue;
 
-    // ───── 1. СНАЧАЛА всегда обновляем позицию ─────
-    if(Net.online){
-      p.pos.lerp(p.netPos,Math.min(1,dt*10));
-      if(p.pos.distanceTo(p.netPos) > 100) p.pos.copy(p.netPos);
-      let diff=p.targetYaw-p.yaw;
-      while(diff>Math.PI)diff-=Math.PI*2;while(diff<-Math.PI)diff+=Math.PI*2;
-      p.yaw+=diff*Math.min(1,dt*10);
-      p.moving=p.pos.distanceTo(p.netPos)>0.08;
-    } else {
+    // ───── 1. NPC живут всегда, сетевые — только онлайн ─────
+    if(p.isNPC || !Net.online){
       p.npcTimer-=dt;
       if(p.npcTimer<=0){p.npcTimer=rand(9,26);
         const r=Math.random();
@@ -14036,6 +16224,13 @@ if(!p.onGround){p.velY-=12*dt;p.pos.y+=p.velY*dt;
           setTimeout(()=>p.playAnim(it==='stick'?'swing':'drink',it==='stick'?0.5:1.7),300);
           setTimeout(()=>p.equip(null),2600);}}
       p.moving=false;
+    } else {
+      p.pos.lerp(p.netPos,Math.min(1,dt*10));
+      if(p.pos.distanceTo(p.netPos) > 100) p.pos.copy(p.netPos);
+      let diff=p.targetYaw-p.yaw;
+      while(diff>Math.PI)diff-=Math.PI*2;while(diff<-Math.PI)diff+=Math.PI*2;
+      p.yaw+=diff*Math.min(1,dt*10);
+      p.moving=p.pos.distanceTo(p.netPos)>0.08;
     }
 
     // ───── 2. ПОТОМ считаем видимость по уже обновлённой позиции ─────
@@ -14052,10 +16247,12 @@ if(!p.onGround){p.velY-=12*dt;p.pos.y+=p.velY*dt;
     compassDirEl.textContent=dirs[Math.round(deg/45)%8];
   }
    drawMM();
-  if(!isMobile || (performance.now()-_lastRenderT)>=30){
-    _lastRenderT=performance.now();
-    renderer.render(scene,camera);
-  }
+  const miniOpen = !!document.querySelector('.mgame.show');
+const modalOpen = !!document.querySelector('.modal.show');
+if(!miniOpen && !modalOpen && (!isMobile || (performance.now()-_lastRenderT)>=30)){
+  _lastRenderT=performance.now();
+  renderer.render(scene,camera);
+}
 }
 
 /* ============ СТАРТ ИГРЫ ============ */
@@ -14072,11 +16269,12 @@ function startGame(name,color,url,custom){
     if(m && m.to){ localPlayer.married = true; localPlayer.marriedTo = m.to; localPlayer._refreshTag(); }
   }catch(e){}
   buildInv();buildEmobar();updatePlayersList();
-  updateLogHud();
+    updateLogHud();
   checkFortuneExpire();
   loadFortunes();
   updateFortuneBadges();
   setSeason(currentSeason);
+  checkAchievements();
   addChat('Сумрак','Ты вышел к костру.','#ffb457',{noBubble:true,skipCheck:true});
   setupMobileControls();
   if(url){
@@ -14332,7 +16530,13 @@ document.addEventListener('visibilitychange',()=>{
       const sc  = getScale(id);
       el.classList.remove('custom-hidden','custom-pos','custom-scaled');
       el.style.removeProperty('--scale');
-      if(!cfg) continue;
+            if(!cfg){
+        if(Math.abs(sc - 1) > 0.01){
+          el.classList.add('custom-scaled');
+          el.style.setProperty('--scale', sc);
+        }
+        continue;
+      }
       if(cfg.visible === false) el.classList.add('custom-hidden');
       const hasPos = typeof cfg.xp === 'number' && typeof cfg.yp === 'number';
       if(hasPos){
@@ -14571,6 +16775,30 @@ document.addEventListener('visibilitychange',()=>{
     open: openPanel,
     reset: () => { layout = {}; save(); apply(); }
   };
+})();
+
+// 🎨 Кнопка холста в чате соцсети
+(function attachChatCanvasBtn(){
+  function attach(){
+    const compose = document.querySelector('#chatView .social-compose');
+    if(!compose) return false;
+    if(document.getElementById('chatCanvasBtn')) return true;
+    const btn = document.createElement('button');
+    btn.id = 'chatCanvasBtn';
+    btn.title = 'Холст';
+    btn.textContent = '🎨';
+    btn.style.cssText = 'padding:8px 11px;border-radius:8px;border:1px solid rgba(255,180,90,.35);'+
+      'background:rgba(10,13,18,.6);color:#ffd9a4;font-family:inherit;cursor:pointer;'+
+      'font-size:15px;flex-shrink:0;line-height:1';
+    btn.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if(social.activeChatId) openChatCanvas(social.activeChatId);
+    };
+    compose.insertBefore(btn, compose.firstChild);
+    return true;
+  }
+  if(!attach()) document.addEventListener('DOMContentLoaded', attach);
 })();
 
 window.__sumrakReady=true;
