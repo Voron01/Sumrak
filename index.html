@@ -1869,16 +1869,38 @@ const snd=new Ambience();
 /* ============ СЕТЬ ============ */
 const Net={
   ws:null,id:null,online:false,
+  _url:null,_onMsg:null,_onOpen:null,_onClose:null,
+  _reconnectTimer:null,
   connect(url,onMsg,onOpen,onClose){
-    let u=url;
-    if(location.protocol==='https:'&&url.startsWith('ws://'))u=url.replace('ws://','wss://');
-    try{this.ws=new WebSocket(u);}catch(e){onClose&&onClose();return;}
-    this.ws.onopen=()=>{this.online=true;onOpen&&onOpen();};
-    this.ws.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}onMsg(m);};
-    this.ws.onclose=()=>{this.online=false;onClose&&onClose();};
+    this._url=url;this._onMsg=onMsg;this._onOpen=onOpen;this._onClose=onClose;
+    this._doConnect();
+  },
+  _doConnect(){
+    clearTimeout(this._reconnectTimer);
+    let u=this._url;
+    if(location.protocol==='https:'&&u.startsWith('ws://'))u=u.replace('ws://','wss://');
+    try{this.ws=new WebSocket(u);}catch(e){this._scheduleReconnect();return;}
+    this.ws.onopen=()=>{this.online=true;this._onOpen&&this._onOpen();};
+    this.ws.onmessage=ev=>{let m;try{m=JSON.parse(ev.data);}catch(e){return;}this._onMsg(m);};
+    this.ws.onclose=()=>{
+      this.online=false;
+      this._onClose&&this._onClose();
+      this._scheduleReconnect();
+    };
+    this.ws.onerror=()=>{ try{this.ws.close();}catch(e){} };
+  },
+  _scheduleReconnect(){
+    clearTimeout(this._reconnectTimer);
+    this._reconnectTimer=setTimeout(()=>{
+      if(!this.online)this._doConnect();
+    },3000);
   },
   send(o){if(this.ws&&this.ws.readyState===1){try{this.ws.send(JSON.stringify(o));}catch(e){}}},
-  close(){if(this.ws)try{this.ws.close();}catch(e){}this.online=false;}
+  close(){
+    clearTimeout(this._reconnectTimer);
+    if(this.ws)try{this.ws.close();}catch(e){}
+    this.online=false;
+  }
 };
 
 /* ============ СЦЕНА ============ */
@@ -6601,13 +6623,34 @@ const saveClan=()=>{try{localStorage.setItem('sumrak_clan',JSON.stringify({name:
 function makeLocal(name,color,custom){
   const p=new Player({id:'me',name,color,isLocal:true,custom});
   localPlayer=p;players.set('me',p);
-  let sx=0,sz=4.6,syaw=Math.PI;
+
+  // Дефолтный спавн — у костра
+  let sx=0, sz=4.6, syaw=Math.PI;
+
   try{
     const s=JSON.parse(localStorage.getItem('sumrak_pos')||'null');
-    if(s){sx=s.x;sz=s.z;syaw=s.yaw;}
+    if(s && typeof s.x === 'number' && typeof s.z === 'number'){
+      const dist = Math.hypot(s.x, s.z);
+      // Берём сохранённую позицию ТОЛЬКО если она в пределах мира
+      if(dist < WORLD_RADIUS - 5 && dist > 1.5){
+        sx = s.x; sz = s.z;
+        if(typeof s.yaw === 'number') syaw = s.yaw;
+      }
+      // Иначе (остров / интерьер / битые координаты) — спавн у костра
+    }
   }catch(e){}
-  p.pos.set(sx,0,sz);p.yaw=syaw;p.targetYaw=syaw;camYaw=syaw;
-  if(clan.name)p.setClanTag(clan.name);
+
+  p.pos.set(sx, 0, sz);
+// Страховка: принудительный кламп на случай форс-мажора
+{
+  const sd = Math.hypot(p.pos.x, p.pos.z);
+  if(sd > WORLD_RADIUS){
+    p.pos.x = p.pos.x / sd * (WORLD_RADIUS - 5);
+    p.pos.z = p.pos.z / sd * (WORLD_RADIUS - 5);
+  }
+}
+  p.yaw = syaw; p.targetYaw = syaw; camYaw = syaw;
+  if(clan.name) p.setClanTag(clan.name);
   return p;
 }
 
@@ -7683,10 +7726,12 @@ function updatePlayersList(){
       }
     };
     d.querySelector('[data-act="hide"]').onclick=ev=>{
-      ev.stopPropagation();
-      hidden.add(p.id);p.isHidden=true;p.group.visible=false;
-      saveHidden();showToast('Скрыт: '+p.name);updatePlayersList();
-    };
+  ev.stopPropagation();
+  if(!confirm('Скрыть '+p.name+'? Вернуть можно кнопкой «Показать» внизу списка.')) return;
+  hidden.add(p.id);p.isHidden=true;p.group.visible=false;
+  saveHidden();showToast('Скрыт: '+p.name+' (вернуть — кнопка «Показать» внизу)');
+  updatePlayersList();
+};
     d.querySelector('.pn').onclick=ev=>{
       ev.stopPropagation();snd.click();
       personalTarget=p.id;chatMode='personal';
@@ -10644,7 +10689,16 @@ function handleNet(m){
           }
         });
       }
-      Net.send({t:'join',name:localPlayer.name,color:localPlayer.color,custom:currentCustom,clan:clan.name});
+      Net.send({t:'join',
+  name:localPlayer.name,
+  color:localPlayer.color,
+  custom:currentCustom,
+  clan:clan.name,
+  x:+localPlayer.pos.x.toFixed(2),
+  y:+localPlayer.pos.y.toFixed(2),
+  z:+localPlayer.pos.z.toFixed(2),
+  r:+localPlayer.yaw.toFixed(2)
+});
       addChat('Сумрак','Ты у костра.','#ffb457',{noBubble:true,skipCheck:true});
       sendSyncPacket();
       if(Net.online) setTimeout(()=>{ if(clan.name) Net.send({t:'chestSync', clan:clan.name}); },1000);
@@ -10919,10 +10973,18 @@ function addRemote(id,name,color,state){
   p.isOnline=true;
   if(state&&state.clan)p.setClanTag(state.clan);
   if(hidden.has(id)){p.isHidden=true;p.group.visible=false;}
-  let seat=-1;
-  for(let i=0;i<seats.length;i++){if(!seats[i].taken){seat=i;break;}}
-  if(seat>=0)p.setSeat(seat);else p.pos.set(rand(-3,3),0,rand(-3,3));
-  p.netPos.copy(p.pos);players.set(id,p);updatePlayersList();
+  // Если пришла позиция — ставим сразу туда, иначе на свободное место
+  if(state && state.x !== undefined){
+    p.pos.set(state.x, state.y||0, state.z||0);
+    if(state.r !== undefined){ p.yaw = state.r; p.targetYaw = state.r; }
+  } else {
+    let seat=-1;
+    for(let i=0;i<seats.length;i++){if(!seats[i].taken){seat=i;break;}}
+    if(seat>=0)p.setSeat(seat);else p.pos.set(rand(-3,3),0,rand(-3,3));
+  }
+  p.netPos.copy(p.pos);
+  players.set(id,p);
+  updatePlayersList();
 }
 function sendSyncPacket(){
   if(!Net.online||!localPlayer)return;
@@ -12596,19 +12658,18 @@ if(clanIslandGroup && clanIslandGroup.visible && clanIslandGroup.userData.clanFi
       syncTimer+=dt;
       if(syncTimer>2.5){syncTimer=0;sendSyncPacket();}
     }
-    if(!window.__posSaveT || performance.now() - window.__posSaveT > 2000){
+    if(!onClanIsland && !inInterior &&
+   (!window.__posSaveT || performance.now() - window.__posSaveT > 2000)){
   window.__posSaveT = performance.now();
   try{localStorage.setItem('sumrak_pos',JSON.stringify({x:p.pos.x,z:p.pos.z,yaw:p.yaw}));}catch(e){}
 }
   }
-      for(const p of players.values()){
+     for(const p of players.values()){
     if(p.isLocal)continue;
-    const distToMe = localPlayer ? p.pos.distanceTo(localPlayer.pos) : 0;
-    p.group.visible = !p.isHidden && distToMe < 120;
-    if(!p.group.visible) continue;
+
+    // ───── 1. СНАЧАЛА всегда обновляем позицию ─────
     if(Net.online){
       p.pos.lerp(p.netPos,Math.min(1,dt*10));
-      // телепорт-снап
       if(p.pos.distanceTo(p.netPos) > 100) p.pos.copy(p.netPos);
       let diff=p.targetYaw-p.yaw;
       while(diff>Math.PI)diff-=Math.PI*2;while(diff<-Math.PI)diff+=Math.PI*2;
@@ -12627,6 +12688,12 @@ if(clanIslandGroup && clanIslandGroup.visible && clanIslandGroup.userData.clanFi
           setTimeout(()=>p.equip(null),2600);}}
       p.moving=false;
     }
+
+    // ───── 2. ПОТОМ считаем видимость по уже обновлённой позиции ─────
+    const distToMe = localPlayer ? p.pos.distanceTo(localPlayer.pos) : 0;
+    p.group.visible = !p.isHidden && distToMe < 120;
+
+    // ───── 3. Визуал обновляем всегда (сам цикл пропускает невидимых) ─────
     p.updateVisual(dt);
   }
   const compassDirEl=$('#compassDir');
