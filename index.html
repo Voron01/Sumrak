@@ -1814,6 +1814,54 @@ let mobileRunning=false;
 /* ============ КАМЕРА ============ */
 let autoCameraFollow=true;
 let photoMode=false;
+// ═══ 2-Й ЭТАЖ ТАВЕРНЫ ═══
+const TAVERN_FLOOR2_Y = 5.5;       // высота пола 2-го этажа
+const TAVERN_FLOOR2_CEIL_Y = 9.5;  // потолок 2-го этажа
+let currentFloor = 0;              // 0 = 1-й, 1 = 2-й (только в таверне)
+let tavernFloor2Group = null;
+const interiorCollidersFloor2 = [];
+const interiorSittablesFloor2 = [];
+// Проём под лестницу (локальные координаты, центр комнаты = 0,0)
+const STAIR_HOLE_X1 = 8, STAIR_HOLE_X2 = 12;
+const STAIR_HOLE_Z1 = 5, STAIR_HOLE_Z2 = 10;
+// ═══════════════ НОВЫЕ СИСТЕМЫ ═══════════════
+
+// — Разные дрова —
+let myLogsByType = {log: 0, log_pine: 0, log_mushroom: 0};
+let fireColorOverride = null;
+let fireColorTimer = 0;
+
+// — Истории у костра —
+let storyNextAt = Date.now() + 8 * 60 * 1000;
+const CAMPFIRE_STORIES = [
+  'Ты слышишь, как где-то в глубине леса кто-то поёт…',
+  'Искры сложились в фигуру оленя на секунду.',
+  'Кто-то оставил у огня тёплую кружку.',
+  'Ветер принёс запах хвои и мокрой земли.',
+  'Где-то далеко ухнула сова. Ближе — тишина.',
+  'На миг показалось, что за деревьями кто-то стоит.',
+  'Ты вспоминаешь что-то тёплое, но не можешь вспомнить что.',
+  'Уголёк треснул и рассыпался искрами.',
+  'Тишина такая плотная, что её можно потрогать.',
+  'Луна выглянула из-за туч и снова спряталась.',
+  'Ты чувствуешь, что лес смотрит на тебя — доброжелательно.',
+  'Кто-то будто прошептал твоё имя. Но это ветер.',
+  'Пахнет дымом, осенью и чем-то древним.',
+  'Звёзды сегодня особенно яркие.',
+  'Вдалеке мелькнул чей-то силуэт. И исчез.'
+];
+
+// — Падающие звёзды —
+let fallingStar = null;
+let fallingStarNextAt = Date.now() + 90 * 1000;
+let wishActive = false;
+let wishTimer = 0;
+
+// — Следы —
+const FOOTPRINT_POOL_SIZE = 60;
+const footprints = [];
+let footprintIdx = 0;
+let footprintCooldown = 0;
 let lookSensitivity = 1.0;
 try{
   const ls = parseFloat(localStorage.getItem('sumrak_look_sens'));
@@ -1936,6 +1984,22 @@ addEventListener('orientationchange',()=>{
 });
 
 const WORLD_RADIUS=200;
+
+// — Пул следов —
+{
+  const fpGeo = new THREE.PlaneGeometry(0.16, 0.26);
+  for(let i = 0; i < FOOTPRINT_POOL_SIZE; i++){
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0x000000, transparent: true, opacity: 0,
+      depthWrite: false, side: THREE.DoubleSide
+    });
+    const m = new THREE.Mesh(fpGeo, mat);
+    m.rotation.x = -Math.PI / 2;
+    m.visible = false;
+    scene.add(m);
+    footprints.push({mesh: m, life: 0});
+  }
+}
 
 const skyU={top:{value:new THREE.Color(0x060a12)},bot:{value:new THREE.Color(0x1c2735)}};
 {
@@ -3433,6 +3497,77 @@ const lanternLights=[];
   addCol(midX, midZ, 0.3);
 }
 
+function tickCampfireStories(){
+  if(!localPlayer) return;
+  if(Date.now() < storyNextAt) return;
+  const nearFire = Math.hypot(localPlayer.pos.x, localPlayer.pos.z) < 3.5;
+  if(!nearFire || !localPlayer.sitting) return;
+  const story = CAMPFIRE_STORIES[randInt(0, CAMPFIRE_STORIES.length - 1)];
+  addChat('📖 Сумрак', story, '#c9b391', {noBubble: true, skipCheck: true});
+  storyNextAt = Date.now() + (8 + Math.random() * 8) * 60 * 1000;
+}
+
+function spawnFallingStar(){
+  if(!localPlayer) return;
+  if(currentSeason === 'winter' || isRaining) return;
+  if(photoMode) return;
+  if(inInterior || onClanIsland) return;
+  if(!window.__stars || window.__stars.material.opacity < 0.4) return;
+
+  const start = new THREE.Vector3(
+    localPlayer.pos.x + rand(-80, 80),
+    rand(50, 80),
+    localPlayer.pos.z + rand(-80, 80)
+  );
+  const dir = new THREE.Vector3(rand(-0.8, 0.8), -1, rand(-0.8, 0.8)).normalize();
+  const end = start.clone().addScaledVector(dir, 100);
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute([
+    start.x, start.y, start.z,
+    end.x,   end.y,   end.z
+  ], 3));
+  const lineMat = new THREE.LineBasicMaterial({color:0xfff0a0, transparent:true, opacity:1});
+  const line = new THREE.Line(geo, lineMat);
+  scene.add(line);
+
+  const headMat = new THREE.SpriteMaterial({color:0xfff0a0, transparent:true, opacity:1,
+    blending:THREE.AdditiveBlending, depthWrite:false});
+  const head = new THREE.Sprite(headMat);
+  head.scale.set(3, 3, 1);
+  head.position.copy(start);
+  scene.add(head);
+
+  fallingStar = {line, head, start, end, t:0};
+  wishActive = true;
+  wishTimer = 2.5;
+  showToast('✨ Падающая звезда! Загадай желание — просто двигайся!');
+  snd.chip();
+}
+
+function makeWish(){
+  if(!wishActive) return;
+  wishActive = false;
+  const date = new Date().toISOString().slice(0, 10);
+  try { localStorage.setItem('sumrak_wish', date); } catch(e) {}
+  showToast('🌟 Желание загадано!');
+  if(localPlayer){
+    addChat('✨', localPlayer.name + ' загадал желание под падающей звездой',
+      '#c9b391', {noBubble:true, skipCheck:true});
+    localPlayer.playEmotion('✨');
+  }
+  snd.inv();
+}
+
+function placeFootprint(x, z, yaw){
+  const fp = footprints[footprintIdx];
+  footprintIdx = (footprintIdx + 1) % FOOTPRINT_POOL_SIZE;
+  fp.mesh.position.set(x, 0.025, z);
+  fp.mesh.rotation.z = -yaw;
+  fp.mesh.visible = true;
+  fp.life = 30;
+}
+
 /* ============ ХОЛСТ ============ */
 let sharedCanvasMesh=null;
 const sharedCanvasMeshes=[];
@@ -3851,6 +3986,10 @@ buildClanIsland();
 
 function teleportToIsland(){
   if(!localPlayer) return;
+  if(!clan.name || !clan.members.has(localPlayer.name)){
+    showToast('🏝 Только для членов клана');
+    return;
+  }
   rebuildClanIslandIfNeeded();
   onClanIsland=true;
   updateIslandExitBtn();
@@ -4525,7 +4664,7 @@ function makeItemMeshSimple(type){
     const reel=new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.05,0.04,8),
       new THREE.MeshStandardMaterial({color:0x3a3a3a,metalness:0.7,roughness:0.3}));
     reel.position.set(-0.4,0.05,0);reel.rotation.z=Math.PI/2;g.add(reel);
-  } else if(type==='log'){
+    } else if(type==='log' || type==='log_pine' || type==='log_mushroom'){
     const barkM=new THREE.MeshStandardMaterial({color:0x4a3020,roughness:1});
     const innerM=new THREE.MeshStandardMaterial({color:0xa87848,roughness:0.85});
     const log=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.11,0.55,8),barkM);
@@ -4533,6 +4672,29 @@ function makeItemMeshSimple(type){
     const cap=new THREE.Mesh(new THREE.CircleGeometry(0.108,8),innerM);
     cap.position.set(0.275,0.11,0);cap.rotation.y=Math.PI/2;g.add(cap);
     const cap2=cap.clone();cap2.position.x=-0.275;cap2.rotation.y=-Math.PI/2;g.add(cap2);
+    if(type==='log_pine'){
+      const sprigM = new THREE.MeshStandardMaterial({color:0x2a5a2a,roughness:1});
+      for(let i=0;i<3;i++){
+        const s = new THREE.Mesh(new THREE.ConeGeometry(0.04,0.18,4),sprigM);
+        s.position.set(-0.1 + i*0.1, 0.22, 0.05);
+        s.rotation.z = rand(-0.4,0.4);
+        s.rotation.x = rand(-0.3,0.3);
+        g.add(s);
+      }
+    } else if(type==='log_mushroom'){
+      const stemM = new THREE.MeshStandardMaterial({color:0xe8d8c0,roughness:0.9});
+      const capM2 = new THREE.MeshStandardMaterial({color:0x7a3aa0,roughness:0.6,emissive:0x3a1050,emissiveIntensity:0.4});
+      const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.04,0.1,6),stemM);
+      stem.position.set(0, 0.22, 0); g.add(stem);
+      const capMush = new THREE.Mesh(new THREE.SphereGeometry(0.09,10,6,0,Math.PI*2,0,Math.PI/2),capM2);
+      capMush.position.set(0, 0.27, 0); capMush.scale.y = 0.7; g.add(capMush);
+      for(let k=0;k<3;k++){
+        const dot = new THREE.Mesh(new THREE.SphereGeometry(0.012,4,4),
+          new THREE.MeshBasicMaterial({color:0xffffff}));
+        dot.position.set(rand(-0.05,0.05), 0.31, rand(-0.05,0.05));
+        g.add(dot);
+      }
+    }
   }
   g.traverse(o=>{if(o.isMesh)o.castShadow=false;});
   return g;
@@ -4649,9 +4811,11 @@ function makeItem(type){
  
 const ITEM_LABEL={bottle:'Бутылка',meat:'Мясо',apple:'Яблоко',stick:'Палка',lantern:'Фонарь',mug:'Кружка',
   rod:'Удочка',perch:'Окунь',catfish:'Сом',goldfish:'Золотая рыбка',cooked_fish:'Жареная рыба',log:'Полено',
+  log_pine:'Хвойное полено',log_mushroom:'Грибное полено',
   crystal:'Кристалл',mushroom:'Гриб'};
 const ITEM_EMOJI={bottle:'🍾',meat:'🍖',apple:'🍎',stick:'🪵',lantern:'🏮',mug:'☕',
   rod:'🎣',perch:'🐟',catfish:'🐡',goldfish:'🐠',cooked_fish:'🍢',log:'🪵',
+  log_pine:'🌿',log_mushroom:'🍄',
   crystal:'💎',mushroom:'🍄',ring:'💍',cigarette:'🚬'};
 const ITEM_ROT={
   bottle:{x:0.35,z:0.2,y:0},meat:{x:0.1,z:0,y:0},apple:{x:0.1,z:0,y:0},
@@ -4692,7 +4856,9 @@ itemPositions.forEach(([x,z,t])=>spawnGroundItem(t,x,z));
     let blocked=false;
     for(const c of colliders){ if(Math.hypot(x-c.x,z-c.z)<c.r+0.6){blocked=true;break;} }
     if(blocked) continue;
-    const it=spawnGroundItem('log',x,z);
+        const r = Math.random();
+    const logType = r < 0.72 ? 'log' : (r < 0.90 ? 'log_pine' : 'log_mushroom');
+    const it=spawnGroundItem(logType,x,z);
     it.group.rotation.y=rand(0,Math.PI*2);
     placed++;
   }
@@ -6185,11 +6351,16 @@ this._breathPhase = 0;
     this._toastLight=null;
     this._toastLightT=0;
     this._toastHadItem=null;
+    this.lieDown = false;
+    this._zzzSprite = null;
+    this._sleepTimer = 0;
+    this._wakeTimer = 0;
+    this._bedReturn = null;
     this.isOnline=true;
     this.lastFishSize=0;
     this.lastFishId=null;
   }
-  setSeat(idx){
+    setSeat(idx){
     if(this.seat>=0)seats[this.seat].taken=null;
     this.seat=idx;
     if(idx>=0){
@@ -6198,7 +6369,10 @@ this._breathPhase = 0;
       this.pos.copy(s.pos);this.pos.y=0.28;
       this.yaw=Math.atan2(-s.pos.x,-s.pos.z);
       this.targetYaw=this.yaw;this.sitting=true;this.sitGround=false;
-    } else {this.sitting=false;this.pos.y=0;}
+    } else {
+      this.sitting=false;
+      this.pos.y = (inInterior === 'tavern' && currentFloor === 1) ? TAVERN_FLOOR2_Y : 0;
+    }
   }
   setClanTag(clanName){this.clanName=clanName;this._refreshTag();}
   _refreshTag(){
@@ -6333,9 +6507,49 @@ this._breathPhase = 0;
       }
     }
   }
-  updateVisual(dt){
+   updateVisual(dt){
     if(!this.group.visible)return;
     const p=this.parts;
+
+    // ── Анимация «лёжа в кровати» ──
+    if(this.lieDown){
+      this.moving = false;
+      // плавный наклон группы: 0 → -PI/2
+      this.group.rotation.x = lerp(this.group.rotation.x, -Math.PI/2, Math.min(1, dt*6));
+      this.group.position.set(this.pos.x, this.pos.y, this.pos.z);
+      this.group.rotation.y = this.yaw;
+      // выключаем анимацию ходьбы
+      if(p.torso) p.torso.rotation.z = 0;
+      if(p.shL) p.shL.rotation.x = 0;
+      if(p.shR) p.shR.rotation.x = 0;
+      if(p.hipL) p.hipL.rotation.x = 0;
+      if(p.hipR) p.hipR.rotation.x = 0;
+      if(p.kneeL) p.kneeL.rotation.x = 0;
+      if(p.kneeR) p.kneeR.rotation.x = 0;
+      // Закрываем глаза
+      if(p.group.userData.eyeL) p.group.userData.eyeL.scale.y = 0.08;
+      if(p.group.userData.eyeR) p.group.userData.eyeR.scale.y = 0.08;
+      // Z-z-z
+      this._sleepTimer += dt;
+      if(this._sleepTimer > 1.2 && !this._zzzSprite){
+        const sp = makeTextSprite('💤', {fontSize: 40});
+        sp.position.set(0.6, 0.4, 0);
+        this.group.add(sp);
+        this._zzzSprite = sp;
+      }
+      if(this._zzzSprite){
+        this._zzzSprite.position.y = 0.4 + Math.sin(performance.now()*0.003) * 0.15;
+      }
+      return;   // не запускаем обычную анимацию
+    } else {
+      // плавный возврат из положения «лёжа»
+      if(this.group.rotation.x !== 0){
+        this.group.rotation.x = lerp(this.group.rotation.x, 0, Math.min(1, dt*8));
+      }
+      if(p.group.userData.eyeL) p.group.userData.eyeL.scale.y = lerp(p.group.userData.eyeL.scale.y, 1.05, Math.min(1, dt*10));
+      if(p.group.userData.eyeR) p.group.userData.eyeR.scale.y = lerp(p.group.userData.eyeR.scale.y, 1.05, Math.min(1, dt*10));
+    }
+
     this.group.position.copy(this.pos);this.group.rotation.y=this.yaw;
     const targetY=this.sitting?-0.28:0;
 this.group.position.y=lerp(this.group.position.y,targetY,Math.min(1,dt*10));
@@ -6805,7 +7019,9 @@ document.addEventListener('wheel',e=>{
 },{passive:false});
 
 function doJump(){
-  if(!localPlayer||!localPlayer.onGround)return;
+  if(!localPlayer) return;
+  if(localPlayer.lieDown){ wakeUp(); return; }
+  if(!localPlayer.onGround) return;
   if(localPlayer.sitting){localPlayer.sitting=false;localPlayer.sitGround=false;localPlayer.seat=-1;}
   localPlayer.velY=5.0;localPlayer.onGround=false;
   localPlayer._jumpAnticipation = 0.08;
@@ -6814,18 +7030,81 @@ function doJump(){
 
 function contextAction(){
   const p=localPlayer;if(!p)return;
+  // ─── Лестница на 2-й этаж таверны ───
+   if(inInterior === 'tavern'){
+    const _cx = TAVERN_INTERIOR_POS.x, _cz = TAVERN_INTERIOR_POS.z;
+    if(currentFloor === 0){
+      // у основания лестницы, на 1-м этаже
+      if(Math.hypot(p.pos.x - (_cx + 10), p.pos.z - (_cz + 4)) < 2.5){ enterFloor2(); return; }
+       } else if(currentFloor === 1){
+      // у лестницы на 2-м этаже — триггер по всему проёму
+      if(Math.hypot(p.pos.x - (_cx + 10), p.pos.z - (_cz + 7.5)) < 3.5){ exitFloor2(); return; }
+    }
+  }
 
-  // Внутри помещения — выход у двери
-   if(inInterior){
-        const exitZ = inInterior === 'tavern' ? TAVERN_INTERIOR_POS.z + 10
-      : inInterior === 'clanHall' ? CLAN_HALL_INTERIOR_POS.z + 9
-      : CAVE_INTERIOR_POS.z - 9;
-    const exitX = inInterior === 'tavern' ? TAVERN_INTERIOR_POS.x
-      : inInterior === 'clanHall' ? CLAN_HALL_INTERIOR_POS.x
-      : CAVE_INTERIOR_POS.x;
-    if(Math.hypot(p.pos.x - exitX, p.pos.z - exitZ) < 3.0){
-      exitInterior();
+   // ─── Книги в библиотеке 2-го этажа ───
+  if(inInterior === 'tavern' && currentFloor === 1){
+    const _cx = TAVERN_INTERIOR_POS.x, _cz = TAVERN_INTERIOR_POS.z;
+    const _libX = _cx - 15 + 2, _libZ = _cz - 12 + 3;
+    for(let i = 0; i < 3; i++){
+      if(Math.hypot(p.pos.x - (_libX + i*2), p.pos.z - _libZ) < 1.5){
+        openBookDialog(); return;
+      }
+    }
+  }
+
+    // ─── Кровать в спальне: лечь и поспать ───
+  if(inInterior === 'tavern' && currentFloor === 1){
+    const _cx = TAVERN_INTERIOR_POS.x, _cz = TAVERN_INTERIOR_POS.z;
+    const _livX = _cx + 15 - 4, _livZ = _cz - 12 + 4;
+    if(Math.hypot(p.pos.x - _livX, p.pos.z - _livZ) < 1.8){
+      lieInBed();
       return;
+    }
+  }
+
+  // ─── Телескоп: посмотреть на звёзды ───
+  if(inInterior === 'tavern' && currentFloor === 1){
+    const _cx = TAVERN_INTERIOR_POS.x, _cz = TAVERN_INTERIOR_POS.z;
+    const _obsX = _cx - 15 + 4, _obsZ = _cz + 12 - 4;
+    if(Math.hypot(p.pos.x - _obsX, p.pos.z - _obsZ) < 1.5){
+      const night = window.__stars && window.__stars.material.opacity > 0.4;
+      if(!night){
+        showToast('🔭 Днём звёзд не видно');
+        return;
+      }
+      const constellations = [
+        '🐻 Большая Медведица — путь домой',
+        '🦢 Лебедь — весть издалека',
+        '🏹 Орион — охота и удача',
+        '🐟 Рыбы — тихая вода',
+        '⚖ Весы — равновесие'
+      ];
+      const c = constellations[Math.floor(Math.random() * constellations.length)];
+      showToast('🔭 ' + c);
+      if(localPlayer) localPlayer.playEmotion('✨');
+      if(Math.random() < 0.35 && fallingStar === null){
+        spawnFallingStar();
+        fallingStarNextAt = Date.now() + 180000;
+      }
+      return;
+    }
+  }
+
+    // Внутри помещения — выход у двери (только на 1-м этаже таверны)
+   if(inInterior){
+    const canExitHere = (inInterior !== 'tavern') || currentFloor === 0;
+    if(canExitHere){
+      const exitZ = inInterior === 'tavern' ? TAVERN_INTERIOR_POS.z + 10
+        : inInterior === 'clanHall' ? CLAN_HALL_INTERIOR_POS.z + 9
+        : CAVE_INTERIOR_POS.z - 9;
+      const exitX = inInterior === 'tavern' ? TAVERN_INTERIOR_POS.x
+        : inInterior === 'clanHall' ? CLAN_HALL_INTERIOR_POS.x
+        : CAVE_INTERIOR_POS.x;
+      if(Math.hypot(p.pos.x - exitX, p.pos.z - exitZ) < 3.0){
+        exitInterior();
+        return;
+      }
     }
   } else {
     if(!onClanIsland && p.pos.distanceTo(TAVERN_DOOR_OUTSIDE) < 2.5){
@@ -7007,11 +7286,15 @@ function pickUpItem(it){
     if(Net.online)Net.send({t:'pickup',x:it.pos.x,z:it.pos.z});
     return;
   }
-  if(it.type==='log'){
+    if(it.type==='log' || it.type==='log_pine' || it.type==='log_mushroom'){
     myLogsCarried++;
+    myLogsByType[it.type] = (myLogsByType[it.type]||0) + 1;
     updateLogHud();
     snd.pickup();
-    showToast('🪵 Поленьев в руках: '+myLogsCarried);
+    const lbl = it.type==='log_pine' ? '🌿 Хвойное полено'
+              : it.type==='log_mushroom' ? '🍄 Грибное полено'
+              : '🪵 Полено';
+    showToast(lbl + ' (в руках: ' + myLogsCarried + ')');
     it.group.visible=false;it.active=false;it.respawnTimer=18;
     if(Net.online)Net.send({t:'pickup',x:it.pos.x,z:it.pos.z});
     return;
@@ -7031,6 +7314,43 @@ function pickUpItem(it){
   it.group.visible=false;it.active=false;
   it.respawnTimer = it._interiorRespawn || 10;
   if(Net.online)Net.send({t:'pickup',x:it.pos.x,z:it.pos.z});
+}
+function lieInBed(){
+  const p = localPlayer;
+  if(!p || p.lieDown) return;
+  if(!(inInterior === 'tavern' && currentFloor === 1)) return;
+  const bedX = TAVERN_INTERIOR_POS.x + 11;
+  const bedZ = TAVERN_INTERIOR_POS.z - 8;
+  p._bedReturn = { x: p.pos.x, y: p.pos.y, z: p.pos.z, yaw: p.yaw };
+  p.lieDown = true;
+  p.sitting = false;
+  p.sitGround = false;
+  p.seat = -1;
+  p._sleepTimer = 0;
+  p.pos.set(bedX, TAVERN_FLOOR2_Y + 0.55, bedZ + 0.6);
+  p.yaw = 0;
+  p.targetYaw = 0;
+  showToast('😴 Ты ложишься… (Space — встать)');
+  snd.crunch();
+}
+function wakeUp(){
+  const p = localPlayer;
+  if(!p || !p.lieDown) return;
+  p.lieDown = false;
+  if(p._zzzSprite){
+    p.group.remove(p._zzzSprite);
+    if(p._zzzSprite.material && p._zzzSprite.material.map) p._zzzSprite.material.map.dispose();
+    p._zzzSprite = null;
+  }
+  p._sleepTimer = 0;
+  if(p._bedReturn){
+    p.pos.set(p._bedReturn.x, p._bedReturn.y, p._bedReturn.z);
+    p.yaw = p._bedReturn.yaw;
+    p.targetYaw = p._bedReturn.yaw;
+    p._bedReturn = null;
+  }
+  hunger = 100;
+  showToast('☀ Ты проснулся отдохнувшим');
 }
 function openBarmanDialog(){
   const el = document.getElementById('barmanPanel');
@@ -7149,7 +7469,7 @@ function useItem(){
 function toggleSit(){
   if(!localPlayer)return;
   const p=localPlayer;
-  if(p.sitting){
+    if(p.sitting){
     // Встаём с интерьерного стула
     if(p._interiorSeat !== undefined){
       if(p._prevInteriorX !== undefined){
@@ -7160,35 +7480,42 @@ function toggleSit(){
       }
       p.sitting = false;
       p._interiorSeat = undefined;
-      p.pos.y = 0;
+      p.pos.y = (p._interiorFloor === 1) ? TAVERN_FLOOR2_Y : 0;
+      p._interiorFloor = undefined;
       return;
     }
-    // Встаём с уличного места
+        // Встаём с уличного места
     p.setSeat(-1);
     p.sitGround = false;
     p.sitting = false;
-    p.pos.y = 0;
+    p.pos.y = (inInterior === 'tavern' && currentFloor === 1) ? TAVERN_FLOOR2_Y : 0;
     return;
   }
-  // Пытаемся сесть на интерьерный стул
+   // Пытаемся сесть на интерьерный стул
   if(inInterior){
+    // На 2-м этаже — свой массив мебели и своя высота пола
+    const isFloor2 = (inInterior === 'tavern' && currentFloor === 1);
+    const sittables = isFloor2 ? interiorSittablesFloor2 : interiorSittables;
+    const baseY = isFloor2 ? TAVERN_FLOOR2_Y : 0;
+
     let best = -1, bd = 1e9;
-    for(let i = 0; i < interiorSittables.length; i++){
-      const s = interiorSittables[i];
+    for(let i = 0; i < sittables.length; i++){
+      const s = sittables[i];
       const d = Math.hypot(p.pos.x - s.x, p.pos.z - s.z);
       if(d < bd){ bd = d; best = i; }
     }
-       if(best >= 0 && bd < (interiorSittables[best].radius || 1.2)){
-      const s = interiorSittables[best];
+         if(best >= 0 && bd < (sittables[best].radius || 1.2)){
+      const s = sittables[best];
       p._prevInteriorX = p.pos.x;
       p._prevInteriorZ = p.pos.z;
       p.sitting = true;
       p.sitGround = false;
       p.seat = -1;
       p._interiorSeat = best;
+      p._interiorFloor = isFloor2 ? 1 : 0;
       p.pos.x = s.x;
       p.pos.z = s.z;
-      p.pos.y = 0.28;
+      p.pos.y = baseY + 0.28;
       p.yaw = s.yaw || p.yaw;
       p.targetYaw = p.yaw;
       return;
@@ -7201,13 +7528,14 @@ function toggleSit(){
     const d=p.pos.distanceTo(seats[i].pos);
     if(d<bd){bd=d;best=i;}
   }
-  if(best>=0&&bd<1.3){
+    if(best>=0&&bd<1.3){
     p.setSeat(best);
     p.pos.y=0.28;
   } else {
     p.sitting=true;
     p.sitGround=true;
     p.seat=-1;
+    p.pos.y = (inInterior === 'tavern' && currentFloor === 1) ? TAVERN_FLOOR2_Y + 0.28 : 0.28;
   }
 }
 function equipItem(t){
@@ -7900,13 +8228,16 @@ function renderClanPanel(){
     if(onClanIsland){
       html+='<div class="ed-sec" style="text-align:center"><button id="cLeaveIslandBtn" class="ghost">🏠 Покинуть остров</button></div>';
     }
-    if(isLeader){
-      // === Остров клана ===
+        // === Остров клана — ДОСТУПЕН ВСЕМ ЧЛЕНАМ ===
+    if(clan.name && clan.members.has(localPlayer.name)){
       html+='<div class="ed-sec"><label>🏝 Остров клана</label>'+
         '<button id="cIslandBtn">'+(onClanIsland?'🏠 Вернуться к костру':'🏝 Отправиться на остров')+'</button>'+
         '<div style="margin-top:6px;font-size:11px;color:#a99d87;line-height:1.5">'+
-        'Остров виден только членам клана, которых ты пригласишь. '+
+        'Остров твоего клана. Доступен всем членам. '+
         'Вокруг — вода, зайти нельзя.</div></div>';
+    }
+
+    if(isLeader){
       const onlineMembers=[...players.values()].filter(p=>!p.isLocal && clan.members.has(p.name));
       if(onlineMembers.length){
         html+='<div class="ed-sec"><label>📨 Пригласить на остров</label>';
@@ -8111,6 +8442,39 @@ const ORDERS = [
 let activeOrders = {};
 try{ activeOrders = JSON.parse(localStorage.getItem('sumrak_orders')||'{}'); }catch(e){}
 function saveOrders(){ try{localStorage.setItem('sumrak_orders',JSON.stringify(activeOrders));}catch(e){} }
+
+const BOOK_TEXTS = [
+  {title:'О природе огня', text:'Огонь помнит тех, кто к нему приходит. Даже когда уходит память...\n\nСезоны сменяют друг друга, но пламя остаётся. Кто поддерживает его — становится частью чего-то большего.'},
+  {title:'Сказания о кланах', text:'Кланы рождаются у костра и умирают без него. Остров — не место, а память.\n\nЛидер, что забыл о своих, теряет всё.'},
+  {title:'Рыбацкий альманах', text:'Окунь любит тень. Сом — глубину. Золотая рыбка — тишину.\n\nКлюёт в предрассветный час, но иногда — и в полночь. Тогда загадай желание.'},
+  {title:'О пещере', text:'Кристаллы в пещере — не камни, а капли света, что застыли.\n\nНе бери все. Оставь хотя бы один. Иначе тьма придёт.'},
+  {title:'Записки странника', text:'Я видел падающую звезду. Она летела ровно секунду, но я успел загадать.\n\nСледующий день был самым тёплым. Не знаю, связано ли это.'},
+  {title:'О любви и клятвах', text:'У алтаря можно поклясться. Кольцо — не символ, а обещание.\n\nТот, кто нарушит, не найдёт покоя. Так говорят старики.'},
+  {title:'Рецепты старого бармена', text:'Зелье скорости — 3 капли росы, 1 щепотка полыни.\n\nЗелье здоровья — настой корня. Не пить в одиночестве.'}
+];
+function openBookDialog(){
+  const book = BOOK_TEXTS[Math.floor(Math.random() * BOOK_TEXTS.length)];
+  let modal = document.getElementById('bookReadPanel');
+  if(!modal){
+    modal = document.createElement('div');
+    modal.id = 'bookReadPanel';
+    modal.className = 'modal';
+    modal.innerHTML = '<div class="mp">' +
+      '<button class="mclose" data-close>✕</button>' +
+      '<h2 id="bookReadTitle">📖</h2>' +
+      '<div id="bookReadText" style="color:#e9e2d6;font-size:14px;line-height:1.7;' +
+      'white-space:pre-wrap;padding:14px;background:rgba(0,0,0,0.3);border-radius:10px;' +
+      'max-height:60vh;overflow-y:auto"></div>' +
+      '</div>';
+    document.body.appendChild(modal);
+    modal.querySelector('[data-close]').onclick = () => modal.classList.remove('show');
+    modal.addEventListener('click', e => { if(e.target === modal) modal.classList.remove('show'); });
+  }
+  document.getElementById('bookReadTitle').textContent = '📖 ' + book.title;
+  document.getElementById('bookReadText').textContent = book.text;
+  modal.classList.add('show');
+  snd.click();
+}
 
 function openOrders(){
   const el = document.getElementById('ordersPanel');
@@ -10699,8 +11063,24 @@ function contributeLog(){
   const dFire=Math.hypot(localPlayer.pos.x,localPlayer.pos.z);
   if(dFire>2.6){showToast('Подойди к костру');return;}
   const add=myLogsCarried;
+
+  let dom='log', maxCnt=0;
+  for(const k in myLogsByType){
+    if(myLogsByType[k] > maxCnt){ maxCnt = myLogsByType[k]; dom = k; }
+  }
+  if(dom === 'log_pine'){
+    fireColorOverride = {r:0.35, g:1.0, b:0.45};
+    fireColorTimer = 30;
+    showToast('🌿 Хвойные ветки — пламя зеленеет!');
+  } else if(dom === 'log_mushroom'){
+    fireColorOverride = {r:0.85, g:0.35, b:1.0};
+    fireColorTimer = 30;
+    showToast('🍄 Грибное полено — пламя фиолетовое!');
+  }
+
   fireBoostTimer=Math.min(MAX_FIRE_BOOST,fireBoostTimer+30*add);
   myLogsCarried=0;
+  myLogsByType={log:0, log_pine:0, log_mushroom:0};
   fireLogsContributed+=add;
   try{localStorage.setItem('sumrak_fire_logs',String(fireLogsContributed));}catch(e){}
   submitRecord('fire',fireLogsContributed);
@@ -10712,7 +11092,10 @@ function contributeLog(){
   updateLogHud();
   addChat(localPlayer.name,'подбрасывает '+add+' поленьев в костёр! 🔥','#ff8840',
     {type:'general',speakerId:'me'});
-  if(Net.online)Net.send({t:'firelog',count:add,total:fireLogsContributed});
+  if(Net.online)Net.send({
+    t:'firelog', count:add, total:fireLogsContributed,
+    fireType: dom !== 'log' ? dom : null
+  });
 }
 
 /* ============ СЕТЬ: обработка ============ */
@@ -10834,8 +11217,15 @@ function handleNet(m){
         {type:'general',speakerId:m.id});
       break;
     }
-    case 'firelog':{
+        case 'firelog':{
       if(typeof m.count==='number'&&m.count>0&&m.count<1000){
+        if(m.fireType === 'log_pine'){
+          fireColorOverride = {r:0.35, g:1.0, b:0.45};
+          fireColorTimer = 30;
+        } else if(m.fireType === 'log_mushroom'){
+          fireColorOverride = {r:0.85, g:0.35, b:1.0};
+          fireColorTimer = 30;
+        }
         fireBoostTimer=Math.min(MAX_FIRE_BOOST,fireBoostTimer+m.count*30);
         const p=players.get(m.id);
         const nm=p?p.name:'???';
@@ -11207,9 +11597,11 @@ const _winterTop=new THREE.Color(0xa8b8d8),_winterBot=new THREE.Color(0xd8e8f8);
 const _topWork=new THREE.Color(),_botWork=new THREE.Color();
 function updateDN(dt){
   tickAutoSeason();
-  const hour = new Date().getUTCHours();
-    const fogBoost = (hour >= 4 && hour <= 8) || (hour >= 18 && hour <= 22) ? 1.5 : 1;
-  scene.fog.density = Math.min((isMobile?0.015:0.017) * fogBoost, 0.035);
+    const hour = new Date().getUTCHours();
+  let fogBoost = 1;
+  if(hour >= 4 && hour <= 8) fogBoost = 2.6;
+  else if(hour >= 17 && hour <= 21) fogBoost = 1.9;
+  scene.fog.density = Math.min((isMobile?0.015:0.017) * fogBoost, 0.048);
   worldTime=computeWorldTime();
   const phase=worldTime/FULL_CYCLE;
   const el=Math.sin((phase-0.25)*Math.PI*2);
@@ -11623,11 +12015,31 @@ function buildTavernInterior(){
     const line = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.02, D), woodMat(0x3a2818));
     line.position.set(x, 0.02, 0); g.add(line);
   }
-  // потолок
-  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(W, D), woodMat(0x4a3020));
-  ceil.rotation.x = Math.PI / 2; ceil.position.y = H; g.add(ceil);
+    // потолок с проёмом под лестницу
+  {
+    const shape = new THREE.Shape();
+    shape.moveTo(-W/2, -D/2);
+    shape.lineTo( W/2, -D/2);
+    shape.lineTo( W/2,  D/2);
+    shape.lineTo(-W/2,  D/2);
+    shape.lineTo(-W/2, -D/2);
+    const hole = new THREE.Path();
+    hole.moveTo(STAIR_HOLE_X1, STAIR_HOLE_Z1);
+    hole.lineTo(STAIR_HOLE_X2, STAIR_HOLE_Z1);
+    hole.lineTo(STAIR_HOLE_X2, STAIR_HOLE_Z2);
+    hole.lineTo(STAIR_HOLE_X1, STAIR_HOLE_Z2);
+    hole.lineTo(STAIR_HOLE_X1, STAIR_HOLE_Z1);
+    shape.holes.push(hole);
+        const ceil = new THREE.Mesh(
+      new THREE.ShapeGeometry(shape),
+      new THREE.MeshStandardMaterial({color:0x4a3020, roughness:0.9, side:THREE.DoubleSide})
+    );
+    ceil.rotation.x = Math.PI / 2;
+    ceil.position.y = H;
+    g.add(ceil);
+  }
   // стены
-  const wallM = woodMat(0x8a5a35);
+    const wallM = woodMat(0x5a3a24);
   const wallBack = new THREE.Mesh(new THREE.BoxGeometry(W, H, 0.3), wallM);
   wallBack.position.set(0, H/2, -D/2); g.add(wallBack);
   const wallL = new THREE.Mesh(new THREE.BoxGeometry(0.3, H, D), wallM);
@@ -11642,13 +12054,13 @@ function buildTavernInterior(){
   doorTop.position.set(0, H - (H-2.8)/2, D/2); g.add(doorTop);
 
   // коллайдеры стен
-  for(let x = -W/2; x <= W/2; x += 1) addInteriorCollider(cx + x, cz - D/2, 0.5);
+  for(let x = -W/2; x <= W/2; x += 1) addInteriorCollider(cx + x, cz - D/2, 0.6);
   for(let z = -D/2; z <= D/2; z += 1){
-    addInteriorCollider(cx - W/2, cz + z, 0.5);
-    addInteriorCollider(cx + W/2, cz + z, 0.5);
+    addInteriorCollider(cx - W/2, cz + z, 0.6);
+    addInteriorCollider(cx + W/2, cz + z, 0.6);
   }
-  for(let x = -W/2; x <= -2; x += 1) addInteriorCollider(cx + x, cz + D/2, 0.5);
-  for(let x = 2; x <= W/2; x += 1) addInteriorCollider(cx + x, cz + D/2, 0.5);
+  for(let x = -W/2; x <= -2; x += 1) addInteriorCollider(cx + x, cz + D/2, 0.6);
+  for(let x = 2; x <= W/2; x += 1) addInteriorCollider(cx + x, cz + D/2, 0.6);
 
   // бар
   const barW = 12, barD = 1.4;
@@ -11665,7 +12077,7 @@ g.add(makeBarCounter(0, -D/2 + 1.5, barW, barD, 0));
 
   // столы
   const foodTypes = ['apple', 'meat', 'bottle', 'mug'];
-  [[cx - 9, cz - 3], [cx + 9, cz - 3], [cx - 9, cz + 5], [cx + 9, cz + 5]].forEach(([tx, tz], idx) => {
+   [[cx - 9, cz - 3], [cx + 9, cz - 3], [cx - 9, cz + 5], [cx + 5, cz + 8]].forEach(([tx, tz], idx) => {
     g.add(makeTable(tx - cx, tz - cz, 2.0, 1.2));
     addInteriorCollider(tx, tz, 1.0);
     const offs = [[-0.9, 0, Math.PI/2], [0.9, 0, -Math.PI/2], [0, -0.9, 0], [0, 0.9, Math.PI]];
@@ -11932,6 +12344,423 @@ g.add(makeChandelier(10, 0, H - 0.3));
   tavernInteriorGroup = g;
 }
 buildTavernInterior();
+function buildTavernFloor2(){
+  const g = new THREE.Group();
+  const W = 30, D = 24;
+  const H = TAVERN_FLOOR2_CEIL_Y - TAVERN_FLOOR2_Y;  // 4
+  const cx = TAVERN_INTERIOR_POS.x, cz = TAVERN_INTERIOR_POS.z;
+  const stairGroup = new THREE.Group();
+  function addWall2(x1, z1, x2, z2){
+    const dx = x2 - x1, dz = z2 - z1;
+    const len = Math.hypot(dx, dz);
+    const angle = Math.atan2(dz, dx);
+    const midX = (x1 + x2) / 2, midZ = (z1 + z2) / 2;
+    const wallH = H;   // 4
+       const mesh = new THREE.Mesh(
+      new THREE.BoxGeometry(len, wallH, 0.2),
+      new THREE.MeshStandardMaterial({color:0x5a3a24, roughness:0.95})
+    );
+    mesh.position.set(midX, TAVERN_FLOOR2_Y + wallH/2, midZ);
+    mesh.rotation.y = -angle;
+    g.add(mesh);
+    // коллайдеры (в мировых координатах)
+    const steps = Math.ceil(len / 0.4);
+    for(let i = 0; i <= steps; i++){
+      const t = i / steps;
+      interiorCollidersFloor2.push({
+        x: cx + x1 + dx * t,
+        z: cz + z1 + dz * t,
+        r: 0.35
+      });
+    }
+  }
+
+  // ─── ПОЛ с проёмом под лестницу ───
+  const shape = new THREE.Shape();
+  shape.moveTo(-W/2, -D/2);
+  shape.lineTo(W/2, -D/2);
+  shape.lineTo(W/2, D/2);
+  shape.lineTo(-W/2, D/2);
+  shape.lineTo(-W/2, -D/2);
+  const hole = new THREE.Path();
+  hole.moveTo(STAIR_HOLE_X1, STAIR_HOLE_Z1);
+  hole.lineTo(STAIR_HOLE_X2, STAIR_HOLE_Z1);
+  hole.lineTo(STAIR_HOLE_X2, STAIR_HOLE_Z2);
+  hole.lineTo(STAIR_HOLE_X1, STAIR_HOLE_Z2);
+  hole.lineTo(STAIR_HOLE_X1, STAIR_HOLE_Z1);
+  shape.holes.push(hole);
+   const floor = new THREE.Mesh(
+    new THREE.ShapeGeometry(shape),
+    new THREE.MeshStandardMaterial({color:0x5a3a20, roughness:0.9, side:THREE.DoubleSide})
+  );
+  floor.rotation.x = Math.PI / 2;   // +PI/2 → дыра попадает на +Z, туда, где лестница
+  floor.position.y = TAVERN_FLOOR2_Y;
+  g.add(floor);
+
+  // ─── ПОТОЛОК ───
+  const ceil = new THREE.Mesh(new THREE.PlaneGeometry(W, D), woodMat(0x4a3020));
+  ceil.rotation.x = Math.PI / 2;
+  ceil.position.y = TAVERN_FLOOR2_CEIL_Y;
+  g.add(ceil);
+
+  // ─── СТЕНЫ 2-го этажа ───
+  const wallM = woodMat(0x5a3a24);
+  const wB = new THREE.Mesh(new THREE.BoxGeometry(W, H, 0.3), wallM);
+  wB.position.set(0, TAVERN_FLOOR2_Y + H/2, -D/2); g.add(wB);
+  const wL = new THREE.Mesh(new THREE.BoxGeometry(0.3, H, D), wallM);
+  wL.position.set(-W/2, TAVERN_FLOOR2_Y + H/2, 0); g.add(wL);
+  const wR = new THREE.Mesh(new THREE.BoxGeometry(0.3, H, D), wallM);
+  wR.position.set(W/2, TAVERN_FLOOR2_Y + H/2, 0); g.add(wR);
+  const wF = new THREE.Mesh(new THREE.BoxGeometry(W, H, 0.3), wallM);
+  wF.position.set(0, TAVERN_FLOOR2_Y + H/2, D/2); g.add(wF);
+
+    // Коллайдеры периметра (для 2-го этажа)
+  for(let x = -W/2; x <= W/2; x += 1){
+    interiorCollidersFloor2.push({x: cx + x, z: cz - D/2, r: 0.6});
+    interiorCollidersFloor2.push({x: cx + x, z: cz + D/2, r: 0.6});
+  }
+  for(let z = -D/2; z <= D/2; z += 1){
+    interiorCollidersFloor2.push({x: cx - W/2, z: cz + z, r: 0.6});
+    interiorCollidersFloor2.push({x: cx + W/2, z: cz + z, r: 0.6});
+  }
+  // ─── ПЕРИЛА вокруг проёма (3 стороны) ───
+  const railM = woodMat(0x6a4a2a);
+  function railSeg(x1, z1, x2, z2){
+    const len = Math.hypot(x2 - x1, z2 - z1);
+    const midX = (x1 + x2) / 2, midZ = (z1 + z2) / 2;
+    const angle = Math.atan2(z2 - z1, x2 - x1);
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, len, 8), railM);
+    top.rotation.z = Math.PI/2;
+    top.rotation.y = -angle;
+    top.position.set(midX, TAVERN_FLOOR2_Y + 1.0, midZ);
+    g.add(top);
+    const n = Math.max(2, Math.floor(len / 0.8));
+    for(let i = 0; i <= n; i++){
+      const t = i / n;
+      const post = new THREE.Mesh(new THREE.BoxGeometry(0.08, 1.0, 0.08), railM);
+      post.position.set(x1 + (x2-x1)*t, TAVERN_FLOOR2_Y + 0.5, z1 + (z2-z1)*t);
+      g.add(post);
+    }
+  }
+   railSeg(STAIR_HOLE_X1, STAIR_HOLE_Z1, STAIR_HOLE_X1, STAIR_HOLE_Z2);
+  railSeg(STAIR_HOLE_X1, STAIR_HOLE_Z1, STAIR_HOLE_X2, STAIR_HOLE_Z1);
+  railSeg(STAIR_HOLE_X2, STAIR_HOLE_Z1, STAIR_HOLE_X2, STAIR_HOLE_Z2);
+  for(let x = STAIR_HOLE_X1; x <= STAIR_HOLE_X2; x += 0.5){
+    interiorCollidersFloor2.push({x: cx + x, z: cz + STAIR_HOLE_Z1, r: 0.3});
+  }
+  for(let z = STAIR_HOLE_Z1; z <= STAIR_HOLE_Z2; z += 0.5){
+    interiorCollidersFloor2.push({x: cx + STAIR_HOLE_X1, z: cz + z, r: 0.3});
+    interiorCollidersFloor2.push({x: cx + STAIR_HOLE_X2, z: cz + z, r: 0.3});
+  }
+
+  // ─── ЛЕСТНИЦА (визуал, от 1-го этажа) ───
+  const steps = 15;
+  const stepH = TAVERN_FLOOR2_Y / steps;
+  const stepD = (STAIR_HOLE_Z2 - STAIR_HOLE_Z1) / steps;
+  const stairCX = (STAIR_HOLE_X1 + STAIR_HOLE_X2) / 2;
+  for(let i = 0; i < steps; i++){
+    const step = new THREE.Mesh(
+      new THREE.BoxGeometry(STAIR_HOLE_X2 - STAIR_HOLE_X1 - 0.2, 0.1, stepD * 1.05),
+      woodMat(i % 2 ? 0x6a4a2a : 0x5a3a20)
+    );
+        step.position.set(stairCX, stepH * (i + 1) - 0.05, STAIR_HOLE_Z1 + stepD * (i + 0.5));
+    stairGroup.add(step);
+  }
+  // Боковые перила лестницы
+  const railAngle = Math.atan2(TAVERN_FLOOR2_Y, STAIR_HOLE_Z2 - STAIR_HOLE_Z1);
+  for(const side of [-1, 1]){
+    const rX = stairCX + side * ((STAIR_HOLE_X2 - STAIR_HOLE_X1)/2 - 0.1);
+    const railLen = Math.hypot(TAVERN_FLOOR2_Y, STAIR_HOLE_Z2 - STAIR_HOLE_Z1);
+    const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, railLen, 8), railM);
+    rail.rotation.x = -railAngle + Math.PI/2;
+        rail.position.set(rX, TAVERN_FLOOR2_Y/2 + 0.6, (STAIR_HOLE_Z1 + STAIR_HOLE_Z2)/2);
+    stairGroup.add(rail);
+  }
+  // Коллайдеры лестницы — только на 1-м этаже, чтобы нельзя было пройти сквозь ступени
+  for(let x = STAIR_HOLE_X1 + 0.3; x <= STAIR_HOLE_X2 - 0.3; x += 0.4){
+    addInteriorCollider(cx + x, cz + STAIR_HOLE_Z1, 0.25);         // южный торец (перед лестницей)
+    addInteriorCollider(cx + x, cz + STAIR_HOLE_Z2, 0.25);         // северный торец
+  }
+  for(let i = 0; i < steps; i++){
+    const zStep = STAIR_HOLE_Z1 + stepD * (i + 0.5);
+    addInteriorCollider(cx + STAIR_HOLE_X1 + 0.1, cz + zStep, 0.25);  // западный бок
+    addInteriorCollider(cx + STAIR_HOLE_X2 - 0.1, cz + zStep, 0.25);  // восточный бок
+  }
+  // ─── ВНУТРЕННИЕ СТЕНЫ ───
+  // Западная стена (библиотека + обсерватория отделены от холла)
+  addWall2(-4, -12, -4, -2);   // библиотека/холл, южная часть
+  addWall2(-4,  0, -4,  6);    // библиотека-обсерватория/холл, середина
+  addWall2(-4,  8, -4, 12);    // обсерватория/холл, северная часть
+  // Проходы: z=-2..0 (в библиотеку) и z=6..8 (в обсерваторию)
+
+  // Стена библиотека/обсерватория
+  addWall2(-15, 0, -4, 0);
+
+  // Стена спальня/холл
+  addWall2(4, -12, 4, -4);     // спальня/холл, северная часть
+  addWall2(4, -2, 4, 0);       // спальня/холл, южная часть
+
+  // Проход: z=-4..-2 (в спальню)
+  if(tavernInteriorGroup) tavernInteriorGroup.add(stairGroup);
+
+  // ─── СВЕТ (2 PointLight макс) ───
+  const l1 = new THREE.PointLight(0xffcc88, 1.6, 22, 1.5);
+  l1.position.set(-7, TAVERN_FLOOR2_Y + H - 1.2, -3);
+  g.add(l1);
+  const l2 = new THREE.PointLight(0xffcc88, 1.6, 22, 1.5);
+  l2.position.set(7, TAVERN_FLOOR2_Y + H - 1.2, 3);
+  g.add(l2);
+
+  // ─── ЛЮСТРА (визуал) ───
+  {
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.04, 6, 16), woodMat(0x3a2818));
+    ring.rotation.x = Math.PI/2;
+    ring.position.set(0, TAVERN_FLOOR2_Y + H - 0.3, 0);
+    g.add(ring);
+    const flameM = new THREE.MeshBasicMaterial({color:0xffcc66});
+    for(let i = 0; i < 6; i++){
+      const a = i / 6 * Math.PI * 2;
+      const fl = new THREE.Mesh(new THREE.SphereGeometry(0.05, 6, 6), flameM);
+      fl.position.set(Math.cos(a)*0.45, TAVERN_FLOOR2_Y + H - 0.15, Math.sin(a)*0.45);
+      fl.scale.y = 1.6; g.add(fl);
+    }
+    const chain = new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.02,0.6,5), woodMat(0x3a2818));
+    chain.position.set(0, TAVERN_FLOOR2_Y + H - 0.6, 0); g.add(chain);
+  }
+
+  // ═════════ МЕБЕЛЬ (в подгруппе со сдвигом) ═════════
+  const furniture = new THREE.Group();
+  furniture.position.y = TAVERN_FLOOR2_Y;
+  g.add(furniture);
+
+  // Свечи/пламя (эмиссив) — шаблон
+  const candleM = new THREE.MeshStandardMaterial({color:0xefe6cf,roughness:0.6});
+  const flameM = new THREE.MeshBasicMaterial({color:0xffcc66});
+  function addCandle(x, z){
+    const cnd = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.15,7), candleM);
+    cnd.position.set(x, 0.92, z); furniture.add(cnd);
+    const fl = new THREE.Mesh(new THREE.SphereGeometry(0.04,6,6), flameM);
+    fl.scale.y = 1.7; fl.position.set(x, 1.05, z); furniture.add(fl);
+  }
+
+  // ─── 1) БИБЛИОТЕКА (северо-запад) ───
+  const libX = -W/2 + 2, libZ = -D/2 + 3;
+  for(let i = 0; i < 3; i++) furniture.add(makeBookshelf(libX + i*2, libZ, 0));
+  furniture.add(makeTable(libX + 2, libZ + 3, 2.0, 1.2));
+  furniture.add(makeChair(libX + 1.1, libZ + 3, Math.PI/2));
+  furniture.add(makeChair(libX + 2.9, libZ + 3, -Math.PI/2));
+  addCandle(libX + 2, libZ + 3);
+  for(let i = 0; i < 3; i++) interiorCollidersFloor2.push({x: cx + libX + i*2, z: cz + libZ, r: 1.0});
+  interiorCollidersFloor2.push({x: cx + libX + 2, z: cz + libZ + 3, r: 1.0});
+  interiorSittablesFloor2.push({x: cx + libX + 1.1, z: cz + libZ + 3, yaw: Math.PI/2});
+  interiorSittablesFloor2.push({x: cx + libX + 2.9, z: cz + libZ + 3, yaw: -Math.PI/2});
+  // Диваны в библиотеке (лицом к столу, к северу)
+  furniture.add(makeSofa(libX + 2, libZ + 6, Math.PI, 0x6a4a2a));
+  furniture.add(makeSofa(libX + 6, libZ + 6, Math.PI, 0x8a4a2a));
+  interiorCollidersFloor2.push({x: cx + libX + 2, z: cz + libZ + 6, r: 1.2});
+  interiorCollidersFloor2.push({x: cx + libX + 6, z: cz + libZ + 6, r: 1.2});
+  interiorSittablesFloor2.push({x: cx + libX + 2, z: cz + libZ + 6, yaw: Math.PI, radius: 1.7});
+  interiorSittablesFloor2.push({x: cx + libX + 6, z: cz + libZ + 6, yaw: Math.PI, radius: 1.7});
+
+  // ─── 2) ГОСТИНАЯ (северо-восток) — кровать ───
+  const livX = W/2 - 4, livZ = -D/2 + 4;
+  const bed = new THREE.Group();
+  bed.add(new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.3, 2.4), woodMat(0x4a2f18)));
+  const mattress = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.15, 2.3),
+    new THREE.MeshStandardMaterial({color:0xc8a878,roughness:0.9}));
+  mattress.position.y = 0.23; bed.add(mattress);
+  const pillow = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.12, 0.5),
+    new THREE.MeshStandardMaterial({color:0xe8d8c0,roughness:0.9}));
+  pillow.position.set(0, 0.35, -0.9); bed.add(pillow);
+  const blanket = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.06, 1.6),
+    new THREE.MeshStandardMaterial({color:0x6a3a5a,roughness:0.8}));
+  blanket.position.set(0, 0.32, 0.35); bed.add(blanket);
+  bed.children[0].position.y = 0.15;
+  bed.position.set(livX, 0, livZ);
+  furniture.add(bed);
+  interiorCollidersFloor2.push({x: cx + livX, z: cz + livZ, r: 1.4});
+
+    // Окно (эмиссив)
+  const winM = new THREE.MeshStandardMaterial({color:0x88c8ff,emissive:0x4488cc,emissiveIntensity:0.8});
+  const win = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.2), winM);
+  win.position.set(livX, TAVERN_FLOOR2_Y + 2.0, -D/2 + 0.16); g.add(win);
+
+  // Сундук-декор (без функции)
+  const chest = new THREE.Group();
+  chest.add(new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.6, 0.6), woodMat(0x6a3a1a)));
+  const lid = new THREE.Mesh(new THREE.BoxGeometry(0.95, 0.15, 0.65), woodMat(0x4a2a10));
+  lid.position.y = 0.38; chest.add(lid);
+  chest.children[0].position.y = 0.3;
+  chest.position.set(livX + 1.6, 0, livZ + 1);
+  furniture.add(chest);
+  interiorCollidersFloor2.push({x: cx + livX + 1.6, z: cz + livZ + 1, r: 0.6});
+
+  // ─── 3) ОБСЕРВАТОРИЯ (юго-запад) — телескоп ───
+  const obsX = -W/2 + 4, obsZ = D/2 - 4;
+  const tel = new THREE.Group();
+  const telBase = new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.4,0.1,8), woodMat(0x3a2818));
+  telBase.position.y = 0.05; tel.add(telBase);
+  const legM = woodMat(0x2a1a10);
+  for(const [dx, dz] of [[-0.2,0],[0.2,0],[0,0.2]]){
+    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,1.5,6), legM);
+    leg.position.set(dx, 0.8, dz);
+    tel.add(leg);
+  }
+  const telBody = new THREE.Mesh(new THREE.CylinderGeometry(0.18,0.22,1.4,12),
+    new THREE.MeshStandardMaterial({color:0xc09050,metalness:0.5,roughness:0.5}));
+  telBody.position.set(0, 1.5, 0); telBody.rotation.x = -Math.PI/4; tel.add(telBody);
+  const telLens = new THREE.Mesh(new THREE.CircleGeometry(0.2,16),
+    new THREE.MeshStandardMaterial({color:0x88c8ff,emissive:0x4488cc,emissiveIntensity:1.2}));
+  telLens.position.set(0.55, 1.9, -0.55); telLens.rotation.x = -Math.PI/4; tel.add(telLens);
+  tel.position.set(obsX, 0, obsZ);
+  furniture.add(tel);
+  interiorCollidersFloor2.push({x: cx + obsX, z: cz + obsZ, r: 0.6});
+
+  // Карта звёзд на стене
+  {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 256;
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = '#0a1428'; ctx.fillRect(0,0,256,256);
+    ctx.fillStyle = '#fff';
+    for(let i = 0; i < 60; i++){
+      ctx.beginPath(); ctx.arc(Math.random()*256, Math.random()*256, 0.5+Math.random()*1.5, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.strokeStyle = 'rgba(255,220,120,0.5)'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(80,100); ctx.lineTo(120,80); ctx.lineTo(140,130); ctx.lineTo(180,140); ctx.lineTo(160,180);
+    ctx.stroke();
+    const tex = new THREE.CanvasTexture(cv);
+    const mapM = new THREE.Mesh(new THREE.PlaneGeometry(2,2),
+      new THREE.MeshStandardMaterial({map:tex,emissive:0xffffff,emissiveMap:tex,emissiveIntensity:0.3,roughness:0.7}));
+    mapM.position.set(-W/2 + 0.16, TAVERN_FLOOR2_Y + 2.5, obsZ);
+    mapM.rotation.y = Math.PI/2;
+    g.add(mapM);
+  }
+
+  // ─── 4) БАЛКОН (южная стена, западнее проёма) — 2 столика + 4 стула ───
+  const balZ = D/2 - 2.5;
+  for(const balX of [-2, 2]){
+    furniture.add(makeTable(balX, balZ, 1.6, 1.0));
+    furniture.add(makeChair(balX - 0.8, balZ, Math.PI/2));
+    furniture.add(makeChair(balX + 0.8, balZ, -Math.PI/2));
+    interiorCollidersFloor2.push({x: cx + balX, z: cz + balZ, r: 0.8});
+    interiorSittablesFloor2.push({x: cx + balX - 0.8, z: cz + balZ, yaw: Math.PI/2});
+    interiorSittablesFloor2.push({x: cx + balX + 0.8, z: cz + balZ, yaw: -Math.PI/2});
+  }
+  // ═════════ ДОП. ПРЕДМЕТЫ ═════════
+
+  // ── Глобус на библиотечном столе ──
+  {
+    const globeG = new THREE.Group();
+    const gBase = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 0.05, 12), woodMat(0x3a2818));
+    gBase.position.y = 0.025; globeG.add(gBase);
+    const gSphere = new THREE.Mesh(new THREE.SphereGeometry(0.2, 16, 12),
+      new THREE.MeshStandardMaterial({color:0x3060a0, roughness:0.5}));
+    gSphere.position.y = 0.28; globeG.add(gSphere);
+    const gRing = new THREE.Mesh(new THREE.TorusGeometry(0.22, 0.01, 6, 20),
+      new THREE.MeshStandardMaterial({color:0xc0a050, metalness:0.6, roughness:0.4}));
+    gRing.position.y = 0.28; gRing.rotation.x = Math.PI/3; globeG.add(gRing);
+    globeG.position.set(libX + 1, 0.85, libZ + 3);
+    furniture.add(globeG);
+  }
+
+  // ── Книги на столе ──
+  for(let i = 0; i < 3; i++){
+    const bk = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.06, 0.35),
+      new THREE.MeshStandardMaterial({color:[0x8a2020,0x205080,0x407020][i], roughness:0.7}));
+    bk.position.set(libX + 3, 0.87 + i*0.06, libZ + 3 - 0.1 + i*0.02);
+    bk.rotation.y = -0.2 + i*0.15;
+    furniture.add(bk);
+  }
+
+  // ── Шкаф в спальне ──
+  {
+    const wG = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.2, 0.5), woodMat(0x4a3020));
+    body.position.y = 1.1; wG.add(body);
+    for(const side of [-1, 1]){
+      const door = new THREE.Mesh(new THREE.BoxGeometry(0.45, 2.0, 0.02), woodMat(0x3a2010));
+      door.position.set(side * 0.25, 1.1, 0.26); wG.add(door);
+      const handle = new THREE.Mesh(new THREE.SphereGeometry(0.03, 6, 6),
+        new THREE.MeshStandardMaterial({color:0xc0a050, metalness:0.7, roughness:0.3}));
+      handle.position.set(side * 0.1, 1.1, 0.28); wG.add(handle);
+    }
+    wG.position.set(livX - 2, 0, livZ - 1);
+    furniture.add(wG);
+    interiorCollidersFloor2.push({x: cx + livX - 2, z: cz + livZ - 1, r: 0.7});
+  }
+
+  // ── Письменный стол + стул в спальне ──
+  furniture.add(makeTable(livX + 1.5, livZ + 2, 1.4, 0.8));
+  furniture.add(makeChair(livX + 1.5, livZ + 3, Math.PI));
+  interiorCollidersFloor2.push({x: cx + livX + 1.5, z: cz + livZ + 2, r: 0.8});
+  interiorCollidersFloor2.push({x: cx + livX + 1.5, z: cz + livZ + 3, r: 0.35});
+  interiorSittablesFloor2.push({x: cx + livX + 1.5, z: cz + livZ + 3, yaw: Math.PI});
+
+  // ── Ковёр ──
+  {
+    const rug = new THREE.Mesh(new THREE.CircleGeometry(1.2, 16),
+      new THREE.MeshStandardMaterial({color:0x6a3a3a, roughness:0.9}));
+    rug.rotation.x = -Math.PI/2;
+    rug.position.set(livX, 0.02, livZ + 3);
+    furniture.add(rug);
+  }
+
+  // ── Прикроватная тумбочка + свеча ──
+  {
+    const ns = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.6, 0.5), woodMat(0x4a3020));
+    ns.position.set(livX - 1.0, 0.3, livZ - 1.0);
+    furniture.add(ns);
+    const cnd = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.15, 7), candleM);
+    cnd.position.set(livX - 1.0, 0.68, livZ - 1.0); furniture.add(cnd);
+    const fl = new THREE.Mesh(new THREE.SphereGeometry(0.04, 6, 6), flameM);
+    fl.scale.y = 1.7; fl.position.set(livX - 1.0, 0.8, livZ - 1.0); furniture.add(fl);
+    interiorCollidersFloor2.push({x: cx + livX - 1.0, z: cz + livZ - 1.0, r: 0.4});
+  }
+
+  // ── Цветочный горшок в обсерватории ──
+  {
+    const potG = new THREE.Group();
+    const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 0.3, 10),
+      new THREE.MeshStandardMaterial({color:0x8a5a30, roughness:0.8}));
+    pot.position.y = 0.15; potG.add(pot);
+    for(let i = 0; i < 8; i++){
+      const leaf = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.4, 4),
+        new THREE.MeshStandardMaterial({color:0x2a5a2a, roughness:0.9}));
+      const a = i / 8 * Math.PI * 2;
+      leaf.position.set(Math.cos(a) * 0.1, 0.45, Math.sin(a) * 0.1);
+      leaf.rotation.z = Math.cos(a) * 0.4;
+      leaf.rotation.x = Math.sin(a) * 0.4;
+      potG.add(leaf);
+    }
+    potG.position.set(obsX + 1, 0, obsZ + 1);
+    furniture.add(potG);
+    interiorCollidersFloor2.push({x: cx + obsX + 1, z: cz + obsZ + 1, r: 0.3});
+  }
+
+  // ── Еда на балконных столах (внутри furniture — чтобы было видно только на 2-м этаже) ──
+  function addBalconyFood(x, z, type){
+    const g2 = new THREE.Group();
+    g2.add(makeItemMeshSimple(type));
+    // локальные координаты: x/z относительно центра комнаты
+    g2.position.set(x - cx, 0.88, z - cz);
+    furniture.add(g2);
+    groundItems.push({
+      group: g2, type, pos: new THREE.Vector3(x, TAVERN_FLOOR2_Y + 0.88, z),
+      respawnTimer: 0, active: true, permanent: false, _interiorRespawn: 60
+    });
+  }
+  addBalconyFood(cx - 2.3, cz + D/2 - 2.5, 'apple');
+  addBalconyFood(cx - 1.7, cz + D/2 - 2.5, 'bottle');
+  addBalconyFood(cx + 1.7, cz + D/2 - 2.5, 'mug');
+  addBalconyFood(cx + 2.3, cz + D/2 - 2.5, 'cheese');
+
+   g.position.copy(TAVERN_INTERIOR_POS);
+  g.visible = false;
+  scene.add(g);
+  tavernFloor2Group = g;
+}
+buildTavernFloor2();
 
 function buildClanHallInterior(){
   const g = new THREE.Group();
@@ -12295,10 +13124,60 @@ function enterInterior(type){
   localPlayer._interiorSeat = undefined;
   if(Net.online) Net.send({t:'state', x:localPlayer.pos.x, y:0, z:localPlayer.pos.z, r:localPlayer.yaw, s:0, i:localPlayer.item});
 }
+function enterFloor2(){
+  if(!localPlayer || inInterior !== 'tavern' || currentFloor === 1) return;
+  currentFloor = 1;
+  if(tavernFloor2Group) tavernFloor2Group.visible = true;
+  const cx = TAVERN_INTERIOR_POS.x, cz = TAVERN_INTERIOR_POS.z;
+        localPlayer.pos.set(cx + 2, TAVERN_FLOOR2_Y, cz + 6);
+  localPlayer.yaw = Math.PI;
+  localPlayer.targetYaw = Math.PI;
+  camYaw = Math.PI;
+  localPlayer.sitting = false;
+  localPlayer.sitGround = false;
+  localPlayer.seat = -1;
+  localPlayer._interiorSeat = undefined;
+  localPlayer.onGround = true;
+  localPlayer.velY = 0;
+  showToast('🪜 Ты на 2-м этаже таверны');
+  if(Net.online) Net.send({t:'state',
+    x:+localPlayer.pos.x.toFixed(2), y:TAVERN_FLOOR2_Y,
+    z:+localPlayer.pos.z.toFixed(2), r:+localPlayer.yaw.toFixed(2),
+    s:0, i:localPlayer.item});
+}
+
+function exitFloor2(){
+  if(!localPlayer || inInterior !== 'tavern' || currentFloor !== 1) return;
+  currentFloor = 0;
+  if(tavernFloor2Group) tavernFloor2Group.visible = false;
+  const cx = TAVERN_INTERIOR_POS.x, cz = TAVERN_INTERIOR_POS.z;
+      localPlayer.pos.set(cx + 13, 0, cz + 6);
+  localPlayer.yaw = 0;
+  localPlayer.targetYaw = 0;
+  camYaw = 0;
+  localPlayer.onGround = true;
+  localPlayer.velY = 0;
+  localPlayer.sitting = false;
+  localPlayer.sitGround = false;
+  localPlayer.seat = -1;
+  localPlayer._interiorSeat = undefined;
+  localPlayer._interiorFloor = undefined;
+  showToast('🪜 Ты спустился на 1-й этаж');
+  if(Net.online) Net.send({t:'state',
+    x:+localPlayer.pos.x.toFixed(2), y:0,
+    z:+localPlayer.pos.z.toFixed(2), r:+localPlayer.yaw.toFixed(2),
+    s:0, i:localPlayer.item});
+}
 
 function exitInterior(){
   if(!localPlayer || !inInterior) return;
+  if(localPlayer.lieDown) wakeUp();
   interiorAmbient.intensity = 0;
+  // Сброс 2-го этажа таверны
+  if(inInterior === 'tavern' && currentFloor === 1){
+    currentFloor = 0;
+    if(tavernFloor2Group) tavernFloor2Group.visible = false;
+  }
   if(tavernInteriorGroup) tavernInteriorGroup.visible = false;
   if(clanHallInteriorGroup) clanHallInteriorGroup.visible = false;
   if(caveInteriorGroup) caveInteriorGroup.visible = false;
@@ -12316,7 +13195,9 @@ function exitInterior(){
 }
 function checkCollision(x,z,isJumping){
   if(inInterior){
-    for(const c of interiorColliders){
+    const _cols = (inInterior === 'tavern' && currentFloor === 1)
+      ? interiorCollidersFloor2 : interiorColliders;
+    for(const c of _cols){
       const dx = x - c.x, dz = z - c.z;
       if(dx*dx + dz*dz < c.r*c.r) return true;
     }
@@ -12363,6 +13244,65 @@ if(tavernInteriorGroup && tavernInteriorGroup.userData.ordersBoard){
 
   if(fortuneCooldown>0)fortuneCooldown-=dt;
 
+  if(fireColorTimer > 0){
+    fireColorTimer -= dt;
+    if(fireColorTimer <= 0) fireColorOverride = null;
+  }
+
+  if(!fallingStar && Date.now() >= fallingStarNextAt){
+    const night = window.__stars && window.__stars.material.opacity > 0.4;
+    if(night && !isRaining && currentSeason !== 'winter' && !inInterior && !onClanIsland && !photoMode){
+      spawnFallingStar();
+      fallingStarNextAt = Date.now() + 90000 + Math.random() * 150000;
+    } else {
+      fallingStarNextAt = Date.now() + 30000;
+    }
+  }
+  if(fallingStar){
+    fallingStar.t += dt;
+    const k = fallingStar.t / 1.2;
+    if(k >= 1){
+      scene.remove(fallingStar.line);
+      scene.remove(fallingStar.head);
+      fallingStar = null;
+    } else {
+      fallingStar.line.material.opacity = 1 - k;
+      fallingStar.head.material.opacity = 1 - k;
+      const pos = fallingStar.start.clone().lerp(fallingStar.end, k);
+      fallingStar.head.position.copy(pos);
+    }
+  }
+  if(wishActive){
+    wishTimer -= dt;
+    if(localPlayer && localPlayer.moving && localPlayer.onGround){
+      makeWish();
+    } else if(wishTimer <= 0){
+      wishActive = false;
+    }
+  }
+  // — Следы на снегу и песке —
+  if(localPlayer && localPlayer.moving && localPlayer.onGround && !inInterior && !onClanIsland){
+    footprintCooldown -= dt;
+    if(footprintCooldown <= 0){
+      footprintCooldown = 0.35;
+      const p = localPlayer.pos;
+      const isSnow = (currentSeason === 'winter');
+      const isSand = (p.x > 105 && p.x < 121 && p.z > -210 && p.z < 45);
+      if(isSnow || isSand){
+        placeFootprint(p.x, p.z, localPlayer.yaw);
+        const fp = footprints[(footprintIdx - 1 + FOOTPRINT_POOL_SIZE) % FOOTPRINT_POOL_SIZE];
+        fp.mesh.material.color.setHex(isSnow ? 0x6a7a8a : 0x8a7050);
+      }
+    }
+  }
+  for(let i = 0; i < FOOTPRINT_POOL_SIZE; i++){
+    const fp = footprints[i];
+    if(fp.life > 0){
+      fp.life -= dt;
+      fp.mesh.material.opacity = Math.min(0.55, fp.life * 0.02);
+      if(fp.life <= 0) fp.mesh.visible = false;
+    }
+  }
     {
     // голод отключён
     const hf=document.getElementById('hungerFill');
@@ -12403,6 +13343,12 @@ if(clanIslandGroup && clanIslandGroup.visible && clanIslandGroup.userData.clanFi
       p[i*3+2]+=fireData.vel[i*3+2]*dt+Math.cos(t*2.5+i)*0.0016;
       fireData.vel[i*3+1]+=0.4*dt;
       const f=1-k;c[i*3]=1;c[i*3+1]=0.25+0.65*f;c[i*3+2]=0.03+0.22*f*f;
+      if(fireColorOverride){
+        const blend = Math.min(1, fireColorTimer / 5) * 0.75;
+        c[i*3]   = lerp(c[i*3],   fireColorOverride.r, blend);
+        c[i*3+1] = lerp(c[i*3+1], fireColorOverride.g, blend);
+        c[i*3+2] = lerp(c[i*3+2], fireColorOverride.b, blend);
+      }
     }
     firePts.geometry.attributes.position.needsUpdate=true;
     firePts.geometry.attributes.color.needsUpdate=true;
@@ -12499,8 +13445,8 @@ if(clanIslandGroup && clanIslandGroup.visible && clanIslandGroup.userData.clanFi
   });
   if(localPlayer){
     const p=localPlayer;
-    let mx=0,mz=0;
-    if(!p.sitting){
+        let mx=0,mz=0;
+    if(!p.sitting && !p.lieDown){
       if(keys['KeyW']||keys['ArrowUp'])mz+=1;
       if(keys['KeyS']||keys['ArrowDown'])mz-=1;
       if(keys['KeyA']||keys['ArrowLeft'])mx-=1;
@@ -12525,14 +13471,18 @@ if(clanIslandGroup && clanIslandGroup.visible && clanIslandGroup.userData.clanFi
       if(!checkCollision(nx,nz,isJumping)){p.pos.x=nx;p.pos.z=nz;}
       else if(!checkCollision(nx,p.pos.z,isJumping)){p.pos.x=nx;}
       else if(!checkCollision(p.pos.x,nz,isJumping)){p.pos.z=nz;}
-                        if(inInterior){
-               const doorZ = inInterior === 'tavern' ? TAVERN_INTERIOR_POS.z + 11.5
-          : inInterior === 'clanHall' ? CLAN_HALL_INTERIOR_POS.z + 10.5
-          : CAVE_INTERIOR_POS.z - 10;
-        if(inInterior === 'cave'){
-          if(p.pos.z < doorZ) exitInterior();
+                                                         if(inInterior){
+        if(inInterior === 'tavern' && currentFloor === 1){
+          // на 2-м этаже автовыход отключён — только через E у лестницы
         } else {
-          if(p.pos.z > doorZ) exitInterior();
+          const doorZ = inInterior === 'tavern' ? TAVERN_INTERIOR_POS.z + 11.5
+            : inInterior === 'clanHall' ? CLAN_HALL_INTERIOR_POS.z + 10.5
+            : CAVE_INTERIOR_POS.z - 10;
+          if(inInterior === 'cave'){
+            if(p.pos.z < doorZ) exitInterior();
+          } else {
+            if(p.pos.z > doorZ) exitInterior();
+          }
         }
       } else if(doorCooldown <= 0){
         if(!onClanIsland){
@@ -12555,8 +13505,9 @@ if(clanIslandGroup && clanIslandGroup.visible && clanIslandGroup.userData.clanFi
       }
     }
     if(doorCooldown > 0) doorCooldown -= dt;
-    if(!p.onGround){p.velY-=12*dt;p.pos.y+=p.velY*dt;
-      if(p.pos.y<=0){p.pos.y=0;p.velY=0;p.onGround=true;}}
+    const _floorY = (inInterior === 'tavern' && currentFloor === 1) ? TAVERN_FLOOR2_Y : 0;
+if(!p.onGround){p.velY-=12*dt;p.pos.y+=p.velY*dt;
+  if(p.pos.y<=_floorY){p.pos.y=_floorY;p.velY=0;p.onGround=true;}}
     let diff=p.targetYaw-p.yaw;
     while(diff>Math.PI)diff-=Math.PI*2;while(diff<-Math.PI)diff+=Math.PI*2;
     p.yaw+=diff*Math.min(1,dt*12);
@@ -12571,7 +13522,7 @@ if(clanIslandGroup && clanIslandGroup.visible && clanIslandGroup.userData.clanFi
     p.updateVisual(dt);
     const inWater=p.pos.x>116&&p.pos.x<144&&p.pos.z>-200&&p.pos.z<40;
     const waterDepth=inWater?0.9:0;
-    const eyeY=p.sitting?1.05:(1.55+p.pos.y-waterDepth);
+    const eyeY=p.sitting?(p.pos.y+0.77):(1.55+p.pos.y-waterDepth);
         const headPos=_camHead.set(p.pos.x,eyeY,p.pos.z);
     camera.rotation.y=camYaw;camera.rotation.x=camPitch;camera.rotation.z=0;
     if(firstPerson){
@@ -12584,7 +13535,49 @@ if(clanIslandGroup && clanIslandGroup.visible && clanIslandGroup.userData.clanFi
     }
        const hintEl=$('#hint'),hintTxt=hintEl.querySelector('.hint-txt');
     let hintText='';
-          if(inInterior){
+    if(inInterior === 'tavern'){
+      const _cx = TAVERN_INTERIOR_POS.x, _cz = TAVERN_INTERIOR_POS.z;
+      const _stairCX = (STAIR_HOLE_X1 + STAIR_HOLE_X2) / 2;
+
+      // ─── Лестница ───
+      if(currentFloor === 0){
+        const _bX = _cx + _stairCX, _bZ = _cz + STAIR_HOLE_Z1 - 0.5;
+        if(Math.hypot(p.pos.x - _bX, p.pos.z - _bZ) < 2.0){
+          hintText = '🪜 Подняться на 2-й этаж (E)';
+        }
+            } else if(currentFloor === 1){
+        if(Math.hypot(p.pos.x - (_cx + 10), p.pos.z - (_cz + 7.5)) < 3.5){
+          hintText = '🪜 Спуститься на 1-й этаж (E)';
+        }
+      }
+
+      // ─── Библиотека ───
+      if(!hintText && currentFloor === 1){
+        const _libX = _cx - 15 + 2, _libZ = _cz - 12 + 3;
+        for(let i = 0; i < 3; i++){
+          if(Math.hypot(p.pos.x - (_libX + i*2), p.pos.z - _libZ) < 1.5){
+            hintText = '📖 Прочитать книгу (E)'; break;
+          }
+        }
+      }
+
+      // ─── Кровать ───
+      if(!hintText && currentFloor === 1){
+        const _livX = _cx + 15 - 4, _livZ = _cz - 12 + 4;
+        if(Math.hypot(p.pos.x - _livX, p.pos.z - _livZ) < 1.8){
+          hintText = '😴 Отдохнуть (E)';
+        }
+      }
+
+      // ─── Телескоп ───
+      if(!hintText && currentFloor === 1){
+        const _obsX = _cx - 15 + 4, _obsZ = _cz + 12 - 4;
+        if(Math.hypot(p.pos.x - _obsX, p.pos.z - _obsZ) < 1.5){
+          hintText = '🔭 Посмотреть на звёзды (E)';
+        }
+      }
+    }
+    if(inInterior){
       const dOut = inInterior === 'tavern'
         ? Math.hypot(p.pos.x - TAVERN_INTERIOR_POS.x, p.pos.z - (TAVERN_INTERIOR_POS.z + 10))
         : inInterior === 'clanHall'
@@ -12775,7 +13768,32 @@ function startGame(name,color,url,custom){
       ()=>{addChat('Сумрак','Связь потеряна.','#e08a6a',{noBubble:true,skipCheck:true});
         if(players.size<=1)spawnNPCs(3);});
     setTimeout(()=>{if(players.size<=1)spawnNPCs(3);},4000);
-  } else spawnNPCs(3);
+    } else spawnNPCs(3);
+
+  // — Проверка вчерашнего желания —
+  try {
+    const lastWish = localStorage.getItem('sumrak_wish');
+    if(lastWish){
+      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      if(lastWish === yesterday){
+        setTimeout(() => {
+          const responses = [
+            '✨ Твоё желание сбывается…',
+            '🌙 Желание уже в пути.',
+            '🔮 Скоро. Огонь помнит.',
+            '⭐ Оно услышано, не торопи.'
+          ];
+          addChat('✨ Сумрак', responses[randInt(0, responses.length - 1)],
+            '#ffd9a4', {noBubble:true, skipCheck:true});
+          try { localStorage.removeItem('sumrak_wish'); } catch(e) {}
+        }, 4000);
+      }
+    }
+  } catch(e) {}
+
+  // — Истории у костра —
+  setInterval(tickCampfireStories, 5000);
+
   animate();
 }
 $('#btnEditor').onclick=()=>openEditor();
