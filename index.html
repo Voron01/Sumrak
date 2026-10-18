@@ -1329,6 +1329,15 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
   </div>
 </div>
 
+<!-- ============ TRADE PANEL ============ -->
+<div class="modal" id="tradePanel">
+  <div class="mp">
+    <button class="mclose" data-close>✕</button>
+    <h2 id="tradeTitle">🎁 Передать предмет</h2>
+    <div id="tradeContent"></div>
+  </div>
+</div>
+
 <!-- ============ BULLETIN PANEL ============ -->
 <div class="modal" id="bulletinPanel">
   <div class="mp">
@@ -1416,6 +1425,9 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
       letter-spacing:.14em;margin-bottom:8px">Мои предметы</div>
     <div id="invGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));
       gap:8px;min-height:120px;padding:8px;background:rgba(0,0,0,.3);border-radius:10px"></div>
+        <div style="color:#a99d87;font-size:11px;text-transform:uppercase;
+      letter-spacing:.14em;margin:14px 0 8px">Быстрые слоты</div>
+    <div id="quickSlotsEdit" style="display:flex;gap:8px;justify-content:center;padding:10px;background:rgba(0,0,0,.3);border-radius:10px;flex-wrap:wrap;margin-bottom:14px"></div>
     <div style="color:#a99d87;font-size:11px;text-transform:uppercase;
       letter-spacing:.14em;margin:14px 0 8px">Достижения</div>
     <div id="achList" style="display:flex;flex-wrap:wrap;gap:6px"></div>
@@ -2036,6 +2048,7 @@ const sunL=new THREE.DirectionalLight(0xffd090,0);sunL.position.set(30,40,20);sc
 const moonL=new THREE.DirectionalLight(0x8fb0e0,0.28);moonL.position.set(-40,50,-40);scene.add(moonL);
 const fireL=new THREE.PointLight(0xff9a3c,5.0,65,1.15);
 fireL.position.set(0,1.0,0);
+let campfireCoal = null;
 if(!isMobile){fireL.castShadow=true;fireL.shadow.mapSize.set(512,512);fireL.shadow.camera.far = 30;}
 scene.add(fireL);
 
@@ -2375,9 +2388,10 @@ function insideRecordBoardZone(x,z){
     s.rotation.set(rand(0,3),rand(0,3),rand(0,3));
     s.scale.setScalar(rand(0.7,1.25));scene.add(s);
   }
-  const coal=new THREE.Mesh(new THREE.CircleGeometry(0.85,16),
-    new THREE.MeshStandardMaterial({color:0x2a1a10,roughness:1,emissive:0x882200,emissiveIntensity:0.4}));
-  coal.rotation.x=-Math.PI/2;coal.position.y=0.02;scene.add(coal);
+      const coal=new THREE.Mesh(new THREE.CircleGeometry(0.85,16),
+  new THREE.MeshStandardMaterial({color:0x2a1a10,roughness:1,emissive:0x882200,emissiveIntensity:0.4}));
+coal.rotation.x=-Math.PI/2;coal.position.y=0.02;scene.add(coal);
+campfireCoal = coal;
   const logM=new THREE.MeshStandardMaterial({color:0x2a1b12,roughness:1});
   const logG=new THREE.CylinderGeometry(0.1,0.1,1.5,6);
   for(let i=0;i<5;i++){
@@ -4654,9 +4668,21 @@ function makeItemMeshSimple(type){
       new THREE.MeshStandardMaterial({color:0xe07030,roughness:0.6}));
     c.position.y=0.15;c.rotation.z=Math.PI/2;g.add(c);
   } else if(type==='pie'){
-    const p=new THREE.Mesh(new THREE.CylinderGeometry(0.15,0.15,0.1,10),
-      new THREE.MeshStandardMaterial({color:0xc89050,roughness:0.9}));
-    p.position.y=0.05;g.add(p);
+      } else if(type==='mushroom'){
+    const stem=new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.045,0.10,6),
+      new THREE.MeshStandardMaterial({color:0xe8d8c0,roughness:0.9}));
+    stem.position.y=0.05;g.add(stem);
+    const cap=new THREE.Mesh(
+      new THREE.SphereGeometry(0.09,10,6,0,Math.PI*2,0,Math.PI/2),
+      new THREE.MeshStandardMaterial({color:0xc04020,roughness:0.7}));
+    cap.position.y=0.10;cap.scale.y=0.65;g.add(cap);
+    for(let k=0;k<3;k++){
+      const dot=new THREE.Mesh(new THREE.SphereGeometry(0.012,4,4),
+        new THREE.MeshBasicMaterial({color:0xffffff}));
+      dot.position.set(rand(-0.05,0.05),0.13,rand(-0.05,0.05));
+      g.add(dot);
+    }
+  } else if(type==='rod'){
   } else if(type==='rod'){
     const poleM=new THREE.MeshStandardMaterial({color:0x8a5a2a,roughness:0.7});
     const pole=new THREE.Mesh(new THREE.CylinderGeometry(0.015,0.022,1.5,6),poleM);
@@ -4794,7 +4820,7 @@ function makeItem(type){
         emissiveIntensity:1.2,roughness:0.1}));
     gem.position.y = 0.075;
     g.add(gem);
-  } else if(type==='cigarette'){
+    } else if(type==='cigarette'){
     const paper = new THREE.MeshStandardMaterial({color:0xf0e0c0,roughness:0.8});
     const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.012,0.012,0.11,6),paper);
     stick.rotation.z = Math.PI/2;
@@ -4805,6 +4831,26 @@ function makeItem(type){
     tip.position.set(0.055,0.05,0);
     g.add(tip);
   }
+
+  // Fallback: для типов без held-меша используем простой ground-меш
+  if(g.children.length === 0){
+    if(type === 'crystal'){
+      const cm = new THREE.Mesh(new THREE.OctahedronGeometry(0.08,0),
+        new THREE.MeshStandardMaterial({
+          color:0x00e5ff, emissive:0x00e5ff, emissiveIntensity:1.4,
+          transparent:true, opacity:0.9, roughness:0.15
+        }));
+      cm.scale.y = 1.8; cm.position.y = 0.12;
+      g.add(cm);
+    } else {
+      const fallback = makeItemMeshSimple(type);
+      if(fallback.children.length > 0){
+        fallback.scale.setScalar(0.75);
+        g.add(fallback);
+      }
+    }
+  }
+
   g.traverse(o=>{if(o.isMesh)o.castShadow=false;});
   return g;
 }
@@ -4812,16 +4858,21 @@ function makeItem(type){
 const ITEM_LABEL={bottle:'Бутылка',meat:'Мясо',apple:'Яблоко',stick:'Палка',lantern:'Фонарь',mug:'Кружка',
   rod:'Удочка',perch:'Окунь',catfish:'Сом',goldfish:'Золотая рыбка',cooked_fish:'Жареная рыба',log:'Полено',
   log_pine:'Хвойное полено',log_mushroom:'Грибное полено',
+  bread:'Хлеб', cheese:'Сыр', fish:'Рыба', grape:'Виноград', carrot:'Морковь', pie:'Пирог',
   crystal:'Кристалл',mushroom:'Гриб'};
 const ITEM_EMOJI={bottle:'🍾',meat:'🍖',apple:'🍎',stick:'🪵',lantern:'🏮',mug:'☕',
   rod:'🎣',perch:'🐟',catfish:'🐡',goldfish:'🐠',cooked_fish:'🍢',log:'🪵',
   log_pine:'🌿',log_mushroom:'🍄',
+  bread:'🍞', cheese:'🧀', fish:'🐟', grape:'🍇', carrot:'🥕', pie:'🥧',
   crystal:'💎',mushroom:'🍄',ring:'💍',cigarette:'🚬'};
 const ITEM_ROT={
   bottle:{x:0.35,z:0.2,y:0},meat:{x:0.1,z:0,y:0},apple:{x:0.1,z:0,y:0},
   stick:{x:-1.35,z:0,y:0},lantern:{x:0,z:0,y:0},mug:{x:0.1,z:0,y:0},
   rod:{x:0,z:0,y:0},perch:{x:0.15,z:0,y:0},catfish:{x:0.1,z:0,y:0},
-  goldfish:{x:0.15,z:0,y:0},cooked_fish:{x:0.15,z:0,y:0},log:{x:Math.PI/2,z:0,y:0},ring:{x:0,z:0,y:0}, cigarette:{x:0.5,z:-0.3,y:0}
+  goldfish:{x:0.15,z:0,y:0},cooked_fish:{x:0.15,z:0,y:0},
+  log:{x:Math.PI/2,z:0,y:0},
+  mushroom:{x:0.1,z:0,y:0},
+  ring:{x:0,z:0,y:0}, cigarette:{x:0.5,z:-0.3,y:0}
 };
 const itemPositions=[];
 const itemCount=isMobile?25:50;
@@ -6994,13 +7045,12 @@ document.addEventListener('keydown',e=>{
   if(e.key==='н'||e.key==='Н'){if(localPlayer)raiseToast();}
   if(e.code==='KeyR'&&localPlayer){e.preventDefault();performFortune();}
   if(e.key==='к'||e.key==='К'){if(localPlayer)performFortune();}
-  if(e.shiftKey){
-    if(e.code==='Digit1')equipItem('bottle');
-    if(e.code==='Digit2')equipItem('meat');
-    if(e.code==='Digit3')equipItem('apple');
-    if(e.code==='Digit4')equipItem('stick');
-    if(e.code==='Digit5')equipItem('lantern');
-    if(e.code==='Digit6'&&ITEM_ORDER.includes('rod'))equipItem('rod');
+    if(e.shiftKey){
+    const idx = {'Digit1':0,'Digit2':1,'Digit3':2,'Digit4':3,'Digit5':4}[e.code];
+    if(idx !== undefined){
+      const t = ITEM_ORDER[idx];
+      if(t) equipItem(t);
+    }
   } else {
     const emoteMap={Digit1:'😀',Digit2:'😂',Digit3:'😮',Digit4:'😍',Digit5:'😢',
       Digit6:'😡',Digit7:'👍',Digit8:'🔥',Digit9:'🍻',Digit0:'🎵'};
@@ -7421,7 +7471,7 @@ function renderBarmanDialog(){
 }
 function useItem(){
   const p=localPlayer;if(!p||!p.item||p.anim)return;
-  if(p.item==='bottle'||p.item==='mug'){
+    if(p.item==='bottle'||p.item==='mug'){
     const inRiverZone=p.pos.x>110&&p.pos.x<150&&p.pos.z>-200&&p.pos.z<40;
     if(fortuneNoWater&&inRiverZone){
       p.playEmotion('😵');
@@ -7433,11 +7483,16 @@ function useItem(){
     setTimeout(()=>snd.gulp(),500);setTimeout(()=>snd.gulp(),900);
     hunger=clamp(hunger+8,0,100);
     showToast('Ты пьёшь...');
-  } else if(p.item==='meat'||p.item==='apple'){
+    if(inventory[p.item] > 0) removeFromInventory(p.item, 1);
+    setTimeout(()=>{p.equip(null);if(Net.online)Net.send({t:'equip',i:null});},1800);
+  } else if(p.item==='meat'||p.item==='apple'||p.item==='mushroom'){
     p.playAnim('eat',1.6);
     setTimeout(()=>snd.crunch(),350);setTimeout(()=>snd.crunch(),800);
-    hunger=clamp(hunger+(p.item==='meat'?28:18),0,100);
-    showToast(p.item==='meat'?'Ты жуёшь мясо':'Ты грызёшь яблоко');
+    const addH = p.item==='meat' ? 28 : (p.item==='apple' ? 18 : 8);
+    hunger=clamp(hunger+addH,0,100);
+    showToast(p.item==='meat'?'Ты жуёшь мясо':(p.item==='apple'?'Ты грызёшь яблоко':'🍄 Съел гриб'));
+    if(inventory[p.item] > 0) removeFromInventory(p.item, 1);
+    setTimeout(()=>{p.equip(null);if(Net.online)Net.send({t:'equip',i:null});},1700);
   } else if(p.item==='cooked_fish'){
     p.playAnim('eat',1.8);
     setTimeout(()=>snd.crunch(),350);setTimeout(()=>snd.crunch(),800);
@@ -7949,6 +8004,84 @@ function openInventory(){
   showMini('inventoryPanel');
   renderInventory();
 }
+function renderQuickSlotsEditor(){
+  const el = document.getElementById('quickSlotsEdit');
+  if(!el) return;
+  el.innerHTML = '';
+  ITEM_ORDER.forEach((t, i) => {
+    const slot = document.createElement('div');
+    slot.style.cssText = 'width:64px;height:64px;border-radius:10px;background:rgba(10,13,18,.7);border:1px solid rgba(255,180,90,.3);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:.15s';
+    if(t){
+      slot.innerHTML = '<div style="font-size:24px">'+(ITEM_EMOJI[t]||'?')+'</div>'+
+        '<div style="font-size:10px;color:#ffd9a4;margin-top:2px;text-align:center;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(ITEM_LABEL[t]||t)+'</div>';
+      const clearBtn = document.createElement('div');
+      clearBtn.textContent = '✕';
+      clearBtn.style.cssText = 'position:absolute;top:-4px;right:-4px;width:20px;height:20px;border-radius:50%;background:rgba(200,60,60,.95);color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:bold;box-shadow:0 2px 4px rgba(0,0,0,.5)';
+      clearBtn.title = 'Убрать из слота';
+      clearBtn.onclick = (e) => {
+        e.stopPropagation();
+        ITEM_ORDER[i] = null;
+        saveSlots();
+        buildInv();
+        renderQuickSlotsEditor();
+      };
+      slot.appendChild(clearBtn);
+      slot.onclick = () => {
+        equipItem(t);
+        showMini(null);
+      };
+      slot.onmouseenter = () => { slot.style.borderColor = '#ffb457'; };
+      slot.onmouseleave = () => { slot.style.borderColor = 'rgba(255,180,90,.3)'; };
+    } else {
+      slot.innerHTML = '<div style="font-size:26px;color:#7e7768">+</div>'+
+        '<div style="font-size:9px;color:#7e7768">слот '+(i+1)+'</div>';
+      slot.onclick = () => showSlotPicker(i);
+      slot.onmouseenter = () => { slot.style.borderColor = '#ffb457'; slot.style.background = 'rgba(255,150,50,.15)'; };
+      slot.onmouseleave = () => { slot.style.borderColor = 'rgba(255,180,90,.3)'; slot.style.background = 'rgba(10,13,18,.7)'; };
+    }
+    el.appendChild(slot);
+  });
+}
+
+function showSlotPicker(slotIdx){
+  const types = Object.keys(inventory).filter(t => inventory[t] > 0 && t !== 'log' && t !== 'log_pine' && t !== 'log_mushroom');
+  if(types.length === 0){
+    showToast('В инвентаре нет предметов для слота');
+    return;
+  }
+  let picker = document.getElementById('slotPickerModal');
+  if(!picker){
+    picker = document.createElement('div');
+    picker.id = 'slotPickerModal';
+    picker.className = 'modal';
+    picker.innerHTML = '<div class="mp"><button class="mclose" data-close>✕</button>'+
+      '<h2 id="slotPickerTitle">Выбери предмет</h2>'+
+      '<div id="slotPickerContent" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;max-height:60vh;overflow-y:auto"></div></div>';
+    document.body.appendChild(picker);
+    picker.querySelector('[data-close]').onclick = () => picker.classList.remove('show');
+    picker.addEventListener('click', e => { if(e.target === picker) picker.classList.remove('show'); });
+  }
+  document.getElementById('slotPickerTitle').textContent = 'Слот '+(slotIdx+1)+' — выбери предмет';
+  const content = document.getElementById('slotPickerContent');
+  content.innerHTML = '';
+  types.forEach(t => {
+    const b = document.createElement('button');
+    b.style.cssText = 'display:flex;flex-direction:column;align-items:center;padding:10px 6px;border-radius:10px;background:rgba(10,13,18,.7);border:1px solid rgba(255,180,90,.3);color:#ffd9a4;cursor:pointer;font-family:inherit';
+    b.innerHTML = '<span style="font-size:24px">'+(ITEM_EMOJI[t]||'📦')+'</span>'+
+      '<span style="font-size:10px;margin-top:4px;text-align:center">'+(ITEM_LABEL[t]||t)+'</span>'+
+      '<span style="font-size:10px;color:#ffd060;margin-top:2px">×'+inventory[t]+'</span>';
+    b.onclick = () => {
+      ITEM_ORDER[slotIdx] = t;
+      saveSlots();
+      buildInv();
+      renderQuickSlotsEditor();
+      picker.classList.remove('show');
+      showToast('Слот '+(slotIdx+1)+': '+(ITEM_LABEL[t]||t));
+    };
+    content.appendChild(b);
+  });
+  picker.classList.add('show');
+}
 function renderInventory(){
   const grid = document.getElementById('invGrid');
   const gridAch = document.getElementById('achList');
@@ -8001,28 +8134,28 @@ function renderInventory(){
       gridAch.appendChild(b);
     });
   }
+  renderQuickSlotsEditor();
 }
 function useInventoryItem(type){
-  if(type === 'log'){
+  if(!type) return;
+  // Все три вида поленьев → в счётчик «в руках», не в руку
+  if(type === 'log' || type === 'log_pine' || type === 'log_mushroom'){
     if(localPlayer && Math.hypot(localPlayer.pos.x, localPlayer.pos.z) < 3){
-      myLogsCarried += inventory[type];
-      removeFromInventory(type, inventory[type]);
-      updateLogHud();
-      renderInventory();
-      showToast('🪵 Поленья к костру');
+      const cnt = inventory[type] || 0;
+      if(cnt > 0){
+        myLogsCarried += cnt;
+        myLogsByType[type] = (myLogsByType[type]||0) + cnt;
+        removeFromInventory(type, cnt);
+        updateLogHud();
+        renderInventory();
+        showToast('🪵 Поленья к костру (+' + cnt + ')');
+      }
     } else {
       showToast('Подойди к костру, чтобы использовать поленья');
     }
     return;
   }
-  if(type === 'mushroom'){
-    if(removeFromInventory('mushroom',1)){
-      hunger = clamp(hunger+5,0,100);
-      showToast('🍄 Съел гриб');
-      renderInventory();
-    }
-    return;
-  }
+  // Всё остальное (включая гриб) — в руку
   if(ITEM_EMOJI[type]){
     equipItem(type);
     showMini(null);
@@ -8030,13 +8163,30 @@ function useInventoryItem(type){
 }
 document.getElementById('invClose').onclick = () => showMini('phoneMenu');
 let ITEM_ORDER=['bottle','meat','apple','stick','lantern'];
+try{
+  const saved = localStorage.getItem('sumrak_slots');
+  if(saved){
+    const parsed = JSON.parse(saved);
+    if(Array.isArray(parsed) && parsed.length === 5){
+      ITEM_ORDER = parsed;
+    }
+  }
+}catch(e){}
+function saveSlots(){
+  try{ localStorage.setItem('sumrak_slots', JSON.stringify(ITEM_ORDER)); }catch(e){}
+}
 function buildInv(){
   invEl.innerHTML='';
   ITEM_ORDER.forEach((t,i)=>{
     const s=document.createElement('div');
-    s.className='slot';s.dataset.item=t;
-    s.innerHTML='<div class="num">⇧'+(i+1)+'</div><div>'+(ITEM_EMOJI[t]||'?')+'</div><div class="lbl">'+(ITEM_LABEL[t]||t)+'</div>';
-    s.onclick=()=>equipItem(t);invEl.appendChild(s);
+    s.className='slot';s.dataset.item=t||'';
+    if(t){
+      s.innerHTML='<div class="num">⇧'+(i+1)+'</div><div>'+(ITEM_EMOJI[t]||'?')+'</div><div class="lbl">'+(ITEM_LABEL[t]||t)+'</div>';
+      s.onclick=()=>equipItem(t);
+    } else {
+      s.innerHTML='<div class="num">⇧'+(i+1)+'</div><div style="color:#555;font-size:14px">—</div>';
+    }
+    invEl.appendChild(s);
   });
 }
 function updateInvUI(){
@@ -8077,11 +8227,12 @@ function updatePlayersList(){
       const pre=words.map(w=>w[0].toUpperCase()).join('');
       nameDisplay='"'+pre+'" '+p.name;
     }
-    d.innerHTML='<span class="dot '+onlineClass+'" style="background:'+colorHex+';color:'+colorHex+'"></span>'+
-      '<span class="pn">'+nameDisplay+'</span>'+
-      '<button class="act '+(friends.has(p.id)?'on':'')+'" data-act="friend">'+(friends.has(p.id)?'★':'☆')+'</button>'+
-      '<button class="act" data-act="hide">👁</button>';
-    d.querySelector('[data-act="friend"]').onclick=ev=>{
+    d.innerHTML='<span class="dot '+onlineClass+'" style="background:'+colorHex+';color: '+colorHex+'"></span>'+
+  '<span class="pn">'+nameDisplay+'</span>'+
+  '<button class="act '+(friends.has(p.id)?'on':'')+'" data-act="friend">'+(friends.has(p.id)?'★':'☆')+'</button>'+
+  '<button class="act" data-act="gift" title="Подарить">🎁</button>'+
+  '<button class="act" data-act="hide">👁</button>';
+       d.querySelector('[data-act="friend"]').onclick=ev=>{
       ev.stopPropagation();
       if(friends.has(p.id)){
         friends.delete(p.id);showToast(p.name+' убран');saveFriends();updatePlayersList();
@@ -8091,6 +8242,11 @@ function updatePlayersList(){
           showToast('Приглашение отправлено '+p.name);
         } else {friends.add(p.id);snd.chip();saveFriends();updatePlayersList();}
       }
+    };
+    d.querySelector('[data-act="gift"]').onclick=ev=>{
+      ev.stopPropagation();
+      if(!Net.online){ showToast('Обмен только онлайн'); return; }
+      openTradeDialog(p.id, p.name);
     };
     d.querySelector('[data-act="hide"]').onclick=ev=>{
   ev.stopPropagation();
@@ -8162,6 +8318,96 @@ function spawnNPCs(n){
 
 /* ============ ДРУЗЬЯ / КЛАН ============ */
 function openFriendsPanel(){$('#friendsPanel').classList.add('show');renderFriendsPanel();}
+/* ============ ОБМЕН ПРЕДМЕТАМИ ============ */
+let tradeTarget = null;
+
+function openTradeDialog(targetId, targetName){
+  if(!localPlayer) return;
+  if(!Net.online){ showToast('Обмен доступен только онлайн'); return; }
+  tradeTarget = { id: targetId, name: targetName };
+  const el = document.getElementById('tradePanel');
+  if(!el) return;
+  el.classList.add('show');
+  const title = document.getElementById('tradeTitle');
+  if(title) title.textContent = '🎁 Передать — ' + targetName;
+  renderTradeDialog();
+}
+
+function renderTradeDialog(){
+  const el = document.getElementById('tradeContent');
+  if(!el || !tradeTarget) return;
+  const types = Object.keys(inventory).filter(t => inventory[t] > 0 && t !== 'log');
+  let html = '';
+  if(types.length === 0){
+    html = '<div style="text-align:center;color:#7e7768;padding:30px">Пусто — нечего дарить</div>';
+  } else {
+    html += '<div style="color:#a99d87;font-size:11px;text-transform:uppercase;letter-spacing:.14em;margin-bottom:8px">Выбери предмет</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;margin-bottom:14px">';
+    types.forEach(t => {
+      html += '<button data-give="'+t+'" style="display:flex;flex-direction:column;align-items:center;padding:8px 4px;border-radius:10px;background:rgba(10,13,18,.7);border:1px solid rgba(255,180,90,.3);color:#ffd9a4;cursor:pointer;font-family:inherit">'+
+        '<span style="font-size:22px">'+(ITEM_EMOJI[t]||'📦')+'</span>'+
+        '<span style="font-size:10px;margin-top:4px">'+(ITEM_LABEL[t]||t)+'</span>'+
+        '<span style="font-size:10px;color:#ffd060">×'+inventory[t]+'</span></button>';
+    });
+    html += '</div>';
+    html += '<div style="color:#a99d87;font-size:11px;text-transform:uppercase;letter-spacing:.14em;margin-bottom:8px">Количество</div>';
+    html += '<input id="tradeCount" type="number" min="1" value="1" style="width:100%;padding:10px;border-radius:9px;border:1px solid rgba(255,180,90,.25);background:rgba(0,0,0,.4);color:#f2e9d9;font-family:inherit;font-size:14px;outline:none;margin-bottom:10px;box-sizing:border-box">';
+    html += '<button id="tradeSendBtn" style="width:100%;padding:12px;border-radius:10px;border:none;background:linear-gradient(#ffb457,#dd741d);color:#2a1403;font-family:inherit;font-weight:bold;cursor:pointer;font-size:14px">🎁 Отправить</button>';
+  }
+  el.innerHTML = html;
+
+  let selectedType = null;
+  el.querySelectorAll('[data-give]').forEach(b => {
+    b.onclick = () => {
+      selectedType = b.dataset.give;
+      el.querySelectorAll('[data-give]').forEach(x => {
+        x.style.borderColor = (x === b) ? '#ffb457' : 'rgba(255,180,90,.3)';
+        x.style.background = (x === b) ? 'rgba(255,150,50,.28)' : 'rgba(10,13,18,.7)';
+      });
+      const cnt = document.getElementById('tradeCount');
+      if(cnt) cnt.max = inventory[selectedType] || 1;
+    };
+  });
+  const sendBtn = document.getElementById('tradeSendBtn');
+  if(sendBtn){
+    sendBtn.onclick = () => {
+      if(!selectedType){ showToast('Выбери предмет'); return; }
+      const cntEl = document.getElementById('tradeCount');
+      const count = Math.max(1, parseInt(cntEl.value) || 1);
+      if(count > (inventory[selectedType] || 0)){
+        showToast('Недостаточно предметов'); return;
+      }
+      if(giveItemTo(tradeTarget.id, selectedType, count)){
+        document.getElementById('tradePanel').classList.remove('show');
+      }
+    };
+  }
+}
+
+function giveItemTo(targetId, type, count){
+  if(!localPlayer) return false;
+  if(!Net.online){ showToast('Обмен доступен только онлайн'); return false; }
+  if(!inventory[type] || inventory[type] < count){
+    showToast('Недостаточно предметов'); return false;
+  }
+  const target = players.get(targetId);
+  const targetName = target ? target.name : (tradeTarget ? tradeTarget.name : '???');
+  if(!removeFromInventory(type, count)) return false;
+
+  const payload = {
+    type, count,
+    fromName: localPlayer.name,
+    fromId: Net.id || 'me'
+  };
+  Net.send({ t:'whisper', to: targetId, text: '##GIVE##' + JSON.stringify(payload) });
+
+  showToast('🎁 Отправлено: ' + (ITEM_LABEL[type]||type) + ' ×' + count + ' → ' + targetName);
+  addChat('🎁 Подарок', localPlayer.name + ' → ' + targetName + ': ' +
+    (ITEM_LABEL[type]||type) + ' ×' + count,
+    '#c9b391', {noBubble:true, skipCheck:true});
+  return true;
+}
+/* ============ /ОБМЕН ПРЕДМЕТАМИ ============ */
 function renderFriendsPanel(){
   const el=$('#friendsContent');
   let html='<div style="color:#a99d87;font-size:12px;margin-bottom:10px">Список друзей ('+friends.size+')</div>';
@@ -8172,15 +8418,23 @@ function renderFriendsPanel(){
       const p=players.get(fid);
       const name=p?p.name:'???';
       const isOn=p&&p.isOnline!==false;
-      html+='<div class="friend-card">'+
-        '<span class="'+(isOn?'fc-on':'fc-off')+'"></span>'+
-        '<span class="fc-name">'+name+'</span>'+
-        '<span style="font-size:11px;color:'+(isOn?'#6f6':'#777')+'">'+(isOn?'в игре':'офлайн')+'</span>'+
-        '<button data-rm="'+fid+'" style="background:rgba(200,80,80,.3);border:1px solid rgba(200,80,80,.5);color:#ffd0d0;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit">✕</button>'+
-        '</div>';
+     html+='<div class="friend-card">'+
+  '<span class="'+(isOn?'fc-on':'fc-off')+'"></span>'+
+  '<span class="fc-name">'+name+'</span>'+
+  '<span style="font-size:11px;color:'+(isOn?'#6f6':'#777')+'">'+(isOn?'в игре':'офлайн')+'</span>'+
+  (isOn && Net.online ? '<button data-gift="'+fid+'" style="background:rgba(255,180,90,.3);border:1px solid rgba(255,180,90,.5);color:#ffd9a4;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">🎁</button>' : '')+
+  '<button data-rm="'+fid+'" style="background:rgba(200,80,80,.3);border:1px solid rgba(200,80,80,.5);color:#ffd0d0;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit">✕</button>'+
+  '</div>';
     });
   }
   el.innerHTML=html;
+  el.querySelectorAll('[data-gift]').forEach(b=>{
+    b.onclick=()=>{
+      const p = players.get(b.dataset.gift);
+      if(p) openTradeDialog(p.id, p.name);
+      else showToast('Игрок не найден');
+    };
+  });
   el.querySelectorAll('[data-rm]').forEach(b=>{
     b.onclick=()=>{friends.delete(b.dataset.rm);saveFriends();updatePlayersList();renderFriendsPanel();showToast('Удалён из друзей');};
   });
@@ -10988,15 +11242,38 @@ function performFortune(){
     flyingMesh.rotation.x+=0.2;
     flyingMesh.rotation.y+=0.15;
     if(k<1)requestAnimationFrame(flyLoop);
-    else{
-      scene.remove(flyingMesh);
-      fireBoostTimer=Math.min(MAX_FIRE_BOOST,fireBoostTimer+6);
-      snd.thud();
-    }
+else{
+  scene.remove(flyingMesh);
+  fireBoostTimer=Math.min(MAX_FIRE_BOOST,fireBoostTimer+6);
+  snd.thud();
+
+  // ── Цветовое свечение от брошенного предмета ──
+  if(thrownItem === 'mushroom'){
+    fireColorOverride = {r:0.30, g:0.60, b:1.00};   // синий
+    fireColorTimer = 25;
+    showToast('🍄 Пламя синеет от гриба!');
+  } else if(thrownItem === 'crystal'){
+    fireColorOverride = {r:0.20, g:0.90, b:1.00};   // голубой
+    fireColorTimer = 30;
+    showToast('💎 Пламя голубое от кристалла!');
+  } else if(thrownItem === 'log_pine'){
+    fireColorOverride = {r:0.35, g:1.00, b:0.45};   // зелёный
+    fireColorTimer = 30;
+    showToast('🌿 Пламя зеленеет!');
+  } else if(thrownItem === 'log_mushroom'){
+    fireColorOverride = {r:0.85, g:0.35, b:1.00};   // фиолетовый
+    fireColorTimer = 30;
+    showToast('🍄 Пламя фиолетовое!');
+  }
+}
   };
   requestAnimationFrame(flyLoop);
 
-  p.equip(null);
+    p.equip(null);
+  // ── Расход предмета из инвентаря ──
+  if(inventory[thrownItem] && inventory[thrownItem] > 0){
+    removeFromInventory(thrownItem, 1);
+  }
   if(Net.online)Net.send({t:'equip',i:null});
 
   setTimeout(()=>{
@@ -11179,11 +11456,29 @@ function handleNet(m){
       break;
     }
     case 'whisper':{
-      if(m.to===Net.id){const p=players.get(m.id);
-        addChat(p?p.name:'???',m.text,'#ffc8c8',{type:'personal',speakerId:m.id,fromId:m.id,toId:Net.id});
-        if(chatMode!=='personal'||personalTarget!==m.id)showToast('💬 Личное от '+(p?p.name:'???'));}
-      break;
-    }
+  if(m.to!==Net.id) break;
+  // ── Подарок ──
+  if(m.text && typeof m.text === 'string' && m.text.startsWith('##GIVE##')){
+    try {
+      const data = JSON.parse(m.text.slice(8));
+      if(data && data.type && typeof data.count === 'number' && data.count > 0 && data.count < 1000){
+        addToInventory(data.type, data.count);
+        const senderName = data.fromName || (players.get(m.id)?.name) || '???';
+        showToast('🎁 ' + senderName + ' дарит: ' + (ITEM_LABEL[data.type]||data.type) + ' ×' + data.count);
+        addChat('🎁 Подарок', senderName + ' → ' + (localPlayer?localPlayer.name:'???') + ': ' +
+          (ITEM_LABEL[data.type]||data.type) + ' ×' + data.count,
+          '#c9b391', {noBubble:true, skipCheck:true});
+        snd.inv();
+      }
+    } catch(e) { console.warn('give parse error', e); }
+    break;
+  }
+  // ── Обычный шёпот ──
+  const p=players.get(m.id);
+  addChat(p?p.name:'???',m.text,'#ffc8c8',{type:'personal',speakerId:m.id,fromId:m.id,toId:Net.id});
+  if(chatMode!=='personal'||personalTarget!==m.id)showToast('💬 Личное от '+(p?p.name:'???'));
+  break;
+}
     case 'emoji':{const p=players.get(m.id);if(p)p.playEmotion(m.e);break;}
        case 'anim':{
       const p=players.get(m.id);
@@ -11675,6 +11970,28 @@ function updateDN(dt){
     fireL.intensity=(3.5+nightF*3.0)+Math.sin(performance.now()*0.011)*0.25
     + boostLevel*9 + boostK*4;
   fireL.distance=60+boostLevel*25;
+
+// ── Цвет огня (свет + угли) ──
+if(fireColorTimer > 0 && fireColorOverride){
+  const fcBlend = Math.min(1, fireColorTimer / 5) * 0.9;
+  fireL.color.setRGB(
+    lerp(1.0,   fireColorOverride.r, fcBlend),
+    lerp(0.604, fireColorOverride.g, fcBlend),
+    lerp(0.235, fireColorOverride.b, fcBlend)
+  );
+  if(campfireCoal && campfireCoal.material){
+    campfireCoal.material.emissive.setRGB(
+      lerp(0.533, fireColorOverride.r, fcBlend),
+      lerp(0.133, fireColorOverride.g, fcBlend),
+      lerp(0.0,   fireColorOverride.b, fcBlend)
+    );
+  }
+} else {
+  fireL.color.setHex(0xff9a3c);
+  if(campfireCoal && campfireCoal.material){
+    campfireCoal.material.emissive.setHex(0x882200);
+  }
+}
   if(fireBoostGlow){
     fireBoostGlow.visible=fireBoostTimer>0.05;
     fireBoostGlow.scale.setScalar(1+boostLevel*1.6+boostK*0.4);
@@ -13815,6 +14132,446 @@ $('#leafletClose').onclick=()=>$('#leaflet').classList.add('hidden');
 document.addEventListener('visibilitychange',()=>{
   if(!document.hidden){checkFortuneExpire();loadFortunes();updateFortuneBadges();}
 });
+
+/* ============ НАСТРОЙКА КНОПОК (UI LAYOUT + SIZE) ============ */
+(function UILayout(){
+  if(window.__uiLayout) return;   // защита от двойного вставления
+
+  const STORAGE_KEY = 'sumrak_ui_layout';
+
+  const CUSTOMIZABLE = [
+    { id:'phoneBtn',       label:'📱 Мини-игры' },
+    { id:'editBtn',        label:'🎨 Редактор' },
+    { id:'leafBtn',        label:'📜 Инструкция' },
+    { id:'friendBtn',      label:'⭐ Друзья' },
+    { id:'clanBtn',        label:'🛡 Клан' },
+    { id:'islandExitBtn',  label:'🚪 Костёр' },
+    { id:'mSitBtn',        label:'🪑 Сесть' },
+    { id:'mUseBtn',        label:'✋ Действие' },
+    { id:'mJumpBtn',       label:'⤴ Прыжок' },
+    { id:'mRunBtn',        label:'🏃 Бег' },
+    { id:'mViewBtn',       label:'👁 Вид' },
+    { id:'mSpitBtn',       label:'💦 Плюнуть' },
+    { id:'mToastBtn',      label:'🍻 Тост' },
+    { id:'mFortuneBtn',    label:'🔮 Гадание' },
+    { id:'mDanceBtn',      label:'💃 Танец' },
+    { id:'mFullScreenBtn', label:'⛶ Полный экран' },
+    { id:'mZoomIn',        label:'➕ Зум+' },
+    { id:'mZoomOut',       label:'➖ Зум−' },
+    { id:'mAutoCamBtn',    label:'🎥 Авто-камера' },
+    { id:'mSensBtn',       label:'🎚 Чувствительность' }
+  ];
+
+  let layout = {};
+  try { layout = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e){}
+  const save = () => { try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(layout)); }catch(e){} };
+
+  const globalScale = () => layout.__globalScale || 1;
+  const getScale    = (id) => globalScale() * ((layout[id] && layout[id].size) || 1);
+
+  // ── CSS ──
+  const style = document.createElement('style');
+  style.textContent = `
+    .custom-pos{
+      position:fixed !important;
+      left:0 !important; top:0 !important;
+      right:auto !important; bottom:auto !important;
+      margin:0 !important;
+      transform:translate(var(--cx,0px),var(--cy,0px)) scale(var(--scale,1)) !important;
+      transform-origin:top left !important;
+      z-index:23 !important;
+    }
+    .custom-scaled:not(.custom-pos){
+      transform:scale(var(--scale,1)) !important;
+      transform-origin:center center !important;
+    }
+    .custom-hidden{ display:none !important; }
+
+    body.layout-edit .fab,
+    body.layout-edit .mBtn{
+      cursor:move !important;
+      outline:2px dashed #ffb457;
+      outline-offset:3px;
+      touch-action:none;
+      animation:ul-pulse 1.2s ease-in-out infinite;
+    }
+    @keyframes ul-pulse{
+      0%,100%{ box-shadow:0 0 0 0 rgba(255,180,90,.6); }
+      50%    { box-shadow:0 0 0 8px rgba(255,180,90,0); }
+    }
+    body.layout-edit #mobileCtl{
+      display:block !important;
+      pointer-events:none;
+    }
+    body.layout-edit #mobileBtns,
+    body.layout-edit #mZoomCtrl,
+    body.layout-edit #mCamCtrl{
+      display:flex !important;
+      pointer-events:auto;
+    }
+    body.layout-edit .mBtn{ pointer-events:auto !important; }
+    body.layout-edit #islandExitBtn{ display:flex !important; }
+
+    #uiLayoutPanel{
+      position:fixed; inset:0; z-index:95;
+      display:none; align-items:center; justify-content:center;
+      background:rgba(4,6,10,.92); backdrop-filter:blur(8px);
+      padding:16px; overflow-y:auto;
+    }
+    #uiLayoutPanel.show{ display:flex; }
+    #uiLayoutPanel .ulp{
+      width:min(560px,96vw); max-height:94vh; overflow-y:auto;
+      background:radial-gradient(ellipse at 50% 0%,rgba(60,45,30,.9),rgba(14,16,20,.99));
+      border:1px solid rgba(255,180,90,.4);
+      border-radius:18px; padding:18px;
+    }
+    #uiLayoutPanel h2{
+      margin:0 0 12px; font-weight:normal; letter-spacing:.1em;
+      color:#ffce8f; font-size:19px; text-align:center;
+    }
+    #uiLayoutPanel .ulp-hint{
+      color:#a99d87; font-size:11.5px; text-align:center;
+      margin-bottom:12px; line-height:1.5;
+    }
+    #uiLayoutPanel .ulp-section{
+      margin-bottom:14px; padding:10px;
+      background:rgba(0,0,0,.3); border-radius:11px;
+      border:1px solid rgba(255,180,90,.15);
+    }
+    #uiLayoutPanel .ulp-section label{
+      display:flex; align-items:center; gap:10px;
+      color:#ffd9a4; font-size:12.5px;
+    }
+    #uiLayoutPanel .ulp-section input[type=range]{
+      flex:1; accent-color:#ffb457;
+    }
+    #uiLayoutPanel .ulp-scale-val{
+      min-width:46px; text-align:right; color:#ffd060;
+      font-family:monospace; font-weight:bold;
+    }
+    #uiLayoutPanel .ulp-grid{
+      display:flex; flex-direction:column; gap:6px;
+      margin-bottom:14px; max-height:46vh; overflow-y:auto;
+      padding-right:4px;
+    }
+    #uiLayoutPanel .ulp-item{
+      display:flex; align-items:center; gap:8px; padding:8px 10px;
+      background:rgba(10,13,18,.6); border-radius:9px;
+      border:1px solid rgba(255,180,90,.2); font-size:12.5px;
+      color:#e9e2d6; user-select:none;
+    }
+    #uiLayoutPanel .ulp-item input[type=checkbox]{
+      accent-color:#ffb457; width:16px; height:16px;
+      flex-shrink:0; cursor:pointer;
+    }
+    #uiLayoutPanel .ulp-item .ulp-lb{
+      flex:1; cursor:pointer;
+    }
+    #uiLayoutPanel .ulp-stepper{
+      display:flex; align-items:center; gap:2px; flex-shrink:0;
+    }
+    #uiLayoutPanel .ulp-stepper button{
+      width:26px; height:26px; border-radius:6px;
+      border:1px solid rgba(255,180,90,.35);
+      background:rgba(10,13,18,.7); color:#ffd9a4;
+      font-family:inherit; font-weight:bold; font-size:14px;
+      cursor:pointer; padding:0;
+    }
+    #uiLayoutPanel .ulp-stepper button:active{
+      background:rgba(255,180,90,.4);
+    }
+    #uiLayoutPanel .ulp-stepper .ulp-sz{
+      min-width:38px; text-align:center; color:#ffd060;
+      font-family:monospace; font-size:11.5px;
+    }
+    #uiLayoutPanel .ulp-actions{
+      display:flex; gap:8px; flex-wrap:wrap;
+    }
+    #uiLayoutPanel .ulp-actions button{
+      flex:1; min-width:110px; padding:12px;
+      border-radius:11px; border:1px solid rgba(255,180,90,.35);
+      background:linear-gradient(#ffb457,#dd741d); color:#2a1403;
+      font-family:inherit; font-weight:bold; cursor:pointer; font-size:13px;
+    }
+    #uiLayoutPanel .ulp-actions button.ghost{
+      background:transparent; color:#e0cfae;
+    }
+
+    #uiLayoutEditBar{
+      position:fixed; bottom:20px; left:50%;
+      transform:translateX(-50%);
+      z-index:96; display:none; gap:10px; padding:10px 14px;
+      background:rgba(20,26,34,.96);
+      border:2px solid rgba(255,180,90,.6); border-radius:16px;
+      box-shadow:0 8px 30px rgba(0,0,0,.7);
+      align-items:center;
+    }
+    body.layout-edit #uiLayoutEditBar{ display:flex; }
+    #uiLayoutEditBar button{
+      padding:10px 18px; border-radius:10px;
+      border:1px solid rgba(255,180,90,.35); background:#ffb457;
+      color:#2a1403; font-family:inherit; font-weight:bold;
+      cursor:pointer; font-size:13px;
+    }
+    #uiLayoutEditBar button.ghost{
+      background:transparent; color:#e0cfae;
+    }
+    #uiLayoutEditBar .ulp-edithint{
+      color:#a99d87; font-size:11px;
+      letter-spacing:.04em; max-width:180px; text-align:center;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // ── применение сохранённых настроек ──
+  function apply(){
+    for(const { id } of CUSTOMIZABLE){
+      const el = document.getElementById(id);
+      if(!el) continue;
+      const cfg = layout[id];
+      const sc  = getScale(id);
+      el.classList.remove('custom-hidden','custom-pos','custom-scaled');
+      el.style.removeProperty('--scale');
+      if(!cfg) continue;
+      if(cfg.visible === false) el.classList.add('custom-hidden');
+      const hasPos = typeof cfg.xp === 'number' && typeof cfg.yp === 'number';
+      if(hasPos){
+        el.classList.add('custom-pos');
+        el.style.setProperty('--cx', (cfg.xp/100*innerWidth) + 'px');
+        el.style.setProperty('--cy', (cfg.yp/100*innerHeight) + 'px');
+        el.style.setProperty('--scale', sc);
+      } else if(Math.abs(sc - 1) > 0.01){
+        el.classList.add('custom-scaled');
+        el.style.setProperty('--scale', sc);
+      }
+    }
+  }
+  addEventListener('resize', apply);
+  apply();
+
+  // ── drag в режиме редактирования ──
+  function onDown(e){
+    if(!document.body.classList.contains('layout-edit')) return;
+    const el = e.currentTarget;
+    if(!el || !el.id) return;
+    e.preventDefault(); e.stopPropagation();
+    const r = el.getBoundingClientRect();
+    if(r.width === 0 || r.height === 0) return;
+
+    if(!el.classList.contains('custom-pos')){
+      el.classList.add('custom-pos');
+      el.classList.remove('custom-scaled');
+      el.style.setProperty('--cx', r.left + 'px');
+      el.style.setProperty('--cy', r.top  + 'px');
+      el.style.setProperty('--scale', getScale(el.id));
+    }
+    const id      = el.id;
+    const startX  = e.clientX, startY = e.clientY;
+    const startCX = parseFloat(getComputedStyle(el).getPropertyValue('--cx')) || 0;
+    const startCY = parseFloat(getComputedStyle(el).getPropertyValue('--cy')) || 0;
+    const visW    = r.width, visH = r.height;
+    try { el.setPointerCapture(e.pointerId); } catch(_){}
+
+    const move = (ev) => {
+      const x = Math.max(0, Math.min(innerWidth  - visW, startCX + ev.clientX - startX));
+      const y = Math.max(0, Math.min(innerHeight - visH, startCY + ev.clientY - startY));
+      el.style.setProperty('--cx', x + 'px');
+      el.style.setProperty('--cy', y + 'px');
+    };
+    const up = () => {
+      window.removeEventListener('pointermove', move);
+      window.removeEventListener('pointerup', up);
+      window.removeEventListener('pointercancel', up);
+      const rect = el.getBoundingClientRect();
+      layout[id] = {
+        ...layout[id],
+        visible: layout[id]?.visible !== false,
+        xp: (rect.left / innerWidth)  * 100,
+        yp: (rect.top  / innerHeight) * 100
+      };
+      save();
+    };
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', up);
+    window.addEventListener('pointercancel', up);
+  }
+  function attachDrag(){
+    for(const { id } of CUSTOMIZABLE){
+      const el = document.getElementById(id);
+      if(!el) continue;
+      el.removeEventListener('pointerdown', onDown);
+      el.addEventListener('pointerdown', onDown);
+    }
+  }
+
+  function enterEdit(){
+    document.body.classList.add('layout-edit');
+    // показать все (даже те, что были скрыты), но НЕ трогать позиции
+    for(const { id } of CUSTOMIZABLE){
+      const el = document.getElementById(id);
+      if(!el) continue;
+      el.classList.remove('custom-hidden');
+    }
+    attachDrag();
+    closePanel();
+  }
+  function exitEdit(saveLayout){
+    document.body.classList.remove('layout-edit');
+    if(!saveLayout){
+      try { layout = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+      catch(e){ layout = {}; }
+    }
+    apply();
+  }
+
+  // ── панель ──
+  let panel = null;
+  function buildPanel(){
+    if(panel) return;
+    panel = document.createElement('div');
+    panel.id = 'uiLayoutPanel';
+    panel.innerHTML = `
+      <div class="ulp">
+        <h2>⚙ Настройка кнопок</h2>
+        <div class="ulp-hint">
+          Галочки — какие показывать. −/+ — размер каждой.<br>
+          «Расставить» — перетащить кнопки куда хочешь.
+        </div>
+
+        <div class="ulp-section">
+          <label>
+            <span>🌍 Общий размер</span>
+            <input type="range" min="0.6" max="1.8" step="0.05" data-global-scale>
+            <span class="ulp-scale-val" data-global-val>1.00x</span>
+          </label>
+        </div>
+
+        <div class="ulp-grid" data-grid></div>
+
+        <div class="ulp-actions">
+          <button data-move>🖱 Расставить</button>
+          <button class="ghost" data-reset>↺ Сброс</button>
+          <button class="ghost" data-close>Закрыть</button>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(panel);
+
+    const grid = panel.querySelector('[data-grid]');
+    for(const { id, label } of CUSTOMIZABLE){
+      const row = document.createElement('div');
+      row.className = 'ulp-item';
+
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = layout[id]?.visible !== false;
+      cb.onchange = () => {
+        layout[id] = { ...(layout[id]||{}), visible: cb.checked };
+        save(); apply();
+      };
+      row.appendChild(cb);
+
+      const lbl = document.createElement('span');
+      lbl.className = 'ulp-lb';
+      lbl.textContent = label;
+      lbl.onclick = () => { cb.checked = !cb.checked; cb.onchange(); };
+      row.appendChild(lbl);
+
+      const stepper = document.createElement('div');
+      stepper.className = 'ulp-stepper';
+      const minus = document.createElement('button');
+      minus.textContent = '−';
+      const sz = document.createElement('span');
+      sz.className = 'ulp-sz';
+      const plus = document.createElement('button');
+      plus.textContent = '+';
+
+      const refresh = () => {
+        sz.textContent = Math.round(((layout[id]?.size || 1) * 100)) + '%';
+      };
+      const step = (dir) => {
+        const cur = layout[id]?.size || 1;
+        const nv  = Math.max(0.5, Math.min(2.0, Math.round((cur + dir*0.1) * 100) / 100));
+        layout[id] = { ...(layout[id]||{}), size: nv };
+        save(); apply(); refresh();
+      };
+      minus.onclick = () => step(-1);
+      plus.onclick  = () => step(+1);
+      refresh();
+
+      stepper.appendChild(minus);
+      stepper.appendChild(sz);
+      stepper.appendChild(plus);
+      row.appendChild(stepper);
+
+      grid.appendChild(row);
+    }
+
+    const gsInput = panel.querySelector('[data-global-scale]');
+    const gsVal   = panel.querySelector('[data-global-val]');
+    gsInput.value = globalScale();
+    gsVal.textContent = globalScale().toFixed(2) + 'x';
+    gsInput.oninput = () => {
+      layout.__globalScale = parseFloat(gsInput.value) || 1;
+      gsVal.textContent = layout.__globalScale.toFixed(2) + 'x';
+      save(); apply();
+    };
+
+    panel.querySelector('[data-move]').onclick  = () => enterEdit();
+    panel.querySelector('[data-close]').onclick = () => closePanel();
+    panel.querySelector('[data-reset]').onclick = () => {
+      if(!confirm('Сбросить все настройки кнопок?')) return;
+      layout = {}; save();
+      for(const { id } of CUSTOMIZABLE){
+        const el = document.getElementById(id);
+        if(!el) continue;
+        el.classList.remove('custom-pos','custom-hidden','custom-scaled');
+        el.style.removeProperty('--cx');
+        el.style.removeProperty('--cy');
+        el.style.removeProperty('--scale');
+      }
+      panel.querySelectorAll('input[type=checkbox]').forEach(i => i.checked = true);
+      panel.querySelectorAll('.ulp-sz').forEach(s => s.textContent = '100%');
+      gsInput.value = 1; gsVal.textContent = '1.00x';
+    };
+
+    const bar = document.createElement('div');
+    bar.id = 'uiLayoutEditBar';
+    bar.innerHTML = `
+      <div class="ulp-edithint">Тащи кнопки пальцем / мышью</div>
+      <button data-done>✓ Готово</button>
+      <button class="ghost" data-cancel>Отмена</button>
+    `;
+    document.body.appendChild(bar);
+    bar.querySelector('[data-done]').onclick   = () => exitEdit(true);
+    bar.querySelector('[data-cancel]').onclick = () => exitEdit(false);
+  }
+  function openPanel(){ buildPanel(); panel.classList.add('show'); }
+  function closePanel(){ if(panel) panel.classList.remove('show'); }
+
+  // ── кнопка в меню 📱 ──
+  function injectMenuButton(){
+    const list = document.querySelector('#phoneMenu .phone-list');
+    if(!list){ setTimeout(injectMenuButton, 300); return; }
+    if(list.querySelector('[data-game="buttonsettings"]')) return;
+    const btn = document.createElement('button');
+    btn.dataset.game = 'buttonsettings';
+    btn.innerHTML = '<span class="em">⚙</span> Настройка кнопок';
+    btn.addEventListener('click', (e) => {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      openPanel();
+    }, true);
+    list.insertBefore(btn, list.firstChild);
+  }
+  if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', injectMenuButton);
+  else injectMenuButton();
+
+  window.__uiLayout = {
+    open: openPanel,
+    reset: () => { layout = {}; save(); apply(); }
+  };
+})();
 
 window.__sumrakReady=true;
 console.log('✓ Сумрак готов');
