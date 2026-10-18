@@ -6,6 +6,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>Сумрак</title>
+
 <title>Сумрак</title>
 <style>
 #inventoryPanel .inv-item{display:flex;flex-direction:column;align-items:center;
@@ -856,6 +857,15 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
 .group-friend-check:hover{background:rgba(255,180,90,.1)}
 .group-friend-check input{accent-color:#ffb457}
 </style>
+<!-- PWA: установка на главный экран -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0b1119">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Сумрак">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 </head>
 <body>
 
@@ -1267,6 +1277,7 @@ body.photo-mode #game{filter:brightness(1.08) contrast(1.05);}
     <div class="mBtn" id="mToastBtn" title="Поднять тост">🍻</div>
     <div class="mBtn" id="mFortuneBtn" title="Гадать">🔮</div>
     <div class="mBtn" id="mDanceBtn" title="Танец">💃</div>
+  <div class="mBtn" id="mFullScreenBtn" title="Полный экран">⛶</div>
   </div>
   <div id="mZoomCtrl">
     <div class="mBtn" id="mZoomIn">+</div>
@@ -7239,6 +7250,7 @@ function setupMobileControls(){
   bindBtn('mToastBtn',()=>{if(localPlayer)raiseToast();});
   bindBtn('mFortuneBtn',()=>{if(localPlayer)performFortune();});
   bindBtn('mDanceBtn',()=>{
+  bindBtn('mFullScreenBtn',()=>{ toggleFullscreen(); });
     if(localPlayer){
       localPlayer.playAnim('dance',6.0);
       if(Net.online)Net.send({t:'anim',a:'dance'});
