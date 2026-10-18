@@ -7869,7 +7869,8 @@ function setupMobileControls(){
    function isUiTarget(target){
     return target.closest('.hud,.fab,.mgame,#editor,#leaflet,#joyBase,#mobileBtns,#mZoomCtrl,#mCamCtrl,.modal,#chatbox,#chatToggle,#inviteContainer,#emobar,#inv,#chatSend,#fortuneReveal,#hint,#islandExitBtn');
   }
-  document.addEventListener('touchstart',e=>{
+   document.addEventListener('touchstart',e=>{
+    if(document.body.classList.contains('shooter-active')) return;
     if(document.activeElement.tagName==='INPUT'||document.activeElement.tagName==='TEXTAREA')return;
     if(isUiTarget(e.target))return;
     const isLandscape = window.innerWidth > window.innerHeight;
@@ -7898,7 +7899,8 @@ function setupMobileControls(){
       }
     }
   },{passive:true});
-  document.addEventListener('touchmove',e=>{
+    document.addEventListener('touchmove',e=>{
+    if(document.body.classList.contains('shooter-active')) return;
     for(const t of e.changedTouches){
       if(t.identifier===joyId){
         const dx=t.clientX-joyCx,dy=t.clientY-joyCy;
@@ -7919,7 +7921,8 @@ function setupMobileControls(){
   const resetAll=()=>{
     joyId=null;lookId=null;touchMove=null;joyBase.classList.remove('on');
   };
-  document.addEventListener('touchend',e=>{
+   document.addEventListener('touchend',e=>{
+    if(document.body.classList.contains('shooter-active')) return;
     for(const t of e.changedTouches){
       if(t.identifier===joyId){joyId=null;touchMove=null;joyBase.classList.remove('on');}
       if(t.identifier===lookId)lookId=null;
@@ -9509,6 +9512,40 @@ try{
   }
 }catch(e){}
 function saveSocial(){ try{localStorage.setItem('sumrak_social',JSON.stringify(social));}catch(e){} }
+const CHAT_IDLE_TIMEOUT = 20 * 60 * 1000;
+
+function chatLastActivity(chat){
+  if(!chat) return 0;
+  if(chat.messages && chat.messages.length > 0){
+    return chat.messages[chat.messages.length - 1].time || 0;
+  }
+  return chat.createdAt || 0;
+}
+
+function cleanupInactiveChats(){
+  if(!social || !social.chats) return;
+  const now = Date.now();
+  let changed = false;
+  for(const cid in social.chats){
+    const chat = social.chats[cid];
+    if(!chat) continue;
+    if(social.activeChatId === cid) continue;
+    if(now - chatLastActivity(chat) > CHAT_IDLE_TIMEOUT){
+      delete social.chats[cid];
+      changed = true;
+    }
+  }
+  if(changed){
+    saveSocial();
+    if(typeof currentGame !== 'undefined' && currentGame === 'socialPanel'
+       && social.activeTab === 'chats'){
+      try { renderChats(); } catch(e){}
+    }
+  }
+}
+
+setTimeout(cleanupInactiveChats, 3000);
+setInterval(cleanupInactiveChats, 60 * 1000);
 function escapeHtml(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function timeAgo(t){
   const s=Math.floor((Date.now()-t)/1000);
@@ -9518,8 +9555,8 @@ function timeAgo(t){
   return Math.floor(s/86400)+' дн';
 }
 function mySocId(){ return Net.id||'me'; }
-
 function openSocial(){
+  cleanupInactiveChats();
   showMini('socialPanel');
   renderSocialAll();
 }
@@ -9615,15 +9652,60 @@ function renderChats(){
       const d=document.createElement('div');
       d.className='chat-item';
       const icon=chat.type==='group'?'👥':'💬';
-      d.innerHTML='<span style="font-size:20px">'+icon+'</span>'+
+
+      const main = document.createElement('div');
+      main.style.cssText='display:flex;align-items:center;gap:8px;flex:1;min-width:0;cursor:pointer;';
+      main.innerHTML='<span style="font-size:20px">'+icon+'</span>'+
         '<div style="flex:1;min-width:0">'+
         '<div class="ch-name">'+escapeHtml(chat.name||'Чат')+'</div>'+
         '<div class="ch-preview">'+(last?escapeHtml(last.from+': '+last.text):'Нет сообщений')+'</div>'+
         '</div>';
-      d.onclick=()=>openChatView(id);
+      main.onclick = () => openChatView(id);
+      d.appendChild(main);
+
+      const delBtn = document.createElement('button');
+      delBtn.innerHTML='🗑';
+      delBtn.title='Удалить чат';
+      delBtn.style.cssText='background:rgba(200,80,80,.25);border:1px solid rgba(200,80,80,.4);'+
+        'color:#ffb0b0;border-radius:6px;padding:6px 9px;font-family:inherit;font-size:14px;'+
+        'cursor:pointer;flex-shrink:0;margin-left:6px;';
+      delBtn.onclick = (e) => {
+        e.stopPropagation();
+        if(!confirm('Удалить чат «'+(chat.name||'Чат')+'»?')) return;
+        delete social.chats[id];
+        if(social.activeChatId === id){
+          social.activeChatId = null;
+          const cv=document.getElementById('chatView');
+          const cl=document.getElementById('chatsList');
+          const ng=document.getElementById('newGroupBtn');
+          if(cv) cv.style.display='none';
+          if(cl) cl.style.display='block';
+          if(ng) ng.style.display='block';
+        }
+        saveSocial();
+        renderChats();
+        showToast('🗑 Чат удалён');
+      };
+      d.appendChild(delBtn);
       el.appendChild(d);
     });
+
+    const clearAll = document.createElement('button');
+    clearAll.textContent='🗑 Очистить все чаты ('+entries.length+')';
+    clearAll.style.cssText='width:100%;margin-top:8px;padding:8px;border-radius:8px;'+
+      'border:1px solid rgba(200,80,80,.4);background:rgba(200,80,80,.2);'+
+      'color:#ffb0b0;font-family:inherit;font-size:12px;cursor:pointer;';
+    clearAll.onclick = () => {
+      if(!confirm('Удалить ВСЕ чаты ('+entries.length+')?')) return;
+      social.chats = {};
+      social.activeChatId = null;
+      saveSocial();
+      renderChats();
+      showToast('🗑 Все чаты удалены');
+    };
+    el.appendChild(clearAll);
   }
+
   const friendSection=document.createElement('div');
   friendSection.style.marginTop='12px';
   friendSection.innerHTML='<label style="font-size:11px;color:#8b8778;'+
@@ -10957,6 +11039,9 @@ const ShooterGame = (() => {
   // ═══════════ СОСТОЯНИЕ ═══════════
   let active=false, rafId=null, lastT=0, pointerLocked=false, initDone=false;
   let mode='solo';
+  let sh3TouchMove = null;
+  let sh3JoyId = null, sh3JoyCx = 0, sh3JoyCy = 0;
+  let sh3LookId = null, sh3LookLastX = 0, sh3LookLastY = 0;
   let roomId=null, isHost=false, hostId=null;
   let pvpKillsMe=0, pvpKillsThem=0, pvpEnded=false;
 
@@ -11244,6 +11329,7 @@ const ShooterGame = (() => {
     document.addEventListener('pointerlockchange',onPointerLockChange);
     shCanvas.addEventListener('click',()=>{ if(active && !pointerLocked) shCanvas.requestPointerLock(); });
     shCanvas.addEventListener('contextmenu', e=>e.preventDefault());
+    setupShooterTouchControls();
   }
 
   // ═══════════ АРЕНА — 28 УКРЫТИЙ ═══════════
@@ -11766,11 +11852,15 @@ const ShooterGame = (() => {
   // ═══════════ ОБНОВЛЕНИЯ ═══════════
   function updatePlayer(dt){
     if(pvpEnded) return;
-    let mx=0,mz=0;
+        let mx=0,mz=0;
     if(keys['KeyW']||keys['ArrowUp']) mz+=1;
     if(keys['KeyS']||keys['ArrowDown']) mz-=1;
     if(keys['KeyA']||keys['ArrowLeft']) mx-=1;
     if(keys['KeyD']||keys['ArrowRight']) mx+=1;
+    if(sh3TouchMove){
+      mx += sh3TouchMove.x;
+      mz -= sh3TouchMove.y;
+    }
     const len=Math.hypot(mx,mz);
     if(len>0){
       mx/=len; mz/=len;
@@ -12403,6 +12493,10 @@ const ShooterGame = (() => {
     shCanvas.style.display='block';
     hudEl.style.display='block';
     document.body.classList.add('shooter-active');
+    if(isMobile){
+      const _ctl = document.getElementById('sh3TouchCtl');
+      if(_ctl) _ctl.style.display='block';
+    }
     resetGame();
     active=true;
     lastT=performance.now();
@@ -12420,6 +12514,8 @@ const ShooterGame = (() => {
     if(shCanvas) shCanvas.style.display='none';
     if(hudEl) hudEl.style.display='none';
     document.body.classList.remove('shooter-active');
+    const _ctl = document.getElementById('sh3TouchCtl');
+    if(_ctl) _ctl.style.display='none';
     const panel=document.querySelector('#shootergame .mg-panel');
     if(panel) panel.style.display='';
         for(const k in keys) keys[k]=false;
@@ -12546,6 +12642,132 @@ const ShooterGame = (() => {
       }
     }
     if(startBtn) startBtn.style.display=(isHost && peers.size>=1)?'inline-block':'none';
+  }
+
+  function setupShooterTouchControls(){
+    if(!isMobile) return;
+    if(document.getElementById('sh3TouchCtl')) return;
+
+    const ctl=document.createElement('div');
+    ctl.id='sh3TouchCtl';
+    ctl.style.cssText='position:fixed;inset:0;z-index:82;display:none;pointer-events:none;';
+    ctl.innerHTML=`
+      <div id="sh3JoyBase" style="position:absolute;width:110px;height:110px;border-radius:50%;
+        background:rgba(255,255,255,.08);border:2px solid rgba(255,180,90,.5);
+        display:none;align-items:center;justify-content:center;pointer-events:none;z-index:83;">
+        <div id="sh3JoyKnob" style="width:48px;height:48px;border-radius:50%;
+          background:rgba(255,180,90,.6);border:2px solid rgba(255,220,150,.9);
+          box-shadow:0 0 14px rgba(255,150,50,.7)"></div>
+      </div>
+      <button id="sh3FireBtn" style="position:absolute;right:20px;bottom:180px;
+        width:76px;height:76px;border-radius:50%;background:rgba(255,80,80,.65);
+        border:3px solid rgba(255,150,150,.9);color:#fff;font-size:28px;
+        font-family:inherit;pointer-events:auto;touch-action:none;z-index:84;
+        display:flex;align-items:center;justify-content:center;font-weight:bold;
+        box-shadow:0 4px 12px rgba(0,0,0,.5);">🔥</button>
+      <button id="sh3ReloadBtn" style="position:absolute;right:110px;bottom:150px;
+        width:52px;height:52px;border-radius:50%;background:rgba(80,120,200,.65);
+        border:2px solid rgba(150,180,255,.9);color:#fff;font-size:15px;
+        font-family:inherit;font-weight:bold;pointer-events:auto;touch-action:none;z-index:84;
+        display:flex;align-items:center;justify-content:center;">R</button>
+      <button id="sh3JumpBtn" style="position:absolute;right:20px;bottom:100px;
+        width:56px;height:56px;border-radius:50%;background:rgba(80,180,80,.65);
+        border:2px solid rgba(150,220,150,.9);color:#fff;font-size:18px;
+        font-family:inherit;pointer-events:auto;touch-action:none;z-index:84;
+        display:flex;align-items:center;justify-content:center;">⤴</button>
+      <button id="sh3WeaponBtn" style="position:absolute;right:110px;bottom:80px;
+        width:52px;height:52px;border-radius:50%;background:rgba(200,160,80,.65);
+        border:2px solid rgba(240,200,120,.9);color:#fff;font-size:14px;
+        font-family:inherit;font-weight:bold;pointer-events:auto;touch-action:none;z-index:84;
+        display:flex;align-items:center;justify-content:center;">🔫</button>`;
+    document.body.appendChild(ctl);
+
+    const joyBase=document.getElementById('sh3JoyBase');
+    const joyKnob=document.getElementById('sh3JoyKnob');
+    const BTN_SEL='#sh3FireBtn, #sh3ReloadBtn, #sh3JumpBtn, #sh3WeaponBtn';
+
+    document.addEventListener('touchstart', e => {
+      if(!active) return;
+      if(e.target.closest(BTN_SEL)) return;
+      for(const t of e.changedTouches){
+        const isLeft = t.clientX < window.innerWidth/2;
+        if(isLeft && sh3JoyId===null){
+          sh3JoyId=t.identifier; sh3JoyCx=t.clientX; sh3JoyCy=t.clientY;
+          joyBase.style.left=(sh3JoyCx-55)+'px';
+          joyBase.style.top=(sh3JoyCy-55)+'px';
+          joyBase.style.display='flex';
+          joyKnob.style.transform='translate(0,0)';
+          sh3TouchMove=null;
+        } else if(!isLeft && sh3LookId===null){
+          sh3LookId=t.identifier;
+          sh3LookLastX=t.clientX; sh3LookLastY=t.clientY;
+        }
+      }
+    }, {passive:true, capture:true});
+
+    document.addEventListener('touchmove', e => {
+      if(!active) return;
+      for(const t of e.changedTouches){
+        if(t.identifier===sh3JoyId){
+          const dx=t.clientX-sh3JoyCx, dy=t.clientY-sh3JoyCy;
+          const max=45, len=Math.hypot(dx,dy);
+          const k=len>max?max/len:1;
+          joyKnob.style.transform=`translate(${dx*k}px,${dy*k}px)`;
+          const ndx=dx/max, ndy=dy/max;
+          sh3TouchMove=(Math.hypot(ndx,ndy)<0.15)?null:{x:ndx,y:ndy};
+        } else if(t.identifier===sh3LookId){
+          const sens=0.005;
+          player.yaw   -= (t.clientX-sh3LookLastX)*sens;
+          player.pitch -= (t.clientY-sh3LookLastY)*sens;
+          player.pitch = Math.max(-Math.PI/2+0.05, Math.min(Math.PI/2-0.05, player.pitch));
+          sh3LookLastX=t.clientX; sh3LookLastY=t.clientY;
+        }
+      }
+    }, {passive:false, capture:true});
+
+    const resetJoy=()=>{ sh3JoyId=null; sh3TouchMove=null; joyBase.style.display='none'; };
+    document.addEventListener('touchend', e => {
+      for(const t of e.changedTouches){
+        if(t.identifier===sh3JoyId) resetJoy();
+        if(t.identifier===sh3LookId) sh3LookId=null;
+      }
+    }, {passive:true, capture:true});
+    document.addEventListener('touchcancel', ()=>{ resetJoy(); sh3LookId=null; }, {passive:true, capture:true});
+
+    let fireInterval=null;
+    const fireBtn=document.getElementById('sh3FireBtn');
+    fireBtn.addEventListener('touchstart', e => {
+      e.preventDefault(); e.stopPropagation();
+      if(!active) return;
+      if(WEAPONS[player.weapon].auto){
+        fire();
+        fireInterval=setInterval(()=>{ if(active && player.shootCd<=0) fire(); }, 100);
+      } else {
+        fire();
+      }
+    }, {passive:false});
+    const stopFire=()=>{ if(fireInterval){clearInterval(fireInterval);fireInterval=null;} };
+    fireBtn.addEventListener('touchend',    e=>{ e.preventDefault(); stopFire(); }, {passive:false});
+    fireBtn.addEventListener('touchcancel', e=>{ stopFire(); },                    {passive:false});
+
+    document.getElementById('sh3ReloadBtn').addEventListener('touchstart', e=>{
+      e.preventDefault(); e.stopPropagation();
+      if(active) startReload();
+    }, {passive:false});
+
+    document.getElementById('sh3JumpBtn').addEventListener('touchstart', e=>{
+      e.preventDefault(); e.stopPropagation();
+      if(active && player.onGround && !pvpEnded){
+        player.velY=JUMP_V; player.onGround=false;
+      }
+    }, {passive:false});
+
+    document.getElementById('sh3WeaponBtn').addEventListener('touchstart', e=>{
+      e.preventDefault(); e.stopPropagation();
+      const order=['pistol','smg','rifle','shotgun','sniper','rocket'];
+      const idx=order.indexOf(player.weapon);
+      switchWeapon(order[(idx+1)%order.length]);
+    }, {passive:false});
   }
 
   // ═══════════ ПУБЛИЧНЫЙ API ═══════════
