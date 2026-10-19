@@ -11647,8 +11647,9 @@ let pvpEndGraceTimer=null;
     return g;
   }
 
-  function addPeer(id,name,color,x,z,yaw){
+   function addPeer(id,name,color,x,z,yaw){
   if(peers.has(id)) return;
+  if(!shScene) initScene();                       // ← защита: сцена должна существовать
   const group=createPeerMesh(color,name);
   group.position.set(x||0,0,z||0);
   group.rotation.y=yaw||0;
@@ -11960,9 +11961,9 @@ function doRestartCommon(){
       const b=bulletsData[i];
       if(!b.active) continue;
 
-      // субстепы для быстрых пуль
+            // субстепы для быстрых пуль
       const bSpeed = b.vel.length();
-      const subSteps = Math.min(6, Math.max(1, Math.ceil(bSpeed * dt / 0.5)));
+      const subSteps = Math.min(20, Math.max(1, Math.ceil(bSpeed * dt / 0.25)));
       const subDt = dt / subSteps;
       let hit=false;
 
@@ -11988,14 +11989,18 @@ function doRestartCommon(){
             }
           }
           // Пули игрока: пиры (PvP)
-          if(!hit && mode === 'pvp'){
+                    if(!hit && mode === 'pvp'){
             for(const p of peers.values()){
               if(p.dead) continue;
               const dx=b.pos.x-p.group.position.x;
               const dy=b.pos.y-(p.group.position.y+1.0);
               const dz=b.pos.z-p.group.position.z;
               if(dx*dx+dy*dy+dz*dz<1.4){
-                netSend('phit',{ to:p.id, dmg:b.dmg });
+                netSend('phit',{
+                  to: p.id,
+                  dmg: b.dmg,
+                  fromName: localPlayer ? localPlayer.name : '?'
+                });
                 hit=true; break;
               }
             }
@@ -12432,7 +12437,8 @@ function doRestartCommon(){
         }
         break;
       }
-           case 'pos':{
+                      case 'pos':{
+        if(!m.from){ break; }                          // ← мусорный пакет без id
         let p=peers.get(m.from);
         if(!p){
           addPeer(m.from, m.name||'?', m.color,
@@ -12498,9 +12504,17 @@ function doRestartCommon(){
         wave=m.wave; waveState=m.state; waveT=m.t;
         break;
       }
-                  case 'phit':{
-        if(m.to!==Net.id) break;
-        if(mode==='pvp' && !pvpEnded && !pvpDead) damagePlayer(m.dmg);
+                        case 'phit':{
+        // Основной путь: сервер адресовал мне (to === Net.id)
+        // Fallback: сервер бродкастит всем — принимаем, если это не я сам
+        const isForMe = (m.to === Net.id);
+        const isEcho  = (m.from === Net.id)
+                     || (m.fromName && localPlayer && m.fromName === localPlayer.name);
+        if(!isForMe && isEcho) break;                 // защита от самопопадания
+        if(!isForMe && !m.fromName) break;            // чужой пакет без явного адреса — игнор
+        if(mode === 'pvp' && !pvpEnded && !pvpDead){
+          damagePlayer(m.dmg);
+        }
         break;
       }
       case 'pdead':{
@@ -12549,8 +12563,9 @@ function doRestartCommon(){
     let s=''; for(let i=0;i<4;i++) s+=L[Math.floor(Math.random()*L.length)];
     return s;
   }
-    function joinRoomCode(code,m){
+        function joinRoomCode(code,m){
     if(!Net.online){ if(typeof showToast==='function') showToast('Нет соединения'); return; }
+    initScene();                                    // ← сцену готовим заранее
     roomId=code; mode=m||'coop'; isHost=false;
     const doJoin=()=>{
       netSend('join',{
