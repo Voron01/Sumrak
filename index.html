@@ -12404,13 +12404,27 @@ function doRestartCommon(){
         }
         break;
       }
-      case 'welcome':{
+            case 'welcome':{
         if(m.to!==Net.id) break;
         if(m.wave!==undefined) wave=m.wave;
         if(m.waveState!==undefined) waveState=m.waveState;
         if(m.waveT!==undefined) waveT=m.waveT;
         if(m.enemies && Array.isArray(m.enemies)){
           for(const en of m.enemies) spawnEnemy(en.type, en.id, en.x, en.z);
+        }
+        // ── PvP: восстановить живой состав из снапшота хоста ──
+        if(mode==='pvp'){
+          if(Array.isArray(m.pvpAlive) && m.pvpAlive.length > 0){
+            pvpAlive = new Set(m.pvpAlive);
+          }
+          if(Array.isArray(m.pvpRanking) && m.pvpRanking.length > 0){
+            pvpRanking = m.pvpRanking;
+          }
+          // если игра уже идёт — стартуем локально, чтобы клиент увидел бой
+          if(!active){
+            if(typeof showToast==='function') showToast('🔄 Подключение к бою...');
+            startGame('pvp');
+          }
         }
         break;
       }
