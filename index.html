@@ -2131,7 +2131,7 @@ const Net={
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0x0b1119);
 scene.fog=new THREE.FogExp2(0x0b1119,isMobile?0.022:0.018);
-const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,0.1,isMobile?200:400);
+const camera=new THREE.PerspectiveCamera(68,innerWidth/innerHeight,0.1,500);
 camera.rotation.order='YXZ';
 const renderer=new THREE.WebGLRenderer({antialias:!isMobile,powerPreference:'high-performance'});
 renderer.setSize(innerWidth,innerHeight);
@@ -4189,7 +4189,7 @@ function teleportToIsland(){
   if(clanIslandGroup) clanIslandGroup.visible = true;
   localPlayer.sitting = false;
   localPlayer.sitGround = false;
-  localPlayer.seat = -1;
+     localPlayer.setSeat(-1);
   localPlayer._interiorSeat = undefined;
   localPlayer._interiorFloor = undefined;
   localPlayer._prevInteriorX = undefined;
@@ -4224,8 +4224,7 @@ function teleportFromIsland(){
     currentFloor = 0;
     interiorReturnPos = null;
   }
-  localPlayer.sitting = false;
-  localPlayer.sitGround = false;
+    localPlayer.setSeat(-1);
   localPlayer.pos.set(0, 0, 4.6);
   localPlayer.onGround = true;
   localPlayer.velY = 0;
@@ -4274,16 +4273,17 @@ function drawRecordBoard(ctx){
   ctx.strokeStyle='#1a0e08';
   ctx.lineWidth=6;
   ctx.strokeRect(3,3,W-6,H-6);
-  const games=[
+    const games=[
     {key:'cat',name:'🐱 КОТЁНОК'},
     {key:'bomber',name:'💣 БОМБЕР'},
     {key:'match3',name:'💎 ТРИ В РЯД'},
     {key:'flappy',name:'🐦 FLAPPY'},
     {key:'fish',name:'🎣 РЫБАЛКА',suffix:' см'},
-    {key:'fire',name:'🔥 ХРАНИТЕЛЬ ОГНЯ',suffix:' 🪵'}
+    {key:'fire',name:'🔥 ХРАНИТЕЛЬ ОГНЯ',suffix:' 🪵'},
+    {key:'shooter',name:'🎯 ШУТЕР'}
   ];
   const padX=20,padY=20;
-  const cols=3,rows=2;
+  const cols=4,rows=2;
   const colW=(W-padX*(cols+1))/cols;
   const rowH=(H-padY*(rows+1))/rows;
   games.forEach((gm,i)=>{
@@ -6555,10 +6555,10 @@ function showInvite(type,fromName,fromId,extra={}){
   const container=$('#inviteContainer');
   const card=document.createElement('div');
   card.className='invite-card';
-  let title='',body='';
-  if(type==='friend'){title='⭐ Приглашение в друзья';body='<b>'+fromName+'</b> хочет добавить тебя в друзья.';}
-  else if(type==='clan'){title='🛡 Приглашение в клан';body='<b>'+fromName+'</b> приглашает тебя в клан <b>'+(extra.clanName||'')+'</b>.';}
-  else if(type==='game'){title='🎮 Приглашение в игру';body='<b>'+fromName+'</b> зовёт сыграть в <b>'+(extra.gameName||'игру')+'</b>.';}
+ let title='',body='';
+if(type==='friend'){title='⭐ Приглашение в друзья';body='<b>'+escapeHtml(fromName)+'</b> хочет добавить тебя в друзья.';}
+else if(type==='clan'){title='🛡 Приглашение в клан';body='<b>'+escapeHtml(fromName)+'</b> приглашает тебя в клан <b>'+escapeHtml(extra.clanName||'')+'</b>.';}
+else if(type==='game'){title='🎮 Приглашение в игру';body='<b>'+escapeHtml(fromName)+'</b> зовёт сыграть в <b>'+escapeHtml(extra.gameName||'игру')+'</b>.';}
   card.innerHTML='<div class="ic-title">'+title+'</div><div>'+body+'</div>'+
     '<div class="ic-btns"><button data-accept>Принять</button>'+
     '<button class="reject" data-reject>Отказать</button></div>';
@@ -6656,11 +6656,12 @@ this._breathPhase = 0;
       this.pos.copy(s.pos);this.pos.y=0.28;
       this.yaw=Math.atan2(-s.pos.x,-s.pos.z);
       this.targetYaw=this.yaw;this.sitting=true;this.sitGround=false;
-    } else {
-      this.sitting=false;
-      this.pos.y = (inInterior === 'tavern' && currentFloor === 1) ? TAVERN_FLOOR2_Y : 0;
-    }
+     } else {
+    this.sitting=false;
+    this.sitGround=false;
+    this.pos.y = (inInterior === 'tavern' && currentFloor === 1) ? TAVERN_FLOOR2_Y : 0;
   }
+}
   setClanTag(clanName){this.clanName=clanName;this._refreshTag();}
   _refreshTag(){
     if(this.tag){this.group.remove(this.tag);if(this.tag.material.map)this.tag.material.map.dispose();}
@@ -7330,7 +7331,7 @@ function doJump(){
   if(!localPlayer) return;
   if(localPlayer.lieDown){ wakeUp(); return; }
   if(!localPlayer.onGround) return;
-  if(localPlayer.sitting){localPlayer.sitting=false;localPlayer.sitGround=false;localPlayer.seat=-1;}
+  if(localPlayer.sitting){ localPlayer.setSeat(-1); }
   localPlayer.velY=5.0;localPlayer.onGround=false;
   localPlayer._jumpAnticipation = 0.08;
   snd.jump();
@@ -7498,10 +7499,14 @@ function contextAction(){
     if(!c.sittable)continue;
     const dx=p.pos.x-c.x,dz=p.pos.z-c.z;
     if(dx*dx+dz*dz<(c.r+0.8)*(c.r+0.8)){
-      if(p.sitting){p.sitting=false;p.sitGround=false;p.pos.y=0;}
-      else{p.sitting=true;p.sitGround=true;p.seat=-1;p.pos.x=c.x;p.pos.z=c.z;p.pos.y=0.45;}
-      return;
-    }
+  if(p.sitting){ p.setSeat(-1); }
+  else{
+    if(p.seat >= 0){ seats[p.seat].taken = null; p.seat = -1; }
+    p.sitting=true; p.sitGround=true;
+    p.pos.x=c.x; p.pos.z=c.z; p.pos.y=0.45;
+  }
+  return;
+}
   }
   for(const it of groundItems){
     if(!it.active)continue;
@@ -7822,7 +7827,7 @@ function toggleSit(){
         p._prevInteriorX = undefined;
         p._prevInteriorZ = undefined;
       }
-      p.sitting = false;
+      p.setSeat(-1);
       p._interiorSeat = undefined;
       p.pos.y = (p._interiorFloor === 1) ? TAVERN_FLOOR2_Y : 0;
       p._interiorFloor = undefined;
@@ -8523,7 +8528,7 @@ function updatePlayersList(){
       nameDisplay='"'+pre+'" '+p.name;
     }
     d.innerHTML='<span class="dot '+onlineClass+'" style="background:'+colorHex+';color: '+colorHex+'"></span>'+
-  '<span class="pn">'+nameDisplay+'</span>'+
+  '<span class="pn">'+escapeHtml(nameDisplay)+'</span>'+
   '<button class="act '+(friends.has(p.id)?'on':'')+'" data-act="friend">'+(friends.has(p.id)?'★':'☆')+'</button>'+
   '<button class="act" data-act="gift" title="Подарить">🎁</button>'+
   '<button class="act" data-act="hide">👁</button>';
@@ -8714,10 +8719,10 @@ function renderFriendsPanel(){
     friends.forEach(fid=>{
       const p=players.get(fid);
       const name=p?p.name:'???';
-      const isOn=p&&p.isOnline!==false;
-     html+='<div class="friend-card">'+
+const isOn=p&&p.isOnline!==false;
+ html+='<div class="friend-card">'+
   '<span class="'+(isOn?'fc-on':'fc-off')+'"></span>'+
-  '<span class="fc-name">'+name+'</span>'+
+  '<span class="fc-name">'+escapeHtml(name)+'</span>'+
   '<span style="font-size:11px;color:'+(isOn?'#6f6':'#777')+'">'+(isOn?'в игре':'офлайн')+'</span>'+
   (isOn && Net.online ? '<button data-gift="'+fid+'" style="background:rgba(255,180,90,.3);border:1px solid rgba(255,180,90,.5);color:#ffd9a4;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;font-family:inherit">🎁</button>' : '')+
   '<button data-rm="'+fid+'" style="background:rgba(200,80,80,.3);border:1px solid rgba(200,80,80,.5);color:#ffd0d0;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:inherit">✕</button>'+
@@ -8756,26 +8761,26 @@ function renderClanPanel(){
       if(Net.online)Net.send({t:'clanUpdate',name:n,tag:t,leader:localPlayer.name,members:[...clan.members]});
     };
   } else {
-    let html='<div style="text-align:center;margin-bottom:10px">'+
-      '<div style="font-size:36px">🛡</div>'+
-      '<div style="font-size:20px;color:#e0c8ff">'+clan.name+'</div>'+
-      '<div style="font-size:13px;color:#a990d0">['+clan.tag+']</div>'+
-      '<div style="margin-top:8px;font-size:12px;color:#ffd9a4">👑 Лидер: <b>'+clan.leader+'</b></div>';
-    if(clan.helper)html+='<div style="font-size:12px;color:#a990d0">⭐ Помощник: <b>'+clan.helper+'</b></div>';
+   let html='<div style="text-align:center;margin-bottom:10px">'+
+  '<div style="font-size:36px">🛡</div>'+
+  '<div style="font-size:20px;color:#e0c8ff">'+escapeHtml(clan.name)+'</div>'+
+  '<div style="font-size:13px;color:#a990d0">['+escapeHtml(clan.tag)+']</div>'+
+  '<div style="margin-top:8px;font-size:12px;color:#ffd9a4">👑 Лидер: <b>'+escapeHtml(clan.leader)+'</b></div>';
+if(clan.helper)html+='<div style="font-size:12px;color:#a990d0">⭐ Помощник: <b>'+escapeHtml(clan.helper)+'</b></div>';
     html+='</div>';
     html+='<div class="ed-sec"><label>Участники ('+clan.members.size+')</label>';
-    clan.members.forEach(m=>{
-      const role=m===clan.leader?'👑 Лидер':(m===clan.helper?'⭐ Помощник':'');
-      html+='<div class="clan-member"><span class="nm">'+m+'</span>'+
-        (role?'<span class="role">'+role+'</span>':'')+
-        (isLeader&&m!==localPlayer.name?'<button class="kick" data-m="'+m+'">Исключить</button>':'')+
-        '</div>';
-    });
+   clan.members.forEach(m=>{
+  const role=m===clan.leader?'👑 Лидер':(m===clan.helper?'⭐ Помощник':'');
+  html+='<div class="clan-member"><span class="nm">'+escapeHtml(m)+'</span>'+
+    (role?'<span class="role">'+role+'</span>':'')+
+    (isLeader&&m!==localPlayer.name?'<button class="kick" data-m="'+escapeHtml(m)+'">Исключить</button>':'')+
+    '</div>';
+});
     html+='</div>';
     if(clan.rules){
-      html+='<div class="ed-sec"><label>📜 Правила клана</label>'+
-        '<div style="background:rgba(0,0,0,.3);padding:8px;border-radius:8px;font-size:12px;color:#d8c0ff;white-space:pre-wrap">'+clan.rules+'</div></div>';
-    }
+  html+='<div class="ed-sec"><label>📜 Правила клана</label>'+
+    '<div style="background:rgba(0,0,0,.3);padding:8px;border-radius:8px;font-size:12px;color:#d8c0ff;white-space:pre-wrap">'+escapeHtml(clan.rules)+'</div></div>';
+}
     if(onClanIsland){
       html+='<div class="ed-sec" style="text-align:center"><button id="cLeaveIslandBtn" class="ghost">🏠 Покинуть остров</button></div>';
     }
@@ -8797,17 +8802,17 @@ function renderClanPanel(){
         });
         html+='</div>';
       }
-      html+='<div class="ed-sec"><label>⚙️ Настройки</label>'+
-        '<input id="cEditName" value="'+clan.name+'" placeholder="Название">'+
-        '<input id="cEditTag" value="'+clan.tag+'" placeholder="Тег">'+
-        '<textarea id="cEditRules" placeholder="Правила..." style="height:80px">'+clan.rules+'</textarea>'+
-        '<button id="cSaveEdit">💾 Сохранить</button></div>';
+     html+='<div class="ed-sec"><label>⚙️ Настройки</label>'+
+  '<input id="cEditName" value="'+escapeHtml(clan.name)+'" placeholder="Название">'+
+  '<input id="cEditTag" value="'+escapeHtml(clan.tag)+'" placeholder="Тег">'+
+  '<textarea id="cEditRules" placeholder="Правила..." style="height:80px">'+escapeHtml(clan.rules)+'</textarea>'+
+  '<button id="cSaveEdit">💾 Сохранить</button></div>';
       html+='<div class="ed-sec"><label>📨 Пригласить по имени</label>'+
         '<input id="cInviteName" placeholder="Введи имя игрока" maxlength="14">'+
         '<button id="cInviteBtn">📨 Отправить</button></div>';
-      html+='<div class="ed-sec"><label>⭐ Назначить помощника</label>'+
-        '<input id="cHelperName" placeholder="Имя игрока" value="'+(clan.helper||'')+'" maxlength="14">'+
-        '<button id="cSetHelper">⭐ Назначить/снять</button></div>';
+     html+='<div class="ed-sec"><label>⭐ Назначить помощника</label>'+
+  '<input id="cHelperName" placeholder="Имя игрока" value="'+escapeHtml(clan.helper||'')+'" maxlength="14">'+
+  '<button id="cSetHelper">⭐ Назначить/снять</button></div>';
     }
     html+='<div style="text-align:center;margin-top:12px">'+
       '<button id="cLeaveBtn" class="ghost">Покинуть</button>'+
@@ -8928,7 +8933,7 @@ function renderClanChest(){
   const el = document.getElementById('clanChestContent');
   if(!el) return;
   const chest = loadChest();
-  let html = '<div style="color:#ffd9a4;margin-bottom:8px;text-align:center">Кладовая клана: <b>'+clan.name+'</b></div>';
+  let html = '<div style="color:#ffd9a4;margin-bottom:8px;text-align:center">Кладовая клана: <b>'+escapeHtml(clan.name)+'</b></div>';
   html += '<div style="color:#a99d87;font-size:11px;text-transform:uppercase;letter-spacing:.14em;margin-bottom:6px">В сундуке</div>';
   html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(60px,1fr));gap:6px;padding:8px;background:rgba(0,0,0,.3);border-radius:10px;min-height:80px">';
   const types = Object.keys(chest).filter(t=>chest[t]>0);
@@ -9098,11 +9103,11 @@ function renderRecordsPanel(){
       html += '<div style="color:#7e7768;font-size:12px;padding:8px;text-align:center">Пока пусто</div>';
     } else {
       recs.forEach((r,i)=>{
-        html += '<div style="display:flex;gap:10px;padding:6px 10px;background:rgba(255,150,50,'+(0.15-i*0.04)+');border-radius:8px;margin-bottom:4px;font-size:13px">'+
-          '<span style="font-size:16px">'+(medals[i]||'')+'</span>'+
-          '<span style="flex:1;color:#ffce8f">'+r.name+'</span>'+
-          '<span style="color:#ffb457;font-weight:bold">'+r.score+(gm.suffix||'')+'</span></div>';
-      });
+  html += '<div style="display:flex;gap:10px;padding:6px 10px;background:rgba(255,150,50,'+(0.15-i*0.04)+');border-radius:8px;margin-bottom:4px;font-size:13px">'+
+    '<span style="font-size:16px">'+(medals[i]||'')+'</span>'+
+    '<span style="flex:1;color:#ffce8f">'+escapeHtml(r.name)+'</span>'+
+    '<span style="color:#ffb457;font-weight:bold">'+r.score+(gm.suffix||'')+'</span></div>';
+});
     }
     html += '</div>';
   });
@@ -9123,11 +9128,11 @@ function renderFirePanel(){
     const r=recs[i];
     if(r){
       html+='<div style="padding:9px 11px;background:rgba(255,150,50,.2);'+
-        'border:1px solid rgba(255,150,50,.4);border-radius:9px;margin-bottom:6px;'+
-        'display:flex;gap:9px;align-items:center;font-size:14px">'+
-        '<span style="font-size:20px">'+medals[i]+'</span>'+
-        '<span style="flex:1;color:#ffce8f">'+r.name+'</span>'+
-        '<span style="color:#ffb457;font-weight:bold">'+r.score+' 🪵</span></div>';
+  'border:1px solid rgba(255,150,50,.4);border-radius:9px;margin-bottom:6px;'+
+  'display:flex;gap:9px;align-items:center;font-size:14px">'+
+  '<span style="font-size:20px">'+medals[i]+'</span>'+
+  '<span style="flex:1;color:#ffce8f">'+escapeHtml(r.name)+'</span>'+
+  '<span style="color:#ffb457;font-weight:bold">'+r.score+' 🪵</span></div>';
     } else {
       html+='<div style="padding:9px 11px;background:rgba(80,70,40,.15);'+
         'border-radius:9px;margin-bottom:6px;opacity:0.55;font-size:13px">'+
@@ -9391,10 +9396,16 @@ function openEditor(){
     ?currentCustom.shirtPixels.slice():new Array(256).fill(null);
   paintData=(currentCustom.paintPixels&&Array.isArray(currentCustom.paintPixels))
     ?currentCustom.paintPixels.slice():new Array(256).fill(null);
+  if(!pixelEditor){
   pixelEditor=buildPixelEditorGeneric('#pixelCanvas','#cShirt',
     ()=>pixelData,(d)=>{pixelData=d;});
+}
+if(!paintEditor){
   paintEditor=buildPixelEditorGeneric('#paintCanvas','#paintColor',
     ()=>paintData,(d)=>{paintData=d;});
+}
+pixelEditor.draw();
+paintEditor.draw();
 
   // 3) Сначала показываем панель — иначе canvas превью размером 0×0
   $('#editor').classList.add('show');
@@ -11079,7 +11090,12 @@ const ShooterGame = (() => {
   let sh3JoyId = null, sh3JoyCx = 0, sh3JoyCy = 0;
   let sh3LookId = null, sh3LookLastX = 0, sh3LookLastY = 0;
   let roomId=null, isHost=false, hostId=null;
-  let pvpKillsMe=0, pvpKillsThem=0, pvpEnded=false;
+  let pvpEnded=false;
+let pvpAlive=new Set();
+let pvpRanking=[];
+let pvpDead=false;
+let pvpWinnerId=null;
+let pvpEndGraceTimer=null;
 
   let shCanvas=null, shRenderer=null, shScene=null, shCamera=null, hudEl=null;
   let bloom=null;
@@ -11547,7 +11563,7 @@ const ShooterGame = (() => {
     bulletsMesh.frustumCulled=false;
     shScene.add(bulletsMesh);
     for(let i=0;i<MAX_BULLETS;i++){
-      bulletsData.push({active:false,pos:new THREE.Vector3(),vel:new THREE.Vector3(),dmg:0,life:0,splash:0});
+      bulletsData.push({active:false,pos:new THREE.Vector3(),vel:new THREE.Vector3(),dmg:0,life:0,splash:0,owner:'player'});
       bulletsMesh.setMatrixAt(i,_hiddenM);
     }
     bulletsMesh.instanceMatrix.needsUpdate=true;
@@ -11632,14 +11648,15 @@ const ShooterGame = (() => {
   }
 
   function addPeer(id,name,color,x,z,yaw){
-    if(peers.has(id)) return;
-    const group=createPeerMesh(color,name);
-    group.position.set(x||0,0,z||0);
-    group.rotation.y=yaw||0;
-    shScene.add(group);
-    peers.set(id,{id,name,color,group,targetX:x||0,targetZ:z||0,targetYaw:yaw||0,hp:100});
-    updateWaitUI();
-  }
+  if(peers.has(id)) return;
+  const group=createPeerMesh(color,name);
+  group.position.set(x||0,0,z||0);
+  group.rotation.y=yaw||0;
+  shScene.add(group);
+  peers.set(id,{id,name,color,group,targetX:x||0,targetZ:z||0,
+    targetYaw:yaw||0,hp:100,dead:false});
+  updateWaitUI();
+}
 
   function removePeer(id){
     const p=peers.get(id);
@@ -11650,8 +11667,15 @@ const ShooterGame = (() => {
   }
 
   function updatePeerVisual(dt){
-    for(const p of peers.values()){
-      const g=p.group;
+  for(const p of peers.values()){
+    const g=p.group;
+    if(p.dead){
+      if(g.rotation.z < Math.PI/2){
+        g.rotation.z = Math.min(Math.PI/2, g.rotation.z + dt*6);
+        g.position.y = Math.max(0.2, 1.0 - g.rotation.z*0.8);
+      }
+      continue;
+    }
       g.position.x += (p.targetX - g.position.x) * Math.min(1, dt*12);
       g.position.z += (p.targetZ - g.position.z) * Math.min(1, dt*12);
       let diff = p.targetYaw - g.rotation.y;
@@ -11732,6 +11756,27 @@ const ShooterGame = (() => {
     }
   }
 
+    function damagePlayer(dmg){
+    if(pvpEnded || pvpDead) return;
+    player.hp = Math.max(0, player.hp - dmg);
+    Snd.hit();
+    spawnHitParticles(
+      shCamera.position.clone().add(new THREE.Vector3(0,-0.3,0)),
+      5, 0xff3030
+    );
+    updateHUD();
+    if(player.hp <= 0){
+      if(mode === 'pvp'){
+        pvpDead = true;
+        if(Net.id) eliminateFromPvp(Net.id, localPlayer ? localPlayer.name : '???');
+        netSend('pdead', { playerName: localPlayer ? localPlayer.name : '???' });
+        checkPvpEnd();
+      } else {
+        gameOver();
+      }
+    }
+  }
+
   function explode(pos,radius,dmg){
     for(const e of [...enemies]){
       if(!e.alive) continue;
@@ -11743,28 +11788,117 @@ const ShooterGame = (() => {
     spawnHitParticles(pos,20,0xff8020);
   }
 
-  function damagePlayer(dmg){
-    if(pvpEnded) return;
-    player.hp-=dmg;
-    Snd.hit();
-    if(player.hp<=0){
-      player.hp=0;
-      if(mode==='pvp'){
-        player.hp=player.maxHp;
-        player.pos.set(0,EYE,8);
-        player.velY=0;
-        player.yaw=0; player.pitch=0;
-        player.weapon='pistol';
-        for(const k in WEAPONS) player.ammo[k]=WEAPONS[k].mag;
-        netSend('pdead',{});
-        pvpKillsThem++;
-        if(pvpKillsThem>=PVP_KILLS_TO_WIN) endPvp(false);
-        updateHUD();
-      } else {
-        gameOver();
-      }
-    }
+  function initPvp(){
+  pvpAlive.clear();
+  pvpRanking=[];
+  pvpDead=false;
+  pvpWinnerId=null;
+  pvpEnded=false;
+  clearTimeout(pvpEndGraceTimer);
+
+  pvpAlive.add(Net.id);
+  pvpRanking.push({id:Net.id, name:localPlayer?localPlayer.name:'Вы', place:null});
+
+  for(const peer of peers.values()){
+    if(peer.id===Net.id) continue;
+    pvpAlive.add(peer.id);
+    pvpRanking.push({id:peer.id, name:peer.name||'???', place:null});
+    peer.dead=false;
+    peer.group.rotation.z=0;
+    peer.group.position.y=0;
   }
+}
+
+function eliminateFromPvp(playerId, playerName){
+  if(!pvpAlive.has(playerId)) return;
+  const place = pvpAlive.size;
+  pvpAlive.delete(playerId);
+  const entry = pvpRanking.find(r=>r.id===playerId);
+  if(entry){
+    entry.place = place;
+    if(playerName) entry.name = playerName;
+  } else {
+    pvpRanking.push({id:playerId, name:playerName||'???', place});
+  }
+}
+
+function checkPvpEnd(){
+  if(pvpAlive.size<=1){
+    pvpEnded = true;
+    clearTimeout(pvpEndGraceTimer);
+    // небольшая задержка, чтобы поймать «одновременные» смерти
+    pvpEndGraceTimer = setTimeout(finalizePvp, 600);
+  }
+}
+
+function finalizePvp(){
+  if(pvpAlive.size===1){
+    const winnerId=[...pvpAlive][0];
+    pvpWinnerId=winnerId;
+    const w=pvpRanking.find(r=>r.id===winnerId);
+    if(w) w.place=1;
+  } else {
+    pvpWinnerId=null;
+  }
+  pvpRanking.sort((a,b)=>(a.place||999)-(b.place||999));
+  showPvpRanking();
+}
+
+function showPvpRanking(){
+  const pauseEl=document.getElementById('sh3PauseHint');
+  if(!pauseEl) return;
+  const medals=['🥇','🥈','🥉'];
+  let html='<div style="font-size:26px;color:#ffd060;margin-bottom:16px;text-shadow:0 0 12px rgba(255,180,60,.8)">🏆 Итоги PvP</div>';
+  html+='<div style="background:rgba(0,0,0,.4);border-radius:12px;padding:12px;margin:0 auto 16px;display:inline-block;min-width:280px"><table style="border-collapse:collapse;color:#e9e2d6;width:100%">';
+  pvpRanking.forEach(r=>{
+    const isMe = r.id===Net.id;
+    const medal = r.place===1?medals[0]:r.place===2?medals[1]:r.place===3?medals[2]:`${r.place}.`;
+    const rowBg = isMe?'background:rgba(255,180,90,.2)':(r.place===1?'background:rgba(255,220,60,.15)':'');
+    html+=`<tr style="${rowBg};border-bottom:1px solid rgba(255,180,90,.2)"><td style="padding:8px 12px;text-align:center;font-size:18px;width:50px">${medal}</td><td style="padding:8px 12px;${isMe?'color:#ffd060;font-weight:bold;':''}">${escapeHtml(r.name||'???')}${isMe?' (Вы)':''}</td></tr>`;
+  });
+  html+='</table></div>';
+  const me = pvpRanking.find(r=>r.id===Net.id);
+  if(me&&me.place===1) html+='<div style="font-size:20px;color:#ffd060;margin-bottom:16px">🎉 Победа!</div>';
+  else if(me&&me.place) html+=`<div style="font-size:16px;color:#e9e2d6;margin-bottom:16px">Ваше место: <b style="color:#ffd060">${me.place}</b></div>`;
+  else if(pvpWinnerId===null) html+='<div style="font-size:16px;color:#e9e2d6;margin-bottom:16px">Ничья</div>';
+  html+='<div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap"><button id="sh3PvpAgain" style="padding:12px 28px;border-radius:10px;background:linear-gradient(#ffb457,#dd741d);color:#2a1403;border:none;font-family:inherit;font-weight:bold;cursor:pointer;font-size:15px;pointer-events:auto;box-shadow:0 4px 12px rgba(255,150,40,.5)">🔄 Играть снова</button><button id="sh3PvpExit" style="padding:12px 28px;border-radius:10px;background:rgba(200,80,80,.4);color:#ffd9a4;border:1px solid rgba(200,80,80,.6);font-family:inherit;font-weight:bold;cursor:pointer;font-size:15px;pointer-events:auto">В меню</button></div>';
+  pauseEl.innerHTML=html;
+  pauseEl.style.display='block';
+  pauseEl.style.pointerEvents='auto';
+  if(document.pointerLockElement) document.exitPointerLock();
+  document.getElementById('sh3PvpAgain').onclick=()=>{
+    if(isHost) doRestartHost();
+    else { netSend('askRestart',{}); if(typeof showToast==='function') showToast('Запрос отправлен хосту'); }
+  };
+  document.getElementById('sh3PvpExit').onclick=()=>exitToMenu();
+}
+
+function doRestartHost(){
+  initPvp();
+  netSend('restart',{ pvpAlive:[...pvpAlive], pvpRanking });
+  doRestartCommon();
+}
+
+function doRestartCommon(){
+  pvpEnded=false;
+  pvpDead=false;
+  pvpWinnerId=null;
+  clearTimeout(pvpEndGraceTimer);
+
+  resetGame();
+
+  for(const peer of peers.values()){
+    peer.dead=false;
+    peer.group.rotation.z=0;
+    peer.group.position.y=0;
+  }
+
+  active=true;
+  lastT=performance.now();
+  if(rafId) cancelAnimationFrame(rafId);
+  loop();
+  setTimeout(()=>{ if(active&&!pointerLocked){ try{ shCanvas.requestPointerLock(); }catch(e){} } },100);
+}
 
   function spawnPickup(pos,type,weapon){
     let p=null;
@@ -11808,12 +11942,13 @@ const ShooterGame = (() => {
   }
 
   // ═══════════ ПУЛИ — БЫСТРЫЕ + СУБСТЕПЫ ═══════════
-  function spawnBullet(pos,vel,dmg,splash){
+    function spawnBullet(pos,vel,dmg,splash,owner){
     for(let i=0;i<MAX_BULLETS;i++){
       if(!bulletsData[i].active){
         const b=bulletsData[i];
         b.active=true; b.pos.copy(pos); b.vel.copy(vel);
         b.dmg=dmg; b.life=2.0; b.splash=splash||0;
+        b.owner=owner||'player';
         return;
       }
     }
@@ -11836,29 +11971,45 @@ const ShooterGame = (() => {
         b.pos.y += b.vel.y * subDt;
         b.pos.z += b.vel.z * subDt;
 
-        if(mode!=='pvp'){
-          for(const e of enemies){
-            if(!e.alive) continue;
-            const dx=b.pos.x-e.group.position.x;
-            const dy=b.pos.y-(e.group.position.y+e.height*0.5);
-            const dz=b.pos.z-e.group.position.z;
-            const r=e.radius+0.2;
-            if(dx*dx+dy*dy+dz*dz<r*r){
-              if(b.splash>0) explode(b.pos,b.splash,b.dmg);
-              else damageEnemy(e,b.dmg);
-              hit=true; break;
+                if(b.owner === 'player'){
+          // Пули игрока: враги (solo/coop)
+          if(mode !== 'pvp'){
+            for(const e of enemies){
+              if(!e.alive) continue;
+              const dx=b.pos.x-e.group.position.x;
+              const dy=b.pos.y-(e.group.position.y+e.height*0.5);
+              const dz=b.pos.z-e.group.position.z;
+              const r=e.radius+0.2;
+              if(dx*dx+dy*dy+dz*dz<r*r){
+                if(b.splash>0) explode(b.pos,b.splash,b.dmg);
+                else damageEnemy(e,b.dmg);
+                hit=true; break;
+              }
             }
           }
-        }
-               if(!hit && mode==='pvp'){
-          for(const p of peers.values()){
-            const dx=b.pos.x-p.group.position.x;
-            const dy=b.pos.y-(p.group.position.y+1.0);
-            const dz=b.pos.z-p.group.position.z;
-            if(dx*dx+dy*dy+dz*dz<1.4){
-              netSend('phit',{ to:p.id, dmg:b.dmg });
-              hit=true; break;
+          // Пули игрока: пиры (PvP)
+          if(!hit && mode === 'pvp'){
+            for(const p of peers.values()){
+              if(p.dead) continue;
+              const dx=b.pos.x-p.group.position.x;
+              const dy=b.pos.y-(p.group.position.y+1.0);
+              const dz=b.pos.z-p.group.position.z;
+              if(dx*dx+dy*dy+dz*dz<1.4){
+                netSend('phit',{ to:p.id, dmg:b.dmg });
+                hit=true; break;
+              }
             }
+          }
+        } else if(b.owner === 'enemy'){
+          // Вражеские пули бьют только игрока
+          const dx=b.pos.x-player.pos.x;
+          const dz=b.pos.z-player.pos.z;
+          const horizSq = dx*dx + dz*dz;
+          const feetY = player.pos.y - EYE;   // = 0 на земле
+          const headY = feetY + 2.0;
+          if(horizSq < 0.6*0.6 && b.pos.y >= feetY && b.pos.y <= headY){
+            damagePlayer(b.dmg);
+            hit=true; break;
           }
         }
         if(!hit && (Math.abs(b.pos.x)>ARENA || Math.abs(b.pos.z)>ARENA || b.pos.y<0 || b.pos.y>25)){
@@ -11935,8 +12086,9 @@ const ShooterGame = (() => {
   }
 
   // ═══════════ СТРЕЛЬБА ═══════════
-  function fire(){
-    if(player.reloading>0 || player.shootCd>0 || pvpEnded) return;
+ function fire(){
+  if(pvpDead) return;
+  if(player.reloading>0 || player.shootCd>0 || pvpEnded) return;
     const w=WEAPONS[player.weapon];
     if(player.ammo[player.weapon]<=0){ startReload(); return; }
     player.ammo[player.weapon]--;
@@ -11952,8 +12104,8 @@ const ShooterGame = (() => {
       d.x+=(Math.random()-0.5)*w.spread*2;
       d.y+=(Math.random()-0.5)*w.spread*2;
       d.z+=(Math.random()-0.5)*w.spread*2;
-      d.normalize().multiplyScalar(w.speed);
-      spawnBullet(startPos,d,w.dmg,w.splash||0);
+          d.normalize().multiplyScalar(w.speed);
+      spawnBullet(startPos,d,w.dmg,w.splash||0,'player');
     }
 
     Snd.shoot(player.weapon);   // ← звук зависит от оружия
@@ -11984,8 +12136,15 @@ const ShooterGame = (() => {
   }
 
   // ═══════════ ОБНОВЛЕНИЯ ═══════════
-  function updatePlayer(dt){
-    if(pvpEnded) return;
+ function updatePlayer(dt){
+  if(pvpEnded) return;
+  if(pvpDead){
+    shCamera.position.set(player.pos.x, player.pos.y, player.pos.z);
+    shCamera.rotation.y = player.yaw;
+    shCamera.rotation.x = player.pitch;
+    if(weaponViewModel) weaponViewModel.visible = false;
+    return;
+  }
         let mx=0,mz=0;
     if(keys['KeyW']||keys['ArrowUp']) mz+=1;
     if(keys['KeyS']||keys['ArrowDown']) mz-=1;
@@ -12077,9 +12236,11 @@ const ShooterGame = (() => {
           e.shootCd = (e.shootCd||0) - dt;
           if(e.shootCd<=0){
             e.shootCd=e.shootRate;
-            const dir = new THREE.Vector3(dx,0,dz).normalize();
-            const spawnPos = e.group.position.clone(); spawnPos.y = e.height*0.6;
-            spawnBullet(spawnPos, dir.multiplyScalar(40), 10, 0);
+                      const dir=new THREE.Vector3(dx,0,dz).normalize();
+          const spawnPos=e.group.position.clone();
+          spawnPos.y=e.height*0.7;
+          spawnPos.addScaledVector(dir, e.radius + 0.6);
+          spawnBullet(spawnPos, dir.multiplyScalar(40), 10, 0, 'enemy');
           }
         }
       }
@@ -12113,9 +12274,11 @@ const ShooterGame = (() => {
         e.shootCd-=dt;
         if(e.shootCd<=0){
           e.shootCd=e.shootRate;
-          const dir=new THREE.Vector3(dx,0,dz).normalize();
-          const spawnPos=e.group.position.clone(); spawnPos.y=e.height*0.6;
-          spawnBullet(spawnPos, dir.multiplyScalar(40), 10, 0);
+                    const dir=new THREE.Vector3(dx,0,dz).normalize();
+          const spawnPos=e.group.position.clone();
+          spawnPos.y=e.height*0.7;
+          spawnPos.addScaledVector(dir, e.radius + 0.6);
+          spawnBullet(spawnPos, dir.multiplyScalar(40), 10, 0, 'enemy');
         }
       }
     }
@@ -12226,7 +12389,7 @@ const ShooterGame = (() => {
             enemies:enemies.filter(e=>e.alive).map(e=>({id:e.netId, type:e.type,
               x:e.group.position.x, z:e.group.position.z, hp:e.hp})) });
         }
-        if(mode==='pvp') netSend('welcome',{ to:m.from, mode });
+        if(mode==='pvp') netSend('welcome',{ to:m.from, mode, pvpAlive:[...pvpAlive], pvpRanking });
         break;
       }
             case 'hello':{
@@ -12246,10 +12409,23 @@ const ShooterGame = (() => {
         }
         break;
       }
-      case 'start':{ if(!active) startGame(mode); break; }
+      case 'start':{
+  if(!active){
+    if(mode==='pvp'){
+      if(Array.isArray(m.pvpAlive)) pvpAlive=new Set(m.pvpAlive);
+      if(Array.isArray(m.pvpRanking)) pvpRanking=m.pvpRanking;
+    }
+    startGame(mode);
+  }
+  break;
+}
       case 'leave':{
-        removePeer(m.from);
-        if(!isHost && m.from===hostId){
+  if(pvpAlive.has(m.from)){
+    eliminateFromPvp(m.from, (peers.get(m.from)?.name) || '???');
+    checkPvpEnd();
+  }
+  removePeer(m.from);
+  if(!isHost && m.from===hostId){
           if(typeof showToast==='function') showToast('Хост покинул игру');
           stopGame();
           if(typeof showMini==='function') showMini('phoneMenu');
@@ -12322,21 +12498,33 @@ const ShooterGame = (() => {
         wave=m.wave; waveState=m.state; waveT=m.t;
         break;
       }
-            case 'phit':{
+                  case 'phit':{
         if(m.to!==Net.id) break;
-        if(mode==='pvp' && !pvpEnded) damagePlayer(m.dmg);
+        if(mode==='pvp' && !pvpEnded && !pvpDead) damagePlayer(m.dmg);
         break;
       }
       case 'pdead':{
-        if(pvpEnded) break;
-        pvpKillsMe++;
-        if(pvpKillsMe >= PVP_KILLS_TO_WIN) endPvp(true);
-        else updateHUD();
+        if(m.from === Net.id) break;
+        const peerName = m.playerName || (peers.get(m.from)?.name) || '???';
+        if(!pvpAlive.has(m.from)) break;
+        eliminateFromPvp(m.from, peerName);
+        const peer = peers.get(m.from);
+        if(peer) peer.dead=true;
+        if(typeof showToast==='function') showToast(`💀 ${peerName} выбыл`);
+        checkPvpEnd();
+        updateHUD();
         break;
       }
-      case 'pwin':{
-        if(pvpEnded) break;
-        endPvp(false);   // хост сообщил, что мы проиграли
+      case 'restart':{
+        if(!isHost){
+          if(Array.isArray(m.pvpAlive)) pvpAlive=new Set(m.pvpAlive);
+          if(Array.isArray(m.pvpRanking)) pvpRanking=m.pvpRanking;
+          doRestartCommon();
+        }
+        break;
+      }
+      case 'askRestart':{
+        if(isHost && pvpEnded) doRestartHost();
         break;
       }
     }
@@ -12385,7 +12573,12 @@ const ShooterGame = (() => {
     }
     if(typeof showToast==='function') showToast('Подключаемся к '+code);
   }
-  function hostStart(){ if(!isHost) return; netSend('start',{}); startGame(mode); }
+  function hostStart(){
+  if(!isHost) return;
+  initPvp();
+  netSend('start',{ pvpAlive:[...pvpAlive], pvpRanking });
+  startGame(mode);
+}
 
   // ═══════════ GAME OVER / PVP END ═══════════
   function gameOver(){
@@ -12414,20 +12607,6 @@ const ShooterGame = (() => {
     }
   }
 
-  function endPvp(win){
-    pvpEnded=true;
-    const pauseEl=document.getElementById('sh3PauseHint');
-    if(pauseEl){
-      pauseEl.innerHTML=
-        '<div style="font-size:24px;color:'+(win?'#ffd060':'#ff6060')+';margin-bottom:8px">'+
-          (win?'🏆 Победа!':'💀 Поражение')+'</div>'+
-        '<div style="margin-bottom:12px">'+pvpKillsMe+' : '+pvpKillsThem+'</div>'+
-        '<button id="sh3PvpExit" style="margin:8px 4px;padding:10px 20px;border-radius:8px;background:#ffb457;color:#2a1403;border:none;font-family:inherit;font-weight:bold;cursor:pointer;font-size:14px;pointer-events:auto">В меню</button>';
-      pauseEl.style.display='block';
-      document.getElementById('sh3PvpExit').onclick=()=>exitToMenu();
-    }
-    if(win) netSend('pwin',{});
-  }
 
   // ═══════════ HUD (с панелью оружия) ═══════════
   function buildHUD(){
@@ -12538,11 +12717,13 @@ const ShooterGame = (() => {
     }
     const killsEl=document.getElementById('sh3Kills');
     if(killsEl) killsEl.textContent='💀 '+kills;
-    const pvpEl=document.getElementById('sh3PvpScore');
-    if(pvpEl){
-      if(mode==='pvp'){ pvpEl.style.display=''; pvpEl.textContent='⚔ '+pvpKillsMe+' : '+pvpKillsThem; }
-      else pvpEl.style.display='none';
-    }
+   const pvpEl=document.getElementById('sh3PvpScore');
+if(pvpEl){
+  if(mode==='pvp'){
+    pvpEl.style.display='';
+    pvpEl.textContent=`👥 ${pvpAlive.size} / ${pvpRanking.length}`;
+  } else pvpEl.style.display='none';
+}
     updateWeaponBar();
   }
 
@@ -12663,7 +12844,10 @@ const ShooterGame = (() => {
     aiming=false;
     if(shCamera){ shCamera.fov=BASE_FOV; shCamera.updateProjectionMatrix(); }
     wave=1; score=0; kills=0; waveState='break'; waveT=2.5; waveLeft=0;
-    pvpKillsMe=0; pvpKillsThem=0; pvpEnded=false;
+    pvpEnded=false;
+pvpDead=false;
+pvpWinnerId=null;
+clearTimeout(pvpEndGraceTimer);
     enemyNetId=1;
     for(const e of enemyPool){ e.alive=false; e.group.visible=false; }
     enemies.length=0;
@@ -12697,9 +12881,12 @@ const ShooterGame = (() => {
     shCanvas.style.display='block';
     hudEl.style.display='block';
     document.body.classList.add('shooter-active');
-    if(isMobile){
+       if(isMobile){
       const _ctl = document.getElementById('sh3TouchCtl');
       if(_ctl) _ctl.style.display='block';
+    }
+    if(mode === 'pvp' && pvpAlive.size === 0){
+      initPvp();
     }
     resetGame();
     active=true;
@@ -12729,12 +12916,18 @@ const ShooterGame = (() => {
   }
 
      function exitToMenu(){
-    if(roomId && Net.online){
-      Net.send({t:'sh', sub:'leave', room:roomId});
-    }
-    roomId=null; isHost=false; hostId=null;
-    for(const id of [...peers.keys()]) removePeer(id);
-    stopGame();
+  if(roomId && Net.online){
+    Net.send({t:'sh', sub:'leave', room:roomId});
+  }
+  roomId=null; isHost=false; hostId=null;
+  for(const id of [...peers.keys()]) removePeer(id);
+  pvpAlive.clear();
+  pvpRanking=[];
+  pvpDead=false;
+  pvpWinnerId=null;
+  pvpEnded=false;
+  clearTimeout(pvpEndGraceTimer);
+  stopGame();
     // Сброс состояния ожидания и возврат на экран выбора режима
     const list = document.getElementById('sh3ModeList');
     const wait = document.getElementById('sh3Wait');
@@ -12809,10 +13002,11 @@ const ShooterGame = (() => {
       joinRoomCode(c,'coop'); mode='coop'; isHost=false; startGame('coop');
     };
     document.getElementById('sh3JoinPvp').onclick=()=>{
-      const c=(document.getElementById('sh3JoinCode').value||'').trim().toUpperCase();
-      if(c.length<4){ if(typeof showToast==='function') showToast('Код минимум 4'); return; }
-      joinRoomCode(c,'pvp'); mode='pvp'; isHost=false; startGame('pvp');
-    };
+  const c=(document.getElementById('sh3JoinCode').value||'').trim().toUpperCase();
+  if(c.length<4){ if(typeof showToast==='function') showToast('Код минимум 4'); return; }
+  joinRoomCode(c,'pvp'); mode='pvp'; isHost=false;
+  if(typeof showToast==='function') showToast('Ожидание старта от хоста…');
+};
         document.getElementById('sh3StartBtn').onclick=()=>{ if(isHost) hostStart(); };
     document.getElementById('sh3LeaveBtn').onclick=()=>exitToMenu();
     const backBtn=document.getElementById('sh3SetupBack');
@@ -12839,12 +13033,12 @@ const ShooterGame = (() => {
     const peersEl=document.getElementById('sh3WaitPeers');
     const startBtn=document.getElementById('sh3StartBtn');
     if(peersEl){
-      if(peers.size===0) peersEl.textContent='Ожидание игроков…';
-      else{
-        const names=[...peers.values()].map(p=>p.name).join(', ');
-        peersEl.innerHTML='Игроков: <b>'+(peers.size+1)+'</b> · '+names;
-      }
-    }
+  if(peers.size===0) peersEl.textContent='Ожидание игроков…';
+  else{
+    const names=[...peers.values()].map(p=>escapeHtml(p.name)).join(', ');
+    peersEl.innerHTML='Игроков: <b>'+(peers.size+1)+'</b> · '+names;
+  }
+}
     if(startBtn) startBtn.style.display=(isHost && peers.size>=1)?'inline-block':'none';
   }
 
@@ -14162,10 +14356,10 @@ function handleNet(m){
         const container=$('#inviteContainer');
         const card=document.createElement('div');
         card.className='invite-card';
-        card.innerHTML='<div class="ic-title">🏝 Приглашение на остров</div>'+
-          '<div><b>'+m.from+'</b> приглашает тебя на клановый остров.</div>'+
-          '<div class="ic-btns"><button data-yes>Принять</button>'+
-          '<button class="reject" data-no>Отклонить</button></div>';
+       card.innerHTML='<div class="ic-title">🏝 Приглашение на остров</div>'+
+  '<div><b>'+escapeHtml(m.from)+'</b> приглашает тебя на клановый остров.</div>'+
+  '<div class="ic-btns"><button data-yes>Принять</button>'+
+  '<button class="reject" data-no>Отклонить</button></div>';
         card.querySelector('[data-yes]').onclick=()=>{
           card.remove();
           teleportToIsland();
@@ -16037,9 +16231,7 @@ function enterInterior(type){
   localPlayer.yaw = Math.PI;
   localPlayer.targetYaw = Math.PI;
   camYaw = Math.PI;
-  localPlayer.sitting = false;
-  localPlayer.sitGround = false;
-  localPlayer.seat = -1;
+    localPlayer.setSeat(-1);
   localPlayer._interiorSeat = undefined;
   if(Net.online) Net.send({t:'state', x:localPlayer.pos.x, y:0, z:localPlayer.pos.z, r:localPlayer.yaw, s:0, i:localPlayer.item});
 }
@@ -16052,9 +16244,7 @@ function enterFloor2(){
   localPlayer.yaw = Math.PI;
   localPlayer.targetYaw = Math.PI;
   camYaw = Math.PI;
-  localPlayer.sitting = false;
-  localPlayer.sitGround = false;
-  localPlayer.seat = -1;
+      localPlayer.setSeat(-1);
   localPlayer._interiorSeat = undefined;
   localPlayer.onGround = true;
   localPlayer.velY = 0;
@@ -16078,7 +16268,7 @@ function exitFloor2(){
   localPlayer.velY = 0;
   localPlayer.sitting = false;
   localPlayer.sitGround = false;
-  localPlayer.seat = -1;
+   localPlayer.setSeat(-1);
   localPlayer._interiorSeat = undefined;
   localPlayer._interiorFloor = undefined;
   showToast('🪜 Ты спустился на 1-й этаж');
@@ -16106,7 +16296,7 @@ function exitInterior(){
   // ← ДОБАВЛЕНО: сброс позы сидения и «следа» интерьерного стула
   localPlayer.sitting      = false;
   localPlayer.sitGround    = false;
-  localPlayer.seat         = -1;
+    localPlayer.setSeat(-1);
   localPlayer._prevInteriorX = undefined;
   localPlayer._prevInteriorZ = undefined;
   localPlayer._interiorFloor = undefined;
@@ -17034,25 +17224,37 @@ document.addEventListener('visibilitychange',()=>{
     }
   }
 
-  function enterEdit(){
-    document.body.classList.add('layout-edit');
-    // показать все (даже те, что были скрыты), но НЕ трогать позиции
-    for(const { id } of CUSTOMIZABLE){
-      const el = document.getElementById(id);
-      if(!el) continue;
-      el.classList.remove('custom-hidden');
-    }
-    attachDrag();
-    closePanel();
+ function _editBlockClick(e){
+  if(!document.body.classList.contains('layout-edit')) return;
+  if(e.target.closest('.fab, .mBtn')){
+    e.stopPropagation();
+    e.preventDefault();
   }
-  function exitEdit(saveLayout){
-    document.body.classList.remove('layout-edit');
-    if(!saveLayout){
-      try { layout = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
-      catch(e){ layout = {}; }
-    }
-    apply();
+}
+
+function enterEdit(){
+  document.body.classList.add('layout-edit');
+  for(const { id } of CUSTOMIZABLE){
+    const el = document.getElementById(id);
+    if(!el) continue;
+    el.classList.remove('custom-hidden');
   }
+  attachDrag();
+  closePanel();
+  showMini(null);                                    // ← закрыть меню телефона
+  document.addEventListener('click', _editBlockClick, true);   // ← блок действий
+  document.addEventListener('touchend', _editBlockClick, true);
+}
+ function exitEdit(saveLayout){
+  document.body.classList.remove('layout-edit');
+  document.removeEventListener('click', _editBlockClick, true);
+  document.removeEventListener('touchend', _editBlockClick, true);
+  if(!saveLayout){
+    try { layout = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); }
+    catch(e){ layout = {}; }
+  }
+  apply();
+}
 
   // ── панель ──
   let panel = null;
