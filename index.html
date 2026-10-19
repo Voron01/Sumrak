@@ -4172,14 +4172,35 @@ function teleportToIsland(){
     showToast('🏝 Только для членов клана');
     return;
   }
+  // ─── FIX: выйти из любого интерьера ───
+  if(inInterior){
+    if(tavernInteriorGroup) tavernInteriorGroup.visible = false;
+    if(tavernFloor2Group) tavernFloor2Group.visible = false;
+    if(clanHallInteriorGroup) clanHallInteriorGroup.visible = false;
+    if(caveInteriorGroup) caveInteriorGroup.visible = false;
+    interiorAmbient.intensity = 0;
+    inInterior = null;
+    currentFloor = 0;
+    interiorReturnPos = null;
+  }
   rebuildClanIslandIfNeeded();
-  onClanIsland=true;
+  onClanIsland = true;
   updateIslandExitBtn();
-  if(clanIslandGroup) clanIslandGroup.visible=true;
-  localPlayer.sitting=false; localPlayer.sitGround=false; localPlayer.seat=-1;
-  localPlayer.pos.set(CLAN_ISLAND_POS.x, 0, CLAN_ISLAND_POS.z+15);
-  localPlayer.yaw=Math.PI; localPlayer.targetYaw=Math.PI;
-  camYaw=Math.PI;
+  if(clanIslandGroup) clanIslandGroup.visible = true;
+  localPlayer.sitting = false;
+  localPlayer.sitGround = false;
+  localPlayer.seat = -1;
+  localPlayer._interiorSeat = undefined;
+  localPlayer._interiorFloor = undefined;
+  localPlayer._prevInteriorX = undefined;
+  localPlayer._prevInteriorZ = undefined;
+  // ─── FIX: зафиксировать на земле ───
+  localPlayer.pos.set(CLAN_ISLAND_POS.x, 0, CLAN_ISLAND_POS.z + 15);
+  localPlayer.onGround = true;
+  localPlayer.velY = 0;
+  localPlayer.yaw = Math.PI;
+  localPlayer.targetYaw = Math.PI;
+  camYaw = Math.PI;
   showToast('🏝 Ты на острове клана');
   showIslandReturnCard();
   if(Net.online) Net.send({t:'state',
@@ -4189,13 +4210,28 @@ function teleportToIsland(){
 
 function teleportFromIsland(){
   if(!localPlayer) return;
-  onClanIsland=false;
+  onClanIsland = false;
   updateIslandExitBtn();
-  if(clanIslandGroup) clanIslandGroup.visible=false;
-  localPlayer.sitting=false; localPlayer.sitGround=false;
-  localPlayer.pos.set(0,0,4.6);
-  localPlayer.yaw=Math.PI; localPlayer.targetYaw=Math.PI;
-  camYaw=Math.PI;
+  if(clanIslandGroup) clanIslandGroup.visible = false;
+  // ─── FIX: сброс интерьера ───
+  if(inInterior){
+    if(tavernInteriorGroup) tavernInteriorGroup.visible = false;
+    if(tavernFloor2Group) tavernFloor2Group.visible = false;
+    if(clanHallInteriorGroup) clanHallInteriorGroup.visible = false;
+    if(caveInteriorGroup) caveInteriorGroup.visible = false;
+    interiorAmbient.intensity = 0;
+    inInterior = null;
+    currentFloor = 0;
+    interiorReturnPos = null;
+  }
+  localPlayer.sitting = false;
+  localPlayer.sitGround = false;
+  localPlayer.pos.set(0, 0, 4.6);
+  localPlayer.onGround = true;
+  localPlayer.velY = 0;
+  localPlayer.yaw = Math.PI;
+  localPlayer.targetYaw = Math.PI;
+  camYaw = Math.PI;
   removeIslandReturnCard();
   showToast('🏠 Возврат к костру');
   if(Net.online) Net.send({t:'state',
@@ -11064,8 +11100,9 @@ const ShooterGame = (() => {
   let aiming=false;
   const BASE_FOV = 75;
   const SNIPER_FOV = 22;
-  let wave=1, score=0, kills=0, waveState='break', waveT=2, waveLeft=0;
+    let wave=1, score=0, kills=0, waveState='break', waveT=2, waveLeft=0;
   let enemyNetId=1;
+  let _waveFightFarT=0;
 
   const _tmpM=new THREE.Matrix4();
   const _hiddenM=new THREE.Matrix4().makeScale(0,0,0);
@@ -11333,60 +11370,157 @@ const ShooterGame = (() => {
   }
 
   // ═══════════ АРЕНА — 28 УКРЫТИЙ ═══════════
-  function buildArena(){
-    // пол
-    const floor=new THREE.Mesh(new THREE.PlaneGeometry(ARENA*2, ARENA*2),
-      new THREE.MeshStandardMaterial({color:0x5a5a64, roughness:0.85}));   // ← светлее пол
-    floor.rotation.x=-Math.PI/2; shScene.add(floor);
+    function buildArena(){
+    // ─── ПОЛ: процедурная бетонная текстура ───
+    const floorCanvas=document.createElement('canvas');
+    floorCanvas.width=floorCanvas.height=512;
+    const fctx=floorCanvas.getContext('2d');
+    fctx.fillStyle='#585a5e';
+    fctx.fillRect(0,0,512,512);
+    for(let i=0;i<9000;i++){
+      const gray=60+Math.floor(Math.random()*80);
+      fctx.fillStyle=`rgb(${gray},${gray},${gray})`;
+      fctx.fillRect(Math.random()*512,Math.random()*512,1+Math.random()*2,1+Math.random()*2);
+    }
+    for(let i=0;i<28;i++){
+      const x=Math.random()*512,y=Math.random()*512;
+      const r=12+Math.random()*50;
+      const g=fctx.createRadialGradient(x,y,0,x,y,r);
+      g.addColorStop(0,'rgba(40,40,45,0.42)');
+      g.addColorStop(1,'rgba(40,40,45,0)');
+      fctx.fillStyle=g;
+      fctx.beginPath();fctx.arc(x,y,r,0,Math.PI*2);fctx.fill();
+    }
+    fctx.strokeStyle='rgba(20,20,25,0.75)';
+    fctx.lineWidth=1.5;
+    for(let i=0;i<22;i++){
+      fctx.beginPath();
+      let x=Math.random()*512,y=Math.random()*512;
+      fctx.moveTo(x,y);
+      const segs=3+Math.floor(Math.random()*5);
+      for(let j=0;j<segs;j++){
+        x+=(Math.random()-0.5)*80;
+        y+=(Math.random()-0.5)*80;
+        fctx.lineTo(x,y);
+      }
+      fctx.stroke();
+    }
+    const floorTex=new THREE.CanvasTexture(floorCanvas);
+    floorTex.wrapS=floorTex.wrapT=THREE.RepeatWrapping;
+    floorTex.repeat.set(6,6);
+    floorTex.anisotropy=4;
+    const floor=new THREE.Mesh(
+      new THREE.PlaneGeometry(ARENA*2,ARENA*2),
+      new THREE.MeshStandardMaterial({map:floorTex,roughness:0.92})
+    );
+    floor.rotation.x=-Math.PI/2;
+    shScene.add(floor);
 
-    const grid=new THREE.GridHelper(ARENA*2, 40, 0x8899aa, 0x445566);
-    grid.position.y=0.02; shScene.add(grid);
+    const grid=new THREE.GridHelper(ARENA*2,40,0x777788,0x3a3a44);
+    grid.position.y=0.02;
+    grid.material.opacity=0.28;
+    grid.material.transparent=true;
+    shScene.add(grid);
 
-    // стены
-    const wallM=new THREE.MeshStandardMaterial({color:0x6a6a78, roughness:0.85});
-    const wallH=8;
+    const wallM=new THREE.MeshStandardMaterial({color:0x6a6a72,roughness:0.92});
+    const wallH=10;
     const walls=[
-      [0, wallH/2, -ARENA, ARENA*2, wallH, 0.8],
-      [0, wallH/2,  ARENA, ARENA*2, wallH, 0.8],
-      [-ARENA, wallH/2, 0, 0.8, wallH, ARENA*2],
-      [ ARENA, wallH/2, 0, 0.8, wallH, ARENA*2]
+      [0,wallH/2,-ARENA,ARENA*2,wallH,1.0],
+      [0,wallH/2, ARENA,ARENA*2,wallH,1.0],
+      [-ARENA,wallH/2,0,1.0,wallH,ARENA*2],
+      [ ARENA,wallH/2,0,1.0,wallH,ARENA*2]
     ];
     for(const [x,y,z,sx,sy,sz] of walls){
-      const w=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz), wallM);
-      w.position.set(x,y,z); shScene.add(w);
+      const w=new THREE.Mesh(new THREE.BoxGeometry(sx,sy,sz),wallM);
+      w.position.set(x,y,z);shScene.add(w);
     }
 
-    // укрытия
-    const boxM=new THREE.MeshStandardMaterial({color:0x8a7a68, roughness:0.9});
-    const boxM2=new THREE.MeshStandardMaterial({color:0x6a7a8a, roughness:0.9});
-    const boxDefs = [
-      // внутреннее кольцо
-      {x:-15,z:-15,s:2.5,m:boxM},  {x:15,z:-15,s:2.5,m:boxM},
-      {x:-15,z: 15,s:2.5,m:boxM},  {x:15,z: 15,s:2.5,m:boxM},
-      // среднее кольцо
-      {x:-30,z:-20,s:3.0,m:boxM2}, {x: 0,z:-30,s:3.0,m:boxM},
-      {x: 30,z:-20,s:3.0,m:boxM2}, {x:-30,z:  0,s:3.0,m:boxM},
-      {x: 30,z:  0,s:3.0,m:boxM2}, {x:-30,z: 20,s:3.0,m:boxM},
-      {x:  0,z: 30,s:3.0,m:boxM2}, {x: 30,z: 20,s:3.0,m:boxM},
-      // внешнее кольцо
-      {x:-55,z:-25,s:3.5,m:boxM2}, {x:-55,z: 25,s:3.5,m:boxM},
-      {x: 55,z:-25,s:3.5,m:boxM},  {x: 55,z: 25,s:3.5,m:boxM2},
-      {x:-25,z:-55,s:3.5,m:boxM},  {x: 25,z:-55,s:3.5,m:boxM2},
-      {x:-25,z: 55,s:3.5,m:boxM2}, {x: 25,z: 55,s:3.5,m:boxM},
-      // углы-крепости
-      {x:-50,z:-50,s:4.5,m:boxM2}, {x: 50,z:-50,s:4.5,m:boxM},
-      {x:-50,z: 50,s:4.5,m:boxM},  {x: 50,z: 50,s:4.5,m:boxM2},
-      // доп. укрытия между кольцами
-      {x:-10,z:-35,s:2.0,m:boxM},  {x: 10,z:-35,s:2.0,m:boxM2},
-      {x:-10,z: 35,s:2.0,m:boxM2}, {x: 10,z: 35,s:2.0,m:boxM},
-      {x:-40,z:-10,s:2.5,m:boxM},  {x: 40,z:-10,s:2.5,m:boxM2},
-      {x:-40,z: 10,s:2.5,m:boxM2}, {x: 40,z: 10,s:2.5,m:boxM}
+    const rockMats=[
+      new THREE.MeshStandardMaterial({color:0x6a6055,roughness:0.95,flatShading:true}),
+      new THREE.MeshStandardMaterial({color:0x5a5a65,roughness:0.95,flatShading:true}),
+      new THREE.MeshStandardMaterial({color:0x7a7065,roughness:0.95,flatShading:true})
     ];
-    for(const b of boxDefs){
-      const mesh=new THREE.Mesh(new THREE.BoxGeometry(b.s, b.s, b.s), b.m);
-      mesh.position.set(b.x, b.s/2, b.z);
-      shScene.add(mesh);
-      colliders.push({x:b.x, z:b.z, r:b.s*0.72});
+    const rockSpots=[
+      {x:-15,z:-15,s:3.5},{x:15,z:-15,s:3.5},{x:-15,z:15,s:3.5},{x:15,z:15,s:3.5},
+      {x:-30,z:-20,s:4.5},{x:0,z:-30,s:4.5},{x:30,z:-20,s:4.5},
+      {x:-30,z:0,s:4.5},{x:30,z:0,s:4.5},
+      {x:-30,z:20,s:4.5},{x:0,z:30,s:4.5},{x:30,z:20,s:4.5},
+      {x:-55,z:-25,s:5},{x:-55,z:25,s:5},{x:55,z:-25,s:5},{x:55,z:25,s:5},
+      {x:-25,z:-55,s:5},{x:25,z:-55,s:5},{x:-25,z:55,s:5},{x:25,z:55,s:5},
+      {x:-50,z:-50,s:6},{x:50,z:-50,s:6},{x:-50,z:50,s:6},{x:50,z:50,s:6},
+      {x:-10,z:-35,s:3},{x:10,z:-35,s:3},{x:-10,z:35,s:3},{x:10,z:35,s:3},
+      {x:-40,z:-10,s:3.5},{x:40,z:-10,s:3.5},{x:-40,z:10,s:3.5},{x:40,z:10,s:3.5}
+    ];
+    for(const b of rockSpots){
+      const mat=rockMats[Math.floor(Math.random()*rockMats.length)];
+      const rock=new THREE.Mesh(new THREE.DodecahedronGeometry(b.s*0.6,0),mat);
+      rock.position.set(b.x,b.s*0.35,b.z);
+      rock.scale.set(1+Math.random()*0.25,0.7+Math.random()*0.25,1+Math.random()*0.25);
+      rock.rotation.set(Math.random()*0.3,Math.random()*Math.PI*2,Math.random()*0.3);
+      shScene.add(rock);
+      for(let i=0;i<3;i++){
+        const s=b.s*(0.2+Math.random()*0.25);
+        const sub=new THREE.Mesh(new THREE.DodecahedronGeometry(s,0),mat);
+        const a=Math.random()*Math.PI*2;
+        const r=b.s*(0.6+Math.random()*0.35);
+        sub.position.set(b.x+Math.cos(a)*r,s*0.5,b.z+Math.sin(a)*r);
+        sub.rotation.set(Math.random()*0.5,Math.random()*Math.PI*2,Math.random()*0.5);
+        shScene.add(sub);
+      }
+      colliders.push({x:b.x,z:b.z,r:b.s*0.55});
+    }
+
+    const ruinMats=[
+      new THREE.MeshStandardMaterial({color:0x8a8070,roughness:0.95}),
+      new THREE.MeshStandardMaterial({color:0x7a7060,roughness:0.95}),
+      new THREE.MeshStandardMaterial({color:0x6a6050,roughness:0.95})
+    ];
+    const ruinPositions=[
+      {x:-20,z:-40,ry:0.3},
+      {x: 20,z:-40,ry:-0.3},
+      {x:-20,z: 40,ry:Math.PI+0.4},
+      {x: 20,z: 40,ry:Math.PI-0.4},
+      {x:-42,z: 0, ry:Math.PI/2},
+      {x: 42,z: 0, ry:-Math.PI/2},
+      {x: 0, z:-62,ry:0.1},
+      {x: 0, z: 62,ry:Math.PI+0.1}
+    ];
+    for(const rp of ruinPositions){
+      const g=new THREE.Group();
+      g.position.set(rp.x,0,rp.z);
+      g.rotation.y=rp.ry;
+      const segs=[
+        {x:-4.0,z: 0,len:3.0,h:2.6},
+        {x: 0,  z: 0,len:2.2,h:3.4},
+        {x: 3.5,z: 0,len:4.0,h:1.9},
+        {x:-3.0,z:-3.0,len:2.5,h:2.1},
+        {x: 2.5,z:-3.0,len:3.0,h:3.0}
+      ];
+      for(const seg of segs){
+        if(Math.random()<0.15) continue;
+        const mat=ruinMats[Math.floor(Math.random()*ruinMats.length)];
+        const wMesh=new THREE.Mesh(
+          new THREE.BoxGeometry(seg.len,seg.h,0.4),mat);
+        wMesh.position.set(seg.x,seg.h/2,seg.z);
+        wMesh.rotation.z=(Math.random()-0.5)*0.12;
+        g.add(wMesh);
+        const wx=rp.x+Math.cos(rp.ry)*seg.x-Math.sin(rp.ry)*seg.z;
+        const wz=rp.z+Math.sin(rp.ry)*seg.x+Math.cos(rp.ry)*seg.z;
+        colliders.push({x:wx,z:wz,r:seg.len*0.45});
+      }
+      for(let i=0;i<6;i++){
+        const s=0.3+Math.random()*0.6;
+        const rub=new THREE.Mesh(
+          new THREE.DodecahedronGeometry(s,0),
+          ruinMats[Math.floor(Math.random()*ruinMats.length)]
+        );
+        const a=Math.random()*Math.PI*2;
+        const r=2+Math.random()*4;
+        rub.position.set(Math.cos(a)*r,s*0.4,Math.sin(a)*r);
+        rub.rotation.set(Math.random()*3,Math.random()*3,Math.random()*3);
+        g.add(rub);
+      }
+      shScene.add(g);
     }
   }
 
@@ -11716,12 +11850,12 @@ const ShooterGame = (() => {
             }
           }
         }
-        if(!hit && mode==='pvp'){
+               if(!hit && mode==='pvp'){
           for(const p of peers.values()){
             const dx=b.pos.x-p.group.position.x;
-            const dy=b.pos.y-(p.group.position.y+0.9);
+            const dy=b.pos.y-(p.group.position.y+1.0);
             const dz=b.pos.z-p.group.position.z;
-            if(dx*dx+dy*dy+dz*dz<0.7){
+            if(dx*dx+dy*dy+dz*dz<1.4){
               netSend('phit',{ to:p.id, dmg:b.dmg });
               hit=true; break;
             }
@@ -11996,7 +12130,7 @@ const ShooterGame = (() => {
     return r<0.3?'runner':(r<0.5?'bomber':(r<0.7?'shooter':'tank'));
   }
 
-  function updateWave(dt){
+    function updateWave(dt){
     if(mode==='pvp') return;
     if(mode==='coop' && !isHost) return;
     if(waveState==='break'){
@@ -12012,12 +12146,52 @@ const ShooterGame = (() => {
       }
     } else if(waveState==='fighting'){
       let alive=0;
-      for(const e of enemies) if(e.alive) alive++;
+      let anyNearPlayer=false;
+      for(const e of enemies){
+        if(!e.alive) continue;
+        alive++;
+        const d=Math.hypot(
+          e.group.position.x-player.pos.x,
+          e.group.position.z-player.pos.z);
+        if(d<30) anyNearPlayer=true;
+      }
       if(alive===0){
         wave++; waveState='break'; waveT=3;
         score+=wave*50;
         player.hp=Math.min(player.maxHp,player.hp+15);
+        _waveFightFarT=0;
         if(mode==='coop' && isHost) netSend('wave',{ wave, state:'break', t:waveT });
+        return;
+      }
+      if(!anyNearPlayer){
+        _waveFightFarT += dt;
+        if(_waveFightFarT > 10){
+          for(const e of enemies){
+            if(!e.alive) continue;
+            const d=Math.hypot(
+              e.group.position.x-player.pos.x,
+              e.group.position.z-player.pos.z);
+            if(d>25){
+              const a=Math.random()*Math.PI*2;
+              let nx=player.pos.x+Math.cos(a)*15;
+              let nz=player.pos.z+Math.sin(a)*15;
+              for(const c of colliders){
+                if(Math.hypot(nx-c.x,nz-c.z)<c.r+1.2){
+                  nx=player.pos.x-Math.cos(a)*15;
+                  nz=player.pos.z-Math.sin(a)*15;
+                  break;
+                }
+              }
+              e.group.position.x=nx;
+              e.group.position.z=nz;
+              e.targetX=nx;
+              e.targetZ=nz;
+            }
+          }
+          _waveFightFarT=0;
+        }
+      } else {
+        _waveFightFarT=0;
       }
     }
   }
@@ -12040,9 +12214,11 @@ const ShooterGame = (() => {
   function onNet(m){
     if(!roomId || m.room!==roomId || m.from===Net.id) return;
     switch(m.sub){
-      case 'join':{
+            case 'join':{
+        if(m.from!==Net.id && !peers.has(m.from)){
+          addPeer(m.from, m.name||'?', m.color, m.x, m.z, m.yaw);
+        }
         if(!isHost) break;
-        addPeer(m.from, m.name||'?', m.color, m.x, m.z, m.yaw);
         netSend('hello',{ to:m.from, name:localPlayer?localPlayer.name:'?',
           color:localPlayer?localPlayer.color:0xff8080 });
         if(mode==='coop'){
@@ -12053,9 +12229,11 @@ const ShooterGame = (() => {
         if(mode==='pvp') netSend('welcome',{ to:m.from, mode });
         break;
       }
-      case 'hello':{
-        if(m.to!==Net.id) break;
-        addPeer(m.from, m.name||'?', m.color, 0, 0, 0);
+            case 'hello':{
+        if(m.from===Net.id) break;
+        if(!peers.has(m.from)){
+          addPeer(m.from, m.name||'?', m.color, 0, 0, 0);
+        }
         break;
       }
       case 'welcome':{
@@ -12078,8 +12256,15 @@ const ShooterGame = (() => {
         }
         break;
       }
-      case 'pos':{
-        const p=peers.get(m.from);
+           case 'pos':{
+        let p=peers.get(m.from);
+        if(!p){
+          addPeer(m.from, m.name||'?', m.color,
+                  typeof m.x==='number'?m.x:0,
+                  typeof m.z==='number'?m.z:0,
+                  typeof m.yaw==='number'?m.yaw:0);
+          p=peers.get(m.from);
+        }
         if(!p) break;
         if(typeof m.x==='number'){ p.targetX=m.x; p.targetZ=m.z; }
         if(typeof m.yaw==='number') p.targetYaw=m.yaw;
@@ -12176,11 +12361,28 @@ const ShooterGame = (() => {
     let s=''; for(let i=0;i<4;i++) s+=L[Math.floor(Math.random()*L.length)];
     return s;
   }
-  function joinRoomCode(code,m){
+    function joinRoomCode(code,m){
     if(!Net.online){ if(typeof showToast==='function') showToast('Нет соединения'); return; }
     roomId=code; mode=m||'coop'; isHost=false;
-    netSend('join',{ name:localPlayer?localPlayer.name:'?',
-      color:localPlayer?localPlayer.color:0xff8080, x:0, z:0, yaw:0 });
+    const doJoin=()=>{
+      netSend('join',{
+        name: localPlayer ? localPlayer.name : '?',
+        color: localPlayer ? localPlayer.color : 0xff8080,
+        x: 0, z: 0, yaw: 0
+      });
+    };
+    if(Net.id){ doJoin(); }
+    else {
+      let tries=0;
+      const iv=setInterval(()=>{
+        tries++;
+        if(Net.id){ clearInterval(iv); doJoin(); }
+        else if(tries>50){
+          clearInterval(iv);
+          if(typeof showToast==='function') showToast('Сервер не отвечает');
+        }
+      },200);
+    }
     if(typeof showToast==='function') showToast('Подключаемся к '+code);
   }
   function hostStart(){ if(!isHost) return; netSend('start',{}); startGame(mode); }
@@ -12421,11 +12623,13 @@ const ShooterGame = (() => {
     if(netActive()){
       if(now-lastPosSendT>66){
         lastPosSendT=now;
-        netSend('pos',{
+               netSend('pos',{
           x:+player.pos.x.toFixed(2),
           z:+player.pos.z.toFixed(2),
           yaw:+player.yaw.toFixed(2),
-          hp:Math.round(player.hp)
+          hp:Math.round(player.hp),
+          name: localPlayer ? localPlayer.name : '?',
+          color: localPlayer ? localPlayer.color : 0xff8080
         });
       }
       if(mode==='coop' && isHost && now-lastSnapT>100){
