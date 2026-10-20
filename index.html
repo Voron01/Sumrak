@@ -10245,7 +10245,20 @@ if(__hintClickEl){
     if(!isMobile)return;
     e.stopPropagation();
     e.preventDefault();
-    if(__hintClickEl.dataset.actionable==='1'&&localPlayer)contextAction();
+    if(!localPlayer)return;
+
+    const txtEl = __hintClickEl.querySelector('.hint-txt');
+    const txt = txtEl ? txtEl.textContent : '';
+
+    // 🍻 Тап по подсказке тоста → поднять тост (раньше ничего не делал)
+    if(txt.startsWith('🍻') && !txt.includes('через')){
+      raiseToast();
+      return;
+    }
+    // Остальные подсказки — обычное действие E
+    if(__hintClickEl.dataset.actionable === '1'){
+      contextAction();
+    }
   });
 }
 
@@ -17237,7 +17250,7 @@ function updateDN(dt){
   if(hour >= 4 && hour <= 8) fogBoost = 2.2;      // утренний туман
   else if(hour >= 17 && hour <= 21) fogBoost = 1.7; // вечерний
   else if(hour >= 22 || hour <= 3) fogBoost = 0.6;  // ночью воздух чище
-  scene.fog.density = Math.min((isMobile?0.024:0.018) * fogBoost, 0.052);
+  scene.fog.density = Math.min(0.018 * fogBoost, 0.045);
     worldTime = _dnCachePhase * FULL_CYCLE;
   const phase = _dnCachePhase;
   const el=Math.sin((phase-0.25)*Math.PI*2);
