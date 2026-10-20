@@ -13882,7 +13882,9 @@ let pvpEndGraceTimer=null;
     document.addEventListener('mousedown',onMouseDown);
     document.addEventListener('mouseup',onMouseUp);
     document.addEventListener('pointerlockchange',onPointerLockChange);
-    shCanvas.addEventListener('click',()=>{ if(active && !pointerLocked) shCanvas.requestPointerLock(); });
+    shCanvas.addEventListener('click',()=>{
+  if(active && !pointerLocked && !pvpEnded) shCanvas.requestPointerLock();
+});
     shCanvas.addEventListener('contextmenu', e=>e.preventDefault());
     setupShooterTouchControls();
   }
@@ -14885,20 +14887,30 @@ function doRestartCommon(){
     if(!roomId || m.room!==roomId || m.from===Net.id) return;
     switch(m.sub){
             case 'join':{
-        if(m.from!==Net.id && !peers.has(m.from)){
-          addPeer(m.from, m.name||'?', m.color, m.x, m.z, m.yaw);
-        }
-        if(!isHost) break;
-        netSend('hello',{ to:m.from, name:localPlayer?localPlayer.name:'?',
-          color:localPlayer?localPlayer.color:0xff8080 });
-        if(mode==='coop'){
-          netSend('welcome',{ to:m.from, mode, wave, waveState, waveT,
-            enemies:enemies.filter(e=>e.alive).map(e=>({id:e.netId, type:e.type,
-              x:e.group.position.x, z:e.group.position.z, hp:e.hp})) });
-        }
-        if(mode==='pvp') netSend('welcome',{ to:m.from, mode, pvpAlive:[...pvpAlive], pvpRanking });
-        break;
-      }
+  if(m.from!==Net.id && !peers.has(m.from)){
+    addPeer(m.from, m.name||'?', m.color, m.x, m.z, m.yaw);
+  }
+
+  // ── НОВОЕ: если PvP уже идёт — сразу включаем пира в бой ──
+  if(mode==='pvp' && active && !pvpEnded && !pvpAlive.has(m.from)){
+    pvpAlive.add(m.from);
+    if(!pvpRanking.find(r=>r.id===m.from)){
+      pvpRanking.push({id:m.from, name:m.name||'???', place:null});
+    }
+    updateHUD();
+  }
+
+  if(!isHost) break;
+  netSend('hello',{ to:m.from, name:localPlayer?localPlayer.name:'?',
+    color:localPlayer?localPlayer.color:0xff8080 });
+  if(mode==='coop'){
+    netSend('welcome',{ to:m.from, mode, wave, waveState, waveT,
+      enemies:enemies.filter(e=>e.alive).map(e=>({id:e.netId, type:e.type,
+        x:e.group.position.x, z:e.group.position.z, hp:e.hp})) });
+  }
+  if(mode==='pvp') netSend('welcome',{ to:m.from, mode, pvpAlive:[...pvpAlive], pvpRanking });
+  break;
+}
             case 'hello':{
         if(m.from===Net.id) break;
         if(!peers.has(m.from)){
@@ -15034,17 +15046,20 @@ function doRestartCommon(){
         break;
       }
       case 'pdead':{
-        if(m.from === Net.id) break;
-        const peerName = m.playerName || (peers.get(m.from)?.name) || '???';
-        if(!pvpAlive.has(m.from)) break;
-        eliminateFromPvp(m.from, peerName);
-        const peer = peers.get(m.from);
-        if(peer) peer.dead=true;
-        if(typeof showToast==='function') showToast(`💀 ${peerName} выбыл`);
-        checkPvpEnd();
-        updateHUD();
-        break;
-      }
+  if(m.from === Net.id) break;
+  const peerName = m.playerName || (peers.get(m.from)?.name) || '???';
+
+  // Даже если пира нет в pvpAlive — всё равно фиксируем выбывание
+  eliminateFromPvp(m.from, peerName);
+
+  const peer = peers.get(m.from);
+  if(peer) peer.dead = true;
+  if(typeof showToast === 'function') showToast(`💀 ${peerName} выбыл`);
+
+  checkPvpEnd();      // ← вызываем всегда
+  updateHUD();
+  break;
+}
       case 'restart':{
         if(!isHost){
           if(Array.isArray(m.pvpAlive)) pvpAlive=new Set(m.pvpAlive);
@@ -15296,16 +15311,20 @@ if(pvpEl){
     if(e.button===0) mouseDown=false;
     else if(e.button===2) aiming=false;
   }
-  function onPointerLockChange(){
-    pointerLocked=document.pointerLockElement===shCanvas;
-    const pauseEl=document.getElementById('sh3PauseHint');
-    if(pauseEl&&active){
-      if(pointerLocked) pauseEl.style.display='none';
-      else if(pauseEl.innerHTML.indexOf('Игра окончена')===-1 &&
-              pauseEl.innerHTML.indexOf('Победа')===-1 &&
-              pauseEl.innerHTML.indexOf('Поражение')===-1)
-        pauseEl.style.display='block';
-    }
+    function onPointerLockChange(){
+    pointerLocked = document.pointerLockElement === shCanvas;
+    const pauseEl = document.getElementById('sh3PauseHint');
+    if(!pauseEl || !active) return;
+
+    // Если идёт показ итогов — не трогаем панель вообще
+    if(pvpEnded) return;
+
+    if(pointerLocked) pauseEl.style.display='none';
+    else if(pauseEl.innerHTML.indexOf('Игра окончена')===-1 &&
+            pauseEl.innerHTML.indexOf('Итоги PvP')===-1 &&
+            pauseEl.innerHTML.indexOf('Победа')===-1 &&
+            pauseEl.innerHTML.indexOf('Поражение')===-1)
+      pauseEl.style.display='block';
   }
   function onResize(){
     if(!shRenderer) return;
@@ -20768,9 +20787,9 @@ if(clanIslandGroup && clanIslandGroup.visible && clanIslandGroup.userData.clanFi
 
   // Culling деревьев по расстоянию (главная экономия draw-calls на мобилке)
   {
-    if(!window.__treeCull) window.__treeCull = 0;
-    window.__treeCull++;
-    const _doCull = !isMobile || (window.__treeCull % 6 === 0);
+    if(window.__treeCull === undefined) window.__treeCull = 0;
+window.__treeCull++;
+const _doCull = !isMobile || (window.__treeCull % 6 === 0);
     if(_doCull && localPlayer){
       const _maxTreeDist = isMobile ? 70 : 150;
       const _maxDistSq = _maxTreeDist * _maxTreeDist;
