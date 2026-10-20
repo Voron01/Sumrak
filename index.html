@@ -14331,12 +14331,23 @@ function checkPvpEnd(){
   if(pvpAlive.size<=1){
     pvpEnded = true;
     clearTimeout(pvpEndGraceTimer);
-    // небольшая задержка, чтобы поймать «одновременные» смерти
-    pvpEndGraceTimer = setTimeout(finalizePvp, 600);
+    pvpEndGraceTimer = setTimeout(() => {
+      finalizePvp();
+      // ── СТРАХОВКА: если панель так и не показалась — показать принудительно ──
+      setTimeout(() => {
+        if(!active) return;
+        const pe = document.getElementById('sh3PauseHint');
+        if(pe && pe.style.display !== 'block' && pe.innerHTML.indexOf('Итоги PvP') === -1){
+          console.warn('[PvP] итоги не показались — форсирую показ');
+          showPvpRanking();
+        }
+      }, 1500);
+    }, 600);
   }
 }
 
 function finalizePvp(){
+  if(!active) return;
   if(pvpAlive.size===1){
     const winnerId=[...pvpAlive][0];
     pvpWinnerId=winnerId;
@@ -14926,7 +14937,7 @@ function doRestartCommon(){
         if(m.enemies && Array.isArray(m.enemies)){
           for(const en of m.enemies) spawnEnemy(en.type, en.id, en.x, en.z);
         }
-        // ── PvP: восстановить живой состав из снапшота хоста ──
+               // ── PvP: восстановить живой состав из снапшота хоста ──
         if(mode==='pvp'){
           if(Array.isArray(m.pvpAlive) && m.pvpAlive.length > 0){
             pvpAlive = new Set(m.pvpAlive);
@@ -14934,22 +14945,17 @@ function doRestartCommon(){
           if(Array.isArray(m.pvpRanking) && m.pvpRanking.length > 0){
             pvpRanking = m.pvpRanking;
           }
-          // если игра уже идёт — стартуем локально, чтобы клиент увидел бой
-          if(!active){
-            if(typeof showToast==='function') showToast('🔄 Подключение к бою...');
-            startGame('pvp');
-          }
+          // ВАЖНО: НЕ стартуем здесь! Ждём пакет 'start' от хоста.
+          // Иначе гость начинает бой с пустым/несинхронным pvpAlive.
         }
         break;
       }
-      case 'start':{
-  if(!active){
-    if(mode==='pvp'){
-      if(Array.isArray(m.pvpAlive)) pvpAlive=new Set(m.pvpAlive);
-      if(Array.isArray(m.pvpRanking)) pvpRanking=m.pvpRanking;
-    }
-    startGame(mode);
+           case 'start':{
+  if(mode==='pvp'){
+    if(Array.isArray(m.pvpAlive)) pvpAlive = new Set(m.pvpAlive);
+    if(Array.isArray(m.pvpRanking)) pvpRanking = m.pvpRanking;
   }
+  if(!active) startGame(mode);
   break;
 }
       case 'leave':{
@@ -15311,17 +15317,18 @@ if(pvpEl){
     if(e.button===0) mouseDown=false;
     else if(e.button===2) aiming=false;
   }
-    function onPointerLockChange(){
+        function onPointerLockChange(){
     pointerLocked = document.pointerLockElement === shCanvas;
     const pauseEl = document.getElementById('sh3PauseHint');
     if(!pauseEl || !active) return;
 
     // Если идёт показ итогов — не трогаем панель вообще
     if(pvpEnded) return;
+    // Если в панели уже висят «Итоги PvP» — не перерисовываем
+    if(pauseEl.innerHTML.indexOf('Итоги PvP') !== -1) return;
 
     if(pointerLocked) pauseEl.style.display='none';
     else if(pauseEl.innerHTML.indexOf('Игра окончена')===-1 &&
-            pauseEl.innerHTML.indexOf('Итоги PvP')===-1 &&
             pauseEl.innerHTML.indexOf('Победа')===-1 &&
             pauseEl.innerHTML.indexOf('Поражение')===-1)
       pauseEl.style.display='block';
